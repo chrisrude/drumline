@@ -1,4 +1,4 @@
-import { load_puzzle } from '$lib/puzzle';
+import { loadPuzzle } from '$lib/puzzle_store';
 import { describe, expect, it } from 'vitest';
 
 const FIRST_TEST = `
@@ -165,7 +165,7 @@ aaaaaa: 2 wds.`
 describe('puzzle input test', () => {
     it('puzzle 37 loads correctly', () => {
 
-        const puzzle = load_puzzle(FIRST_TEST);
+        const puzzle = loadPuzzle(FIRST_TEST);
         expect(puzzle).not.toBe(null);
         // expect three bands and 7 rows
         expect(puzzle.bands.length).toBe(3);
@@ -174,7 +174,7 @@ describe('puzzle input test', () => {
 
     it('puzzle 66 loads correctly', () => {
 
-        const puzzle = load_puzzle(SECOND_TEST);
+        const puzzle = loadPuzzle(SECOND_TEST);
         expect(puzzle).not.toBe(null);
         // expect three bands and 7 rows
         expect(puzzle.bands.length).toBe(7);

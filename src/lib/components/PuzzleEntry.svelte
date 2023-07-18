@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Puzzle } from '$lib/puzzle';
-	import { load_puzzle } from '$lib/puzzle';
-	import { storedPuzzle } from '$lib/puzzle_store';
+	import { loadPuzzle, storedPuzzle } from '$lib/puzzle_store';
 
 	/** @type {import('./$types').PageData} */
 
@@ -13,7 +12,7 @@
 
 	const parse_puzzle = () => {
 		try {
-			puzzle = load_puzzle(inputText);
+			puzzle = loadPuzzle(inputText);
 			storedPuzzle.set(puzzle);
 			parseError = '';
 		} catch (error) {
@@ -32,7 +31,7 @@
 	$: {
 		if (inputText) {
 			try {
-				tentativePuzzle = load_puzzle(inputText);
+				tentativePuzzle = loadPuzzle(inputText);
 				parseError = '';
 			} catch (error) {
 				tentativePuzzle = null;

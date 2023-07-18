@@ -1,13 +1,12 @@
 <script lang="ts">
-	import EnterPuzzle from '$lib/components/EnterPuzzle.svelte';
+	import PuzzleEntry from '$lib/components/PuzzleEntry.svelte';
 	import PuzzleView from '$lib/components/PuzzleView.svelte';
 	import { storedPuzzle } from '$lib/puzzle_store';
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { blur } from 'svelte/transition';
 
-	/** @type {import('./$types').PageData} */
-	export let data;
+	export let data: import('./$types').PageData;
 	export let puzzle = data.puzzle;
 	const loading = writable(true);
 
@@ -38,7 +37,7 @@
 			<button class="clean-button" on:click={clean_puzzle}>⚠️ delete puzzle immediately ⚠️</button>
 		</div>
 	{:else}
-		<EnterPuzzle bind:puzzle />
+		<PuzzleEntry bind:puzzle />
 	{/if}
 {/if}
 

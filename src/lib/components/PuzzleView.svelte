@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ClueGrid from '$lib/components/ClueGrid.svelte';
 	import ClueList from '$lib/components/ClueList.svelte';
-	import { isPuzzleComplete } from '$lib/puzzle';
+	import { isPuzzleComplete } from '$lib/puzzle_store';
 	import { Confetti } from 'svelte-confetti';
 
 	import type { Puzzle } from '$lib/puzzle';

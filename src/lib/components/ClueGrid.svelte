@@ -174,7 +174,7 @@
 				let startRow,
 					startCol = -1;
 				if (
-					puzzle.grid[selectedRow][selectedCol].text === ' ' &&
+					puzzle.grid[selectedRow][selectedCol].text === ' ' ||
 					isInWord(puzzle, selectedRow, selectedCol, isUsingBand())
 				) {
 					// is the previous square in the row/band filled in?

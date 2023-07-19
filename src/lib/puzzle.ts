@@ -287,10 +287,6 @@ function createWordAtLocation(puzzle: Puzzle, i: number, j: number, useBand: boo
             }
             endIdx = k;
         }
-        if (startIdx == endIdx) {
-            // don't add a single letter word
-            return;
-        }
         addPuzzleWordBand(puzzle, bandNumber, startIdx, endIdx);
     } else {
         // look backwards for a square that has a letter in it and is not
@@ -315,10 +311,6 @@ function createWordAtLocation(puzzle: Puzzle, i: number, j: number, useBand: boo
                 break;
             }
             endIdx = k;
-        }
-        // don't add a single letter word
-        if (startIdx == endIdx) {
-            return;
         }
         addPuzzleWordRow(puzzle, i, startIdx, endIdx);
     }

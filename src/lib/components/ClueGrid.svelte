@@ -100,6 +100,55 @@
 		}
 	};
 
+	function findSquareToGroup(): [number, number] | null {
+		// are we using the current square?
+		let startRow,
+			startCol = -1;
+		if (
+			puzzle.grid[selectedRow][selectedCol].text === ' ' ||
+			isInWord(puzzle, selectedRow, selectedCol, isUsingBand())
+		) {
+			// is the previous square in the row/band filled in?
+			[startRow, startCol] = nextCell(true);
+		} else {
+			startRow = selectedRow;
+			startCol = selectedCol;
+		}
+		if (startRow === -1 || startCol === -1) {
+			// nothing to do
+			return null;
+		}
+		if (puzzle.grid[startRow][startCol].text === ' ') {
+			return null;
+		}
+		if (isInWord(puzzle, startRow, startCol, isUsingBand())) {
+			return null;
+		}
+		return [startRow, startCol];
+	}
+
+	export const canGroupIntoAnswer = () => {
+		if (selectedRow === -1 || selectedCol === -1) {
+			return false;
+		}
+		if (selectedRow === center && selectedCol === center) {
+			return false;
+		}
+		return null != findSquareToGroup();
+	};
+
+	export const groupIntoAnswer = () => {
+		const result = findSquareToGroup();
+		if (result === null) {
+			return;
+		}
+		const [startRow, startCol] = result;
+		createWordAtLocation(puzzle, startRow, startCol, isUsingBand());
+		// do an assignment to trigger a re-render
+		mouseDragging = true;
+		mouseDragging = false;
+	};
+
 	function clearWordAtSelection(): boolean {
 		if (!isInWord(puzzle, selectedRow, selectedCol, isUsingBand())) {
 			return false;
@@ -170,27 +219,7 @@
 			case '.':
 				// find adjacent letters and mark them as a word
 				//
-				// are we using the current square?
-				let startRow,
-					startCol = -1;
-				if (
-					puzzle.grid[selectedRow][selectedCol].text === ' ' ||
-					isInWord(puzzle, selectedRow, selectedCol, isUsingBand())
-				) {
-					// is the previous square in the row/band filled in?
-					[startRow, startCol] = nextCell(true);
-				} else {
-					startRow = selectedRow;
-					startCol = selectedCol;
-				}
-				if (startRow === -1 || startCol === -1) {
-					// nothing to do
-					return;
-				}
-				createWordAtLocation(puzzle, startRow, startCol, isUsingBand());
-				// do an assignment to trigger a re-render
-				mouseDragging = true;
-				mouseDragging = false;
+				groupIntoAnswer();
 				event.preventDefault();
 				return;
 
@@ -508,9 +537,29 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-{#if currentClue}
-	<div class="grid-current-clue">{currentClue}</div>
-{/if}
+<div class="grid-current-clue">{currentClue}</div>
+
+<div class="button-bar">
+	<button
+		on:click={toggleSelection}
+		title="Switch to row mode [space]"
+		disabled={selectedRow === -1 || selectedCol === -1 || highlightRow !== -1}>𐃘</button
+	>
+	<button
+		on:click={toggleSelection}
+		title="Switch to band mode [space]"
+		disabled={selectedRow === -1 || selectedCol === -1 || highlightBand !== -1}>⤵</button
+	>
+
+	<button
+		on:click={groupIntoAnswer}
+		disabled={selectedRow === -1 ||
+			selectedCol === -1 ||
+			(mouseDragging && !mouseDragging) ||
+			!canGroupIntoAnswer()}
+		title="Group these letters into answer [period]">⛶</button
+	>
+</div>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
@@ -741,5 +790,12 @@
 		overflow: scroll;
 		max-height: 3rem;
 		min-height: 3rem;
+	}
+
+	.button-bar {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		margin-bottom: 1rem;
 	}
 </style>

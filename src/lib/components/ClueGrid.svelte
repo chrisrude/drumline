@@ -537,7 +537,7 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="grid-current-clue">{currentClue}</div>
+<!-- <div class="grid-current-clue">{currentClue}</div> -->
 
 <div class="button-bar">
 	<button

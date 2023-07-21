@@ -562,57 +562,6 @@
 
 <svelte:window on:keydown={onKeyDown} on:mouseup={onDragEnd} />
 
-<div class="button-bar">
-    <button
-        on:click={toggleSelection}
-        title="Switch to row mode [space]"
-        disabled={selectedRow === -1 || selectedCol === -1 || highlightRow !== -1}
-        >➡️ select row</button
-    >
-    <button
-        on:click={toggleSelection}
-        title="Switch to band mode [space]"
-        disabled={selectedRow === -1 || selectedCol === -1 || highlightBand !== -1}
-        >↩️ select band</button
-    >
-
-    <button
-        on:click={groupIntoAnswer}
-        disabled={selectedRow === -1 ||
-            selectedCol === -1 ||
-            (mouseDragging && !mouseDragging) ||
-            !canGroupIntoAnswer()}
-        title="Group these letters into answer [period]">⛶ mark as answer</button
-    >
-
-    <button
-        on:click={() => clearWordAtSelection()}
-        disabled={selectedRow === -1 ||
-            selectedCol === -1 ||
-            (mouseDragging && !mouseDragging) ||
-            !canUngroupAnswer()}
-        title="Remove this answer [backspace]">⛝ unmark answer</button
-    >
-
-    <button
-        class="rightmost"
-        tabindex="-1"
-        on:click={() => deleteDialog.showModal()}
-        bind:this={deleteDialogButton}
-        title="Delete this puzzle">🗑️ delete puzzle</button
-    >
-    <dialog
-        bind:this={deleteDialog}
-        on:close={() => {
-            deleteDialogButton.blur();
-        }}
-    >
-        <div class="deleteMessage">Delete puzzle now?</div>
-        <button on:click={() => dispatch('deletePuzzle')}>⚠️ delete puzzle immediately ⚠️</button>
-        <button on:click={() => deleteDialog.close()}>nevermind</button>
-    </dialog>
-</div>
-
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="grid"
@@ -620,6 +569,59 @@
     class:bandMode={highlightBand !== -1}
     class:rowMode={highlightRow !== -1}
 >
+    <div class="button-bar">
+        <button
+            on:click={toggleSelection}
+            title="Switch to row mode [space]"
+            disabled={selectedRow === -1 || selectedCol === -1 || highlightRow !== -1}
+            >➡️ select row</button
+        >
+        <button
+            on:click={toggleSelection}
+            title="Switch to band mode [space]"
+            disabled={selectedRow === -1 || selectedCol === -1 || highlightBand !== -1}
+            >↩️ select band</button
+        >
+
+        <button
+            on:click={groupIntoAnswer}
+            disabled={selectedRow === -1 ||
+                selectedCol === -1 ||
+                (mouseDragging && !mouseDragging) ||
+                !canGroupIntoAnswer()}
+            title="Group these letters into answer [period]">⛶ mark as answer</button
+        >
+
+        <button
+            on:click={() => clearWordAtSelection()}
+            disabled={selectedRow === -1 ||
+                selectedCol === -1 ||
+                (mouseDragging && !mouseDragging) ||
+                !canUngroupAnswer()}
+            title="Remove this answer [backspace]">⛝ unmark answer</button
+        >
+
+        <button
+            class="rightmost"
+            tabindex="-1"
+            on:click={() => deleteDialog.showModal()}
+            bind:this={deleteDialogButton}
+            title="Delete this puzzle">🗑️ delete puzzle</button
+        >
+        <dialog
+            bind:this={deleteDialog}
+            on:close={() => {
+                deleteDialogButton.blur();
+            }}
+        >
+            <div class="deleteMessage">Delete puzzle now?</div>
+            <button on:click={() => dispatch('deletePuzzle')}
+                >⚠️ delete puzzle immediately ⚠️</button
+            >
+            <button on:click={() => deleteDialog.close()}>nevermind</button>
+        </dialog>
+    </div>
+
     <div class="row">
         <div class="grid-current-clue">
             <p>{currentClue}</p>
@@ -773,6 +775,11 @@
         color: rgba(0, 0, 0, 0.4);
     }
 
+    .grid.bandMode .bandWord .band-letter,
+    .grid.rowMode .rowWord .band-letter {
+        color: rgba(0, 0, 0, 0.2);
+    }
+
     .grid.rowMode .rowWord {
         box-shadow: var(--shadow-bottom), var(--thin-top);
     }
@@ -869,7 +876,8 @@
 
     .grid-current-clue {
         font-weight: 500;
-        overflow: scroll;
+        overflow: hidden;
+        text-overflow: ellipsis;
         display: flex;
         box-sizing: border-box;
 
@@ -897,6 +905,9 @@
         border-radius: 10px;
         box-shadow: -2px -2px 20px 10px rgba(var(--color-theme-1-rgb), 0.1),
             2px 2px 20px 10px rgba(var(--color-theme-2-rgb), 0.1);
+        font-size: calc(
+            0.75 * min(50vw / (var(--puzzle-size) * 2), 90vh / (4 * var(--puzzle-size)))
+        );
     }
 
     .grid-current-clue p {
@@ -909,8 +920,8 @@
         align-items: center;
         max-height: 5vh;
         margin-bottom: 0.5rem;
-        margin-top: 1rem;
         margin-left: 2rem;
+        max-width: min(50vw, 90vh);
     }
 
     .button-bar button {
@@ -926,7 +937,6 @@
 
     .button-bar button.rightmost {
         margin-left: auto;
-        right: 0;
         margin-right: 0;
     }
 

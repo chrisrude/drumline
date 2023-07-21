@@ -70,7 +70,7 @@ export const getBandNumberFromCoords = (i: number, j: number, size: number) => {
     return band;
 }
 
-export const nextCellInRow = (size: number, i: number, j: number, backwards: boolean) => {
+export const nextCellInRow = (size: number, i: number, j: number, backwards: boolean): [number, number] => {
     let newCol = j;
     if (backwards) {
         if (j > 0) {
@@ -88,6 +88,46 @@ export const nextCellInRow = (size: number, i: number, j: number, backwards: boo
     }
     return [i, newCol];
 }
+
+// go to next empty cell in row, or stay at current cell if there is no next empty cell
+export const nextEmptyCellInRow = (puzzle: Puzzle, i: number, j: number, backwards: boolean): [number, number] => {
+    let newCol = j;
+
+    const step = backwards ? -1 : 1;
+    const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= puzzle.size - 1;
+
+    while (!fnDone(newCol)) {
+        newCol = newCol + step;
+        if (puzzle.grid[i][newCol].text === ' ') {
+            return [i, newCol];
+        }
+    }
+
+    // no empty cells in the row, so go to the first cell
+    return [i, j];
+}
+
+// go to next empty cell in band, or stay at current cell if there is no next empty cell
+export const nextEmptyCellInBand = (puzzle: Puzzle, i: number, j: number, backwards: boolean): [number, number] => {
+    let newIdx = offsetWithinBand(i, j, puzzle.size);
+    const bandCoords = getBandCoords(puzzle.size, getBandNumberFromCoords(i, j, puzzle.size));
+    const step = backwards ? -1 : 1;
+
+    while (true) {
+        newIdx = (newIdx + bandCoords.length + step) % bandCoords.length;
+        if (bandCoords[newIdx][0] === i && bandCoords[newIdx][1] === j) {
+            break;
+        }
+        const [newRow, newCol] = bandCoords[newIdx];
+        if (puzzle.grid[newRow][newCol].text === ' ') {
+            return [newRow, newCol];
+        }
+    }
+
+    // no empty cells in the row, so go to the first cell
+    return [i, j];
+}
+
 
 function isInGrid(size: number, i: number, j: number) {
     return i >= 0 && i < size && j >= 0 && j < size;
@@ -137,10 +177,10 @@ export const getBandCoords = (size: number, bandIdx: number): [number, number][]
     for (let i = bandIdx; i < size - bandIdx; i++) {
         coords.push([bandIdx, i]);
     }
-    for (let i = bandIdx + 1; i < size - bandIdx; i++) {
+    for (let i = bandIdx + 1; i < size - bandIdx - 1; i++) {
         coords.push([i, size - bandIdx - 1]);
     }
-    for (let i = size - bandIdx - 1; i >= bandIdx; i--) {
+    for (let i = size - bandIdx - 1; i >= bandIdx + 1; i--) {
         coords.push([size - bandIdx - 1, i]);
     }
     for (let i = size - bandIdx - 1; i >= bandIdx; i--) {
@@ -160,18 +200,13 @@ export const offsetWithinBand = (i: number, j: number, size: number): number => 
     throw new Error("offset not within band");
 }
 
+export const firstEmptyRowCell = (puzzle: Puzzle, rowNumber: number): [number, number] => {
+    return nextEmptyCellInRow(puzzle, rowNumber, 0, false);
+}
 
 export const firstEmptyBandCell = (puzzle: Puzzle, bandNumber: number): [number, number] => {
     const bandCoords = getBandCoords(puzzle.size, bandNumber);
-    for (let i = 0; i < bandCoords.length; i++) {
-        const [row, col] = bandCoords[i];
-        if (puzzle.grid[row][col].text === ' ') {
-            return [row, col];
-        }
-    }
-    // no empty cells in the band, so go to the first cell
-    // in the band
-    return [bandNumber, bandNumber];
+    return nextEmptyCellInBand(puzzle, bandCoords[0][0], bandCoords[0][1], false);
 }
 
 export const isClueDone = (puzzle: Puzzle, isBand: boolean, clueIdx: number): boolean => {

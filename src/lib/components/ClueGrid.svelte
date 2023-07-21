@@ -7,10 +7,13 @@
 		clearPuzzleWordRow,
 		createWordAtLocation,
 		firstEmptyBandCell,
+		firstEmptyRowCell,
 		getBandNumberFromCoords,
 		isInWord,
 		nextCellInBand,
 		nextCellInRow,
+		nextEmptyCellInBand,
+		nextEmptyCellInRow,
 		offsetWithinBand
 	} from '$lib/puzzle';
 
@@ -37,18 +40,9 @@
 		if (selectedRow === highlightRow) {
 			return;
 		}
-		for (let i = 0; i < size; i++) {
-			if (puzzle.grid[highlightRow][i].text === ' ') {
-				selectedRow = highlightRow;
-				selectedCol = i;
-				return;
-			}
-		}
-		// no empty cells in the row, so go to the first cell
-		// in the row
-		selectedRow = highlightRow;
-		selectedCol = 0;
+		[selectedRow, selectedCol] = firstEmptyRowCell(puzzle, highlightRow);
 	};
+
 	const gotoBand = () => {
 		if (-1 == highlightBand) {
 			return;
@@ -147,6 +141,14 @@
 		// do an assignment to trigger a re-render
 		mouseDragging = true;
 		mouseDragging = false;
+	};
+
+	export const nextEmptyCell = (backwards: boolean) => {
+		if (isUsingBand()) {
+			return nextEmptyCellInBand(puzzle, selectedRow, selectedCol, backwards);
+		} else {
+			return nextEmptyCellInRow(puzzle, selectedRow, selectedCol, backwards);
+		}
 	};
 
 	function clearWordAtSelection(): boolean {
@@ -255,7 +257,7 @@
 					puzzle.grid[selectedRow][selectedCol].text = event.key;
 					event.preventDefault();
 					// move to next cell, either in the row or the band
-					[newRow, newCol] = nextCell(false);
+					[newRow, newCol] = nextEmptyCell(false);
 				} else {
 					// don't stop default behavior
 					return;

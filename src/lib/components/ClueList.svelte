@@ -8,6 +8,7 @@
 	export let useLetters: boolean = false;
 	export let highlightIdx: number = -1;
 	export let puzzle: Puzzle;
+	export let clueGroup: HTMLDivElement;
 
 	const gotoClue = (idx: number) => {
 		if (useLetters) {
@@ -16,13 +17,39 @@
 			highlightIdx = idx;
 		}
 	};
+	$: highlightIdx != -1 && scrollToClue();
+
+	function scrollToClue() {
+		if (clueGroup === undefined) {
+			// this happens when we load the page
+			return;
+		}
+		const clue = clueGroup.children[highlightIdx];
+		if (clue instanceof HTMLElement) {
+			// do we need to scroll?
+
+			let groupTop = clueGroup.scrollTop;
+			let groupBottom = groupTop + clueGroup.clientHeight;
+
+			let clueTop = clue.offsetTop;
+			let clueBottom = clueTop + clue.clientHeight;
+
+			let isClueVisible = clueTop >= groupTop && clueBottom <= groupBottom;
+			if (!isClueVisible) {
+				clueGroup.scrollTo({
+					top: clueTop,
+					behavior: 'auto'
+				});
+			}
+		}
+	}
 </script>
 
 <div class="clues">
 	<div class="clues-title">
 		{clueTitle}
 	</div>
-	<div class="clues-groups">
+	<div class="clues-groups" bind:this={clueGroup}>
 		{#each clueSection as clueList, idx}
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->

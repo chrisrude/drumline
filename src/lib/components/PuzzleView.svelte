@@ -2,14 +2,16 @@
 	import ClueGrid from '$lib/components/ClueGrid.svelte';
 	import ClueList from '$lib/components/ClueList.svelte';
 	import { isPuzzleComplete } from '$lib/puzzle_store';
+	import { createEventDispatcher } from 'svelte';
 	import { Confetti } from 'svelte-confetti';
 
 	import type { Puzzle } from '$lib/puzzle';
 
 	export let puzzle: Puzzle;
-
 	export let highlightRow = -1;
 	export let highlightBand = -1;
+
+	const dispatch = createEventDispatcher();
 </script>
 
 {#if isPuzzleComplete(puzzle)}
@@ -38,7 +40,14 @@
 {/if}
 <div class="puzzle">
 	<div class="puzzle-grid">
-		<ClueGrid bind:highlightRow bind:highlightBand bind:puzzle />
+		<ClueGrid
+			bind:highlightRow
+			bind:highlightBand
+			bind:puzzle
+			on:deletePuzzle={() => {
+				dispatch('deletePuzzle');
+			}}
+		/>
 	</div>
 	<div class="clue-sets">
 		<div class="clue-set">

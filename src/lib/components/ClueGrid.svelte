@@ -16,6 +16,7 @@
 		nextEmptyCellInRow,
 		offsetWithinBand
 	} from '$lib/puzzle';
+	import { createEventDispatcher } from 'svelte';
 
 	export let puzzle: Puzzle;
 	export let size = puzzle.size;
@@ -26,6 +27,10 @@
 	export let currentClue: string = '';
 
 	export const center = Math.floor(size / 2);
+
+	let deleteDialog: HTMLDialogElement;
+	let deleteDialogButton: HTMLButtonElement;
+	const dispatch = createEventDispatcher();
 
 	$: highlightRow !== undefined && gotoRow();
 	$: highlightBand !== undefined && gotoBand();
@@ -219,11 +224,18 @@
 				event.preventDefault();
 				return;
 			case 'Escape':
+				if (deleteDialog !== undefined && deleteDialog.open) {
+					deleteDialog.close();
+					event.preventDefault();
+					return;
+				}
 				if (mouseDragging) {
 					clearDragging();
 					event.preventDefault();
 					return;
 				}
+				// nothing else special to do
+				return;
 			case ' ':
 				toggleSelection();
 				event.preventDefault();
@@ -423,6 +435,10 @@
 	};
 
 	export const onDragEnd = (event: MouseEvent) => {
+		// also close delete dialog if it's open
+		if (deleteDialog !== undefined && deleteDialog.open) {
+			deleteDialog.close();
+		}
 		if (!mouseDragging) {
 			return;
 		}
@@ -575,6 +591,19 @@
 			!canUngroupAnswer()}
 		title="Remove this answer [backspace]">⛝ unmark answer</button
 	>
+
+	<button
+		class="rightmost"
+		tabindex="-1"
+		on:click={() => deleteDialog.showModal()}
+		bind:this={deleteDialogButton}
+		title="Delete this puzzle">🗑️ delete puzzle</button
+	>
+	<dialog bind:this={deleteDialog} on:close={() => {deleteDialogButton.blur();}}>
+		<div class="deleteMessage">Delete puzzle now?</div>
+		<button on:click={() => dispatch('deletePuzzle')}>⚠️ delete puzzle immediately ⚠️</button>
+		<button on:click={() => deleteDialog.close()}>nevermind</button>
+	</dialog>
 </div>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -814,6 +843,7 @@
 		align-items: center;
 		max-height: 5vh;
 		margin-bottom: 0.5rem;
+		margin-top: 1rem;
 	}
 
 	.button-bar button {
@@ -822,5 +852,25 @@
 		text-overflow: ellipsis;
 		overflow: hidden;
 		white-space: nowrap;
+		border-radius: 4px;
+		border-color: var(--color-bg-2);
+		border-width: 1px;
+	}
+
+	.button-bar button.rightmost {
+		margin-left: auto;
+		right: 0;
+		margin-right: 0;
+	}
+
+	.button-bar button:hover:enabled {
+		background-color: var(--color-theme-1);
+		color: var(--color-bg-0);
+	}
+
+	.deleteMessage {
+		font-size: 1.5rem;
+		font-weight: 500;
+		margin-bottom: 1rem;
 	}
 </style>

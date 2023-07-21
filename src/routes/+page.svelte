@@ -33,8 +33,7 @@
 {#if !$loading}
 	{#if puzzle}
 		<div transition:blur={{ amount: '1vw' }} class="fly-holder">
-			<PuzzleView bind:puzzle />
-			<button class="clean-button" on:click={clean_puzzle}>⚠️ delete puzzle immediately ⚠️</button>
+			<PuzzleView bind:puzzle on:deletePuzzle={clean_puzzle} />
 		</div>
 	{:else}
 		<PuzzleEntry bind:puzzle />
@@ -45,8 +44,5 @@
 	.fly-holder {
 		display: flex;
 		flex-direction: column;
-	}
-	.clean-button {
-		margin-top: 40rem;
 	}
 </style>

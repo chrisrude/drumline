@@ -1,6 +1,15 @@
 export { addPuzzleWordBand, addPuzzleWordRow, clearPuzzleWordBand, clearPuzzleWordRow, createWordAtLocation, isInWord };
 export type { Band, Cell, Clue, Puzzle, Row };
 
+// shouldn't be more than 26, or we'll run out of letters
+const MAX_LENGTH = 26;
+// numbers 1-26, as strings
+export const ROW_IDENTIFIERS = Array.from({ length: MAX_LENGTH }, (_, i) => (i + 1).toString());
+// upper-case letters A-Z
+export const BAND_IDENTIFIERS = Array.from({ length: MAX_LENGTH }, (_, i) => String.fromCharCode(i + 65));
+// lower case a-z
+export const CLUE_IDENTIFIERS = BAND_IDENTIFIERS.map(letter => letter.toLowerCase());
+
 type Clue = {
     // a single letter, starting with 'a'
     identifier: string,

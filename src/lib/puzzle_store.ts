@@ -2,7 +2,7 @@ export { initialValue, isPuzzleComplete, loadPuzzle, storedPuzzle };
 
 import { browser } from '$app/environment';
 
-import type { Band, Cell, Clue, Puzzle, Row } from '$lib/puzzle';
+import { BAND_IDENTIFIERS, CLUE_IDENTIFIERS, ROW_IDENTIFIERS, type Band, type Cell, type Clue, type Puzzle, type Row } from '$lib/puzzle';
 import { writable } from 'svelte/store';
 
 const PUZZLE_STORE = 'drumline-puzzle';
@@ -22,14 +22,6 @@ storedPuzzle.subscribe((value) => {
 });
 
 
-// shouldn't be more than 26, or we'll run out of letters
-const MAX_LENGTH = 26;
-// numbers 1-26, as strings
-const ROW_IDENTIFIERS = Array.from({ length: MAX_LENGTH }, (_, i) => (i + 1).toString());
-// upper-case letters A-Z
-const BAND_IDENTIFIERS = Array.from({ length: MAX_LENGTH }, (_, i) => String.fromCharCode(i + 65));
-// lower case a-z
-const CLUE_IDENTIFIERS = BAND_IDENTIFIERS.map(letter => letter.toLowerCase());
 
 const ROWS_HEADER = "ROWS";
 const BANDS_HEADER = "BANDS";

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Puzzle } from '$lib/puzzle';
 	import {
+		BAND_IDENTIFIERS,
 		addPuzzleWordBand,
 		addPuzzleWordRow,
 		clearPuzzleWordBand,
@@ -559,8 +560,6 @@
 
 <svelte:window on:keydown={onKeyDown} on:mouseup={onDragEnd} />
 
-<!-- <div class="grid-current-clue">{currentClue}</div> -->
-
 <div class="button-bar">
 	<button
 		on:click={toggleSelection}
@@ -599,7 +598,12 @@
 		bind:this={deleteDialogButton}
 		title="Delete this puzzle">🗑️ delete puzzle</button
 	>
-	<dialog bind:this={deleteDialog} on:close={() => {deleteDialogButton.blur();}}>
+	<dialog
+		bind:this={deleteDialog}
+		on:close={() => {
+			deleteDialogButton.blur();
+		}}
+	>
 		<div class="deleteMessage">Delete puzzle now?</div>
 		<button on:click={() => dispatch('deletePuzzle')}>⚠️ delete puzzle immediately ⚠️</button>
 		<button on:click={() => deleteDialog.close()}>nevermind</button>
@@ -613,8 +617,15 @@
 	class:bandMode={highlightBand !== -1}
 	class:rowMode={highlightRow !== -1}
 >
+	<div class="row">
+		<div class="grid-current-clue">
+			<p>{currentClue}</p>
+		</div>
+	</div>
 	{#each { length: size } as _, i}
 		<div class="row">
+			<div class="row-number">{i + 1}</div>
+
 			{#each { length: size } as _, j}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -661,6 +672,11 @@
 						on:mousedown={(event) => onDragStart(event, i, j)}
 						on:mouseenter={(event) => onDragOver(event, i, j)}
 					>
+						{#if i === j && i < center}
+							<div class="band-letter">
+								{BAND_IDENTIFIERS[i]}
+							</div>
+						{/if}
 						{puzzle.grid[i][j].text}
 					</div>
 				{/if}
@@ -680,12 +696,31 @@
 		max-width: var(--width);
 		display: flex;
 		flex-direction: column;
-		box-shadow: var(--thin-left), var(--thin-bottom);
+		box-shadow: var(--thin-bottom);
 	}
 
 	.grid .row {
 		display: grid;
-		grid-template-columns: repeat(var(--puzzle-size), 1fr);
+		grid-template-columns: 2rem repeat(var(--puzzle-size), 1fr);
+	}
+
+	.grid .row-number {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		padding-right: 0.5rem;
+		font-size: calc(min(100vh / var(--puzzle-size), 33vw / (2 * var(--puzzle-size))));
+		color: rgba(0, 0, 0, 0.4);
+		box-shadow: var(--thin-right);
+	}
+
+	.band-letter {
+		position: absolute;
+		font-size: calc(min(100vh / var(--puzzle-size), 33vw / (2 * var(--puzzle-size))));
+		font-family: var(--font-body);
+		color: rgba(0, 0, 0, 0.4);
+		margin-top: -1.5em;
+		margin-left: -1.8em;
 	}
 
 	.grid .odd-band {
@@ -701,7 +736,6 @@
 	}
 
 	.letter {
-		/* border: solid 1px rgba(58, 58, 89, 0.2); */
 		box-shadow: var(--thin-top), var(--thin-right);
 		aspect-ratio: 1;
 		display: flex;
@@ -826,15 +860,39 @@
 	}
 
 	.grid-current-clue {
-		display: flex;
 		font-weight: 500;
-		margin-bottom: 0.5rem;
-		background-color: var(--color-bg-2);
-		padding: 0.5rem 1rem;
-		border-radius: 10px;
 		overflow: scroll;
-		max-height: 3rem;
-		min-height: 3rem;
+		display: flex;
+		box-sizing: border-box;
+
+		grid-column-start: 2;
+		grid-column-end: calc(var(--puzzle-size) + 2);
+		grid-row-start: 1;
+		grid-row-end: 2;
+
+		aspect-ratio: var(--puzzle-size);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		box-sizing: border-box;
+		font-family: var(--font-body);
+		margin-bottom: 0.5em;
+		color: rgba(0, 0, 0, 0.6);
+
+		background: linear-gradient(
+			to bottom,
+			rgba(255, 255, 255, 0.1) 0%,
+			rgba(255, 255, 255, 0.4) 40%,
+			rgba(255, 255, 255, 0.1) 100%
+		);
+		border-radius: 10px;
+		box-shadow: -2px -2px 20px 10px rgba(var(--color-theme-1-rgb), 0.1),
+			2px 2px 20px 10px rgba(var(--color-theme-2-rgb), 0.1);
+	}
+
+	.grid-current-clue p {
+		padding: 1rem;
 	}
 
 	.button-bar {
@@ -844,6 +902,7 @@
 		max-height: 5vh;
 		margin-bottom: 0.5rem;
 		margin-top: 1rem;
+		margin-left: 2rem;
 	}
 
 	.button-bar button {

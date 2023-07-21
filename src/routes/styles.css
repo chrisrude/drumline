@@ -4,7 +4,7 @@
     --font-header: var(--font-body);
     --color-bg-0: rgb(202, 216, 228);
     --color-bg-1: hsl(209, 36%, 86%);
-    --color-bg-2: hsl(224, 44%, 95%, 66%);
+    --color-bg-2: rgba(237, 240, 248, 0.66);
     --color-even-band: rgba(179, 176, 196, 0.8);
     --color-odd-band: rgba(255, 255, 255, 0.8);
     --color-theme-1: #ac2abd;

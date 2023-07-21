@@ -33,7 +33,7 @@ aaaaaa
 C a To aaaaaa aaaaaa aaaaaa
 aaaaaa a aaaaaa in aaaaaa’s
 aaaaaa aaaaaa: 2 wds.
-`
+`;
 
 const SECOND_TEST = `
 ROWS
@@ -160,24 +160,22 @@ F a aaaaaa aaaaaa’s aaaaaa
 aaaaaa: 3 wds.
 b aaaaaa aaaaaa out to aaaaaa
 G a aaaaaa aaaaaa, in
-aaaaaa: 2 wds.`
+aaaaaa: 2 wds.`;
 
 describe('puzzle input test', () => {
-    it('puzzle 37 loads correctly', () => {
+	it('puzzle 37 loads correctly', () => {
+		const puzzle = loadPuzzle(FIRST_TEST);
+		expect(puzzle).not.toBe(null);
+		// expect three bands and 7 rows
+		expect(puzzle.bands.length).toBe(3);
+		expect(puzzle.rows.length).toBe(7);
+	});
 
-        const puzzle = loadPuzzle(FIRST_TEST);
-        expect(puzzle).not.toBe(null);
-        // expect three bands and 7 rows
-        expect(puzzle.bands.length).toBe(3);
-        expect(puzzle.rows.length).toBe(7);
-    });
-
-    it('puzzle 66 loads correctly', () => {
-
-        const puzzle = loadPuzzle(SECOND_TEST);
-        expect(puzzle).not.toBe(null);
-        // expect three bands and 7 rows
-        expect(puzzle.bands.length).toBe(7);
-        expect(puzzle.rows.length).toBe(15);
-    });
+	it('puzzle 66 loads correctly', () => {
+		const puzzle = loadPuzzle(SECOND_TEST);
+		expect(puzzle).not.toBe(null);
+		// expect three bands and 7 rows
+		expect(puzzle.bands.length).toBe(7);
+		expect(puzzle.rows.length).toBe(15);
+	});
 });

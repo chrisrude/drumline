@@ -1,71 +1,71 @@
 <script lang="ts">
-	import type { Puzzle } from '$lib/puzzle';
-	import { loadPuzzle, storedPuzzle } from '$lib/puzzle_store';
+    import type { Puzzle } from '$lib/puzzle';
+    import { loadPuzzle, storedPuzzle } from '$lib/puzzle_store';
 
-	/** @type {import('./$types').PageData} */
+    /** @type {import('./$types').PageData} */
 
-	export let puzzle: Puzzle | null;
+    export let puzzle: Puzzle | null;
 
-	export let inputText = '';
-	export let parseError = '';
-	export let tentativePuzzle: Puzzle | null = null;
+    export let inputText = '';
+    export let parseError = '';
+    export let tentativePuzzle: Puzzle | null = null;
 
-	const parse_puzzle = () => {
-		try {
-			puzzle = loadPuzzle(inputText);
-			storedPuzzle.set(puzzle);
-			parseError = '';
-		} catch (error) {
-			if (error instanceof Error) {
-				parseError = error.message;
-			}
-		}
-	};
+    const parse_puzzle = () => {
+        try {
+            puzzle = loadPuzzle(inputText);
+            storedPuzzle.set(puzzle);
+            parseError = '';
+        } catch (error) {
+            if (error instanceof Error) {
+                parseError = error.message;
+            }
+        }
+    };
 
-	$: {
-		if (puzzle) {
-			storedPuzzle.set(puzzle);
-		}
-	}
+    $: {
+        if (puzzle) {
+            storedPuzzle.set(puzzle);
+        }
+    }
 
-	$: {
-		if (inputText) {
-			try {
-				tentativePuzzle = loadPuzzle(inputText);
-				parseError = '';
-			} catch (error) {
-				tentativePuzzle = null;
-				if (error instanceof Error) {
-					parseError = error.message;
-				}
-			}
-		} else {
-			tentativePuzzle = null;
-			parseError = '';
-		}
-	}
+    $: {
+        if (inputText) {
+            try {
+                tentativePuzzle = loadPuzzle(inputText);
+                parseError = '';
+            } catch (error) {
+                tentativePuzzle = null;
+                if (error instanceof Error) {
+                    parseError = error.message;
+                }
+            }
+        } else {
+            tentativePuzzle = null;
+            parseError = '';
+        }
+    }
 </script>
 
 <div class="puzzle-entry">
-	<h1>Solve Marching Band Crossword Puzzles</h1>
-	<div class="puzzle-entry-cols">
-		<div class="puzzle-entry-col-1">
-			<div class="puzzle-entry-instructions">
-				<h2>Paste your puzzle below</h2>
-			</div>
+    <h1>Solve Marching Band Crossword Puzzles</h1>
+    <div class="puzzle-entry-cols">
+        <div class="puzzle-entry-col-1">
+            <div class="puzzle-entry-instructions">
+                <h2>Paste your puzzle below</h2>
+            </div>
 
-			<div class="puzzle-entry-input">
-				<textarea bind:value={inputText} rows="20" />
-				<button on:click={parse_puzzle} disabled={tentativePuzzle === null}
-					>🥁🥁🥁 let's play 🥁🥁🥁</button
-				>
-			</div>
-		</div>
+            <div class="puzzle-entry-input">
+                <textarea bind:value={inputText} rows="20" />
+                <button on:click={parse_puzzle} disabled={tentativePuzzle === null}
+                    >🥁🥁🥁 let's play 🥁🥁🥁</button
+                >
+            </div>
+        </div>
 
-		<div class="puzzle-entry-col-2">
-			<h2>Expected input</h2>
+        <div class="puzzle-entry-col-2">
+            <h2>Expected input</h2>
 
-			<pre>
+            <pre>
 ROWS
 1 a first row clue
 b second row clue
@@ -85,88 +85,88 @@ rows.  Instead this clue is just
 very long.
 </pre>
 
-			{#if parseError}
-				<div class="puzzle-entry-errors">
-					<h3>Could not read puzzle</h3>
-					<p>{parseError}</p>
-				</div>
-			{/if}
-		</div>
-	</div>
-	<div class="puzzle-about">
-		<a href="https://www.nytimes.com/2023/06/22/crosswords/variety-marching-bands.html">
-			ℹ️ What are marching band crosswords?
-		</a>
-	</div>
+            {#if parseError}
+                <div class="puzzle-entry-errors">
+                    <h3>Could not read puzzle</h3>
+                    <p>{parseError}</p>
+                </div>
+            {/if}
+        </div>
+    </div>
+    <div class="puzzle-about">
+        <a href="https://www.nytimes.com/2023/06/22/crosswords/variety-marching-bands.html">
+            ℹ️ What are marching band crosswords?
+        </a>
+    </div>
 </div>
 
 <style>
-	.puzzle-entry {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: space-between;
-	}
-	.puzzle-entry-cols {
-		display: flex;
-		flex-direction: row;
-	}
-	.puzzle-entry-cols h2 {
-		font-size: 1.5rem;
-	}
-	.puzzle-entry-col-1 {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		flex: 1 1 0px;
-		flex-basis: 0;
-	}
-	.puzzle-entry-col-2 {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		margin-left: 2rem;
-		flex: 1 1 0px;
-		flex-basis: 0;
-	}
-	.puzzle-entry-col-2 pre {
-		margin-top: 0;
-	}
-	.puzzle-entry-input {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
-	.puzzle-entry-input textarea {
-		width: 100%;
-		margin-bottom: 1rem;
-		font-family: var(--font-mono);
-		font-size: 1.2rem;
-	}
-	.puzzle-entry-input button {
-		font-size: 1.5rem;
-		padding: 1em;
-		border-radius: 3em;
-	}
-	.puzzle-entry-input button:hover:enabled {
-		background-color: var(--color-theme-1);
-		color: var(--color-bg-0);
-	}
-	.puzzle-entry-errors {
-		margin-top: 1rem;
-		background-color: rgba(var(--color-theme-1-rgb), 0.1);
-		border-radius: 1rem;
-		padding: 1rem;
-	}
-	.puzzle-entry-errors h3 {
-		margin-top: 0;
-	}
-	.puzzle-about {
-		margin-top: 3rem;
-		padding: 1em;
-	}
-	.puzzle-about a {
-		color: unset;
-	}
+    .puzzle-entry {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .puzzle-entry-cols {
+        display: flex;
+        flex-direction: row;
+    }
+    .puzzle-entry-cols h2 {
+        font-size: 1.5rem;
+    }
+    .puzzle-entry-col-1 {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        flex: 1 1 0px;
+        flex-basis: 0;
+    }
+    .puzzle-entry-col-2 {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-left: 2rem;
+        flex: 1 1 0px;
+        flex-basis: 0;
+    }
+    .puzzle-entry-col-2 pre {
+        margin-top: 0;
+    }
+    .puzzle-entry-input {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .puzzle-entry-input textarea {
+        width: 100%;
+        margin-bottom: 1rem;
+        font-family: var(--font-mono);
+        font-size: 1.2rem;
+    }
+    .puzzle-entry-input button {
+        font-size: 1.5rem;
+        padding: 1em;
+        border-radius: 3em;
+    }
+    .puzzle-entry-input button:hover:enabled {
+        background-color: var(--color-theme-1);
+        color: var(--color-bg-0);
+    }
+    .puzzle-entry-errors {
+        margin-top: 1rem;
+        background-color: rgba(var(--color-theme-1-rgb), 0.1);
+        border-radius: 1rem;
+        padding: 1rem;
+    }
+    .puzzle-entry-errors h3 {
+        margin-top: 0;
+    }
+    .puzzle-about {
+        margin-top: 3rem;
+        padding: 1em;
+    }
+    .puzzle-about a {
+        color: unset;
+    }
 </style>

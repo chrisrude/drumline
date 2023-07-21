@@ -422,7 +422,7 @@
 		return false;
 	};
 
-	export const onDragEnd = (event: MouseEvent, i: number, j: number) => {
+	export const onDragEnd = (event: MouseEvent) => {
 		if (!mouseDragging) {
 			return;
 		}
@@ -541,7 +541,7 @@
 	};
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} on:mouseup={onDragEnd} />
 
 <!-- <div class="grid-current-clue">{currentClue}</div> -->
 
@@ -631,7 +631,6 @@
 						on:click={() => highlight(i, j, true)}
 						on:mousedown={(event) => onDragStart(event, i, j)}
 						on:mouseenter={(event) => onDragOver(event, i, j)}
-						on:mouseup={(event) => onDragEnd(event, i, j)}
 					>
 						{puzzle.grid[i][j].text}
 					</div>

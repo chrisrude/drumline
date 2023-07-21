@@ -6,6 +6,7 @@ import {
     BAND_IDENTIFIERS,
     CLUE_IDENTIFIERS,
     ROW_IDENTIFIERS,
+    initBand,
     type Band,
     type Cell,
     type Clue,
@@ -125,9 +126,10 @@ function read_into_rows_and_bands(lines: string[]): [Row[], Band[]] {
 
     const row_clues = read_nested_clues(row_clue_lines, ROW_IDENTIFIERS);
     const band_clues = read_nested_clues(band_clue_lines, BAND_IDENTIFIERS);
+
     return [
         row_clues.map((clues) => ({ clues, words: [] })),
-        band_clues.map((clues) => ({ clues, words: [], start_offset: 0 }))
+        band_clues.map((clues, idx) => (initBand(row_clues.length, idx, clues))),
     ];
 }
 

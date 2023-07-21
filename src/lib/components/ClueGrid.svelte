@@ -54,7 +54,7 @@
 		if (selectedBand === highlightBand) {
 			return;
 		}
-		[selectedRow, selectedCol] = firstEmptyBandCell(puzzle, selectedBand);
+		[selectedRow, selectedCol] = firstEmptyBandCell(puzzle, highlightBand);
 	};
 
 	// update current clue
@@ -304,12 +304,6 @@
 		}
 		selectedRow = i;
 		selectedCol = j;
-	};
-
-	export const clearHighlight = () => {
-		highlightRow = -1;
-		highlightBand = -1;
-		clearDragging();
 	};
 
 	function clearDragging() {
@@ -599,7 +593,7 @@
 					<div
 						class="letter center-cell"
 						class:selected={selectedRow === i && selectedCol === j}
-						on:click={clearHighlight}
+						on:click={toggleSelection}
 					/>
 				{:else}
 					<div

@@ -98,33 +98,31 @@ export const nextEmptyCellInRow = (puzzle: Puzzle, i: number, j: number, backwar
     const center = Math.floor(puzzle.size / 2);
 
     while (!fnDone(newCol)) {
-        newCol = newCol + step;
-        if (newCol === center && i === center) {
-            continue;
-        }
-        if (puzzle.grid[i][newCol].text === ' ') {
+        if (puzzle.grid[i][newCol].text === ' ' && !(newCol === center && i === center)) {
             return [i, newCol];
         }
+        newCol = newCol + step;
     }
 
     // no empty cells in the row, so go to the first cell
     return [i, j];
 }
 
-// go to next empty cell in band, or stay at current cell if there is no next empty cell
+// go to next empty cell in band, or stay at current cell if this one
+// is empty, or there is no next empty cell
 export const nextEmptyCellInBand = (puzzle: Puzzle, i: number, j: number, backwards: boolean): [number, number] => {
     let newIdx = offsetWithinBand(i, j, puzzle.size);
     const bandCoords = getBandCoords(puzzle.size, getBandNumberFromCoords(i, j, puzzle.size));
     const step = backwards ? -1 : 1;
 
     while (true) {
-        newIdx = (newIdx + bandCoords.length + step) % bandCoords.length;
-        if (bandCoords[newIdx][0] === i && bandCoords[newIdx][1] === j) {
-            break;
-        }
         const [newRow, newCol] = bandCoords[newIdx];
         if (puzzle.grid[newRow][newCol].text === ' ') {
             return [newRow, newCol];
+        }
+        newIdx = (newIdx + bandCoords.length + step) % bandCoords.length;
+        if (bandCoords[newIdx][0] === i && bandCoords[newIdx][1] === j) {
+            break;
         }
     }
 

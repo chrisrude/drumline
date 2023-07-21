@@ -143,6 +143,16 @@
 		mouseDragging = false;
 	};
 
+	export const canUngroupAnswer = () => {
+		if (selectedRow === -1 || selectedCol === -1) {
+			return false;
+		}
+		if (selectedRow === center && selectedCol === center) {
+			return false;
+		}
+		return isInWord(puzzle, selectedRow, selectedCol, isUsingBand());
+	};
+
 	export const nextEmptyCell = (backwards: boolean) => {
 		if (isUsingBand()) {
 			return nextEmptyCellInBand(puzzle, selectedRow, selectedCol, backwards);
@@ -545,12 +555,13 @@
 	<button
 		on:click={toggleSelection}
 		title="Switch to row mode [space]"
-		disabled={selectedRow === -1 || selectedCol === -1 || highlightRow !== -1}>𐃘</button
+		disabled={selectedRow === -1 || selectedCol === -1 || highlightRow !== -1}>➡️ select row</button
 	>
 	<button
 		on:click={toggleSelection}
 		title="Switch to band mode [space]"
-		disabled={selectedRow === -1 || selectedCol === -1 || highlightBand !== -1}>⤵</button
+		disabled={selectedRow === -1 || selectedCol === -1 || highlightBand !== -1}
+		>↩️ select band</button
 	>
 
 	<button
@@ -559,7 +570,16 @@
 			selectedCol === -1 ||
 			(mouseDragging && !mouseDragging) ||
 			!canGroupIntoAnswer()}
-		title="Group these letters into answer [period]">⛶</button
+		title="Group these letters into answer [period]">⛶ mark as answer</button
+	>
+
+	<button
+		on:click={() => clearWordAtSelection()}
+		disabled={selectedRow === -1 ||
+			selectedCol === -1 ||
+			(mouseDragging && !mouseDragging) ||
+			!canUngroupAnswer()}
+		title="Remove this answer [backspace]">⛝ unmark answer</button
 	>
 </div>
 
@@ -799,5 +819,9 @@
 		justify-content: flex-end;
 		align-items: center;
 		margin-bottom: 1rem;
+	}
+
+	.button-bar button {
+		margin-left: 0.5rem;
 	}
 </style>

@@ -72,21 +72,21 @@ export const getBandNumberFromCoords = (i: number, j: number, size: number) => {
 
 export const nextCellInRow = (size: number, i: number, j: number, backwards: boolean): [number, number] => {
     let newCol = j;
-    if (backwards) {
-        if (j > 0) {
-            newCol = newCol - 1;
+
+    const step = backwards ? -1 : 1;
+    const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= size - 1;
+    const center = Math.floor(size / 2);
+
+    while (!fnDone(newCol)) {
+        newCol = newCol + step;
+        if (newCol === center && i === center) {
+            continue;
         }
-    } else {
-        const center = Math.floor(size / 2);
-        if (j < size - 1) {
-            newCol = newCol + 1;
-            // don't stop on center cell
-            if (newCol === center && i === center) {
-                newCol = newCol + 1;
-            }
-        }
+        return [i, newCol];
     }
-    return [i, newCol];
+
+    // no empty cells in the row, so go to the first cell
+    return [i, j];
 }
 
 // go to next empty cell in row, or stay at current cell if there is no next empty cell
@@ -95,9 +95,13 @@ export const nextEmptyCellInRow = (puzzle: Puzzle, i: number, j: number, backwar
 
     const step = backwards ? -1 : 1;
     const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= puzzle.size - 1;
+    const center = Math.floor(puzzle.size / 2);
 
     while (!fnDone(newCol)) {
         newCol = newCol + step;
+        if (newCol === center && i === center) {
+            continue;
+        }
         if (puzzle.grid[i][newCol].text === ' ') {
             return [i, newCol];
         }

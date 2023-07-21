@@ -45,8 +45,8 @@ function read_nested_clues(
     raw_lines: string[],
     group_identifiers_orig: readonly string[]
 ): Clue[][] {
-    let groups: Clue[][] = [];
-    let group_identifiers = [...group_identifiers_orig];
+    const groups: Clue[][] = [];
+    const group_identifiers = [...group_identifiers_orig];
     let next_group_identifier = group_identifiers.shift();
 
     for (const line of raw_lines) {
@@ -67,8 +67,8 @@ function read_nested_clues(
             continue;
         }
 
-        let current_group = groups[groups.length - 1];
-        let clue_letter = CLUE_IDENTIFIERS[current_group.length];
+        const current_group = groups[groups.length - 1];
+        const clue_letter = CLUE_IDENTIFIERS[current_group.length];
         if (letter === clue_letter) {
             // we are starting a new clue, and clue_text is the clue text
             current_group.push({
@@ -93,8 +93,8 @@ function read_into_rows_and_bands(lines: string[]): [Row[], Band[]] {
     // takes a list of lines, and returns a list of lists of lines
     // a line becomes part of a new group when it starts with the next expected identifier
 
-    let row_clue_lines: string[] = [];
-    let band_clue_lines: string[] = [];
+    const row_clue_lines: string[] = [];
+    const band_clue_lines: string[] = [];
     let found_rows = false;
     let found_bands = false;
     let current_group = null;
@@ -123,8 +123,8 @@ function read_into_rows_and_bands(lines: string[]): [Row[], Band[]] {
         current_group.push(line);
     }
 
-    let row_clues = read_nested_clues(row_clue_lines, ROW_IDENTIFIERS);
-    let band_clues = read_nested_clues(band_clue_lines, BAND_IDENTIFIERS);
+    const row_clues = read_nested_clues(row_clue_lines, ROW_IDENTIFIERS);
+    const band_clues = read_nested_clues(band_clue_lines, BAND_IDENTIFIERS);
     return [
         row_clues.map((clues) => ({ clues, words: [] })),
         band_clues.map((clues) => ({ clues, words: [], start_offset: 0 }))
@@ -182,7 +182,7 @@ function loadPuzzle(input_text: string): Puzzle {
         }
     }
     const size = rows.length;
-    let grid: Cell[][] = [];
+    const grid: Cell[][] = [];
     for (let i = 0; i < size; i++) {
         grid[i] = [];
         for (let j = 0; j < size; j++) {

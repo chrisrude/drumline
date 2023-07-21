@@ -7,7 +7,16 @@ module.exports = {
         'plugin:svelte/recommended',
         'prettier'
     ],
-    plugins: ['@typescript-eslint'],
+    overrides: [
+        {
+            files: ['*.svelte'],
+            parser: 'svelte-eslint-parser',
+            parserOptions: {
+                parser: '@typescript-eslint/parser'
+            }
+        }
+    ],
+    plugins: ['@typescript-eslint', 'svelte'],
     parserOptions: {
         sourceType: 'module',
         ecmaVersion: 2020,

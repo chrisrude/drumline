@@ -146,7 +146,9 @@ export const nextEmptyCellInBand = (
     const bandCoords = getBandCoords(puzzle.size, getBandNumberFromCoords(i, j, puzzle.size));
     const step = backwards ? -1 : 1;
 
-    while (true) {
+    // loop up to puzzle.size^2 times.  This shouldn't be necessary
+    // but good to have a termination condition
+    for (let k = 0; k < puzzle.size * puzzle.size; k++) {
         const [newRow, newCol] = bandCoords[newIdx];
         if (puzzle.grid[newRow][newCol].text === ' ') {
             return [newRow, newCol];
@@ -177,7 +179,7 @@ export const nextCellInBand = (size: number, i: number, j: number, backwards: bo
     // if in max column, look down and left
     // if in min row, look right and down
     // if in max row, look left and up
-    let directions: number[][] = [];
+    const directions: number[][] = [];
     if (i === bandNumber) {
         directions.push(RIGHT);
     }
@@ -205,7 +207,7 @@ export const nextCellInBand = (size: number, i: number, j: number, backwards: bo
 };
 
 export const getBandCoords = (size: number, bandIdx: number): [number, number][] => {
-    let coords: [number, number][] = [];
+    const coords: [number, number][] = [];
     for (let i = bandIdx; i < size - bandIdx; i++) {
         coords.push([bandIdx, i]);
     }
@@ -255,7 +257,7 @@ export const isClueDone = (puzzle: Puzzle, isBand: boolean, clueIdx: number): bo
         }
         return true;
     }
-    let row: number = clueIdx;
+    const row: number = clueIdx;
     const middle = Math.floor(puzzle.size / 2);
     // check to see if all the squares in this row are filled in
     for (let i = 0; i < puzzle.size; i++) {

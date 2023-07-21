@@ -74,7 +74,7 @@
 		width: 50vw;
 		display: flex;
 		flex-direction: column;
-		align-self: flex-end;
+		align-self: flex-start;
 	}
 	.clue-sets {
 		display: flex;

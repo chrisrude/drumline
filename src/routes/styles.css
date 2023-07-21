@@ -26,6 +26,7 @@
     --thin-right: -1px 0 var(--word-border-color) inset;
     font-family: var(--font-body);
     color: var(--color-text);
+    overflow-y: hidden;
 }
 
 body {
@@ -39,6 +40,7 @@ body {
             rgba(255, 255, 255, 0) 100%),
         linear-gradient(180deg, var(--color-bg-0) 0%, var(--color-bg-1) 15%, var(--color-bg-2) 50%);
     /* more color ideas https://colorpalettes.io/80s-synthwave-color-palette/ */
+    overflow-y: hidden;
 }
 
 h1,

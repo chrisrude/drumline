@@ -8,7 +8,7 @@
 	export let useLetters: boolean = false;
 	export let highlightIdx: number = -1;
 	export let puzzle: Puzzle;
-	export let clueGroup: HTMLDivElement;
+	let clueGroup: HTMLDivElement;
 
 	const gotoClue = (idx: number) => {
 		if (useLetters) {

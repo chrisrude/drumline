@@ -651,6 +651,7 @@
 		max-width: var(--width);
 		display: flex;
 		flex-direction: column;
+		box-shadow: var(--thin-left), var(--thin-bottom);
 	}
 
 	.grid .row {
@@ -809,12 +810,17 @@
 
 	.button-bar {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: flex-start;
 		align-items: center;
-		margin-bottom: 1rem;
+		max-height: 5vh;
+		margin-bottom: 0.5rem;
 	}
 
 	.button-bar button {
-		margin-left: 0.5rem;
+		max-height: 5vh;
+		margin-right: 0.5rem;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		white-space: nowrap;
 	}
 </style>

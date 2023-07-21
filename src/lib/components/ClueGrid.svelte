@@ -709,18 +709,20 @@
 		align-items: center;
 		justify-content: flex-end;
 		padding-right: 0.5rem;
-		font-size: calc(min(100vh / var(--puzzle-size), 33vw / (2 * var(--puzzle-size))));
+		font-size: calc(0.75 * min(50vw / var(--puzzle-size), 90vh / (2 * var(--puzzle-size))));
 		color: rgba(0, 0, 0, 0.4);
 		box-shadow: var(--thin-right);
 	}
 
 	.band-letter {
+		--offset: calc(min(50vw / var(--puzzle-size), 90vh / (2 * var(--puzzle-size))));
+
 		position: absolute;
-		font-size: calc(min(100vh / var(--puzzle-size), 33vw / (2 * var(--puzzle-size))));
+		font-size: calc(0.75 * min(50vw / var(--puzzle-size), 90vh / (2 * var(--puzzle-size))));
 		font-family: var(--font-body);
 		color: rgba(0, 0, 0, 0.4);
-		margin-top: -1.5em;
-		margin-left: -1.8em;
+		margin-top: var(--offset);
+		margin-left: var(--offset);
 	}
 
 	.grid .odd-band {

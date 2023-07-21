@@ -696,7 +696,6 @@
 		max-width: var(--width);
 		display: flex;
 		flex-direction: column;
-		box-shadow: var(--thin-bottom);
 	}
 
 	.grid .row {
@@ -709,16 +708,16 @@
 		align-items: center;
 		justify-content: flex-end;
 		padding-right: 0.5rem;
-		font-size: calc(0.75 * min(50vw / var(--puzzle-size), 90vh / (2 * var(--puzzle-size))));
+		font-size: calc(0.75 * min(50vw / (var(--puzzle-size) * 2), 90vh / (2 * var(--puzzle-size))));
 		color: rgba(0, 0, 0, 0.4);
 		box-shadow: var(--thin-right);
 	}
 
 	.band-letter {
-		--offset: calc(min(50vw / var(--puzzle-size), 90vh / (2 * var(--puzzle-size))));
+		--offset: calc(min(50vw / (2 * var(--puzzle-size)), 90vh / (2 * var(--puzzle-size))));
 
 		position: absolute;
-		font-size: calc(0.75 * min(50vw / var(--puzzle-size), 90vh / (2 * var(--puzzle-size))));
+		font-size: calc(0.75 * min(50vw / (2 * var(--puzzle-size)), 90vh / (2 * var(--puzzle-size))));
 		font-family: var(--font-body);
 		color: rgba(0, 0, 0, 0.4);
 		margin-top: var(--offset);

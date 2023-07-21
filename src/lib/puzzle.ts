@@ -74,7 +74,7 @@ export const nextCellInRow = (size: number, i: number, j: number, backwards: boo
     let newCol = j;
 
     const step = backwards ? -1 : 1;
-    const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= size - 1;
+    const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= size;
     const center = Math.floor(size / 2);
 
     while (!fnDone(newCol)) {
@@ -94,7 +94,7 @@ export const nextEmptyCellInRow = (puzzle: Puzzle, i: number, j: number, backwar
     let newCol = j;
 
     const step = backwards ? -1 : 1;
-    const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= puzzle.size - 1;
+    const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= puzzle.size;
     const center = Math.floor(puzzle.size / 2);
 
     while (!fnDone(newCol)) {

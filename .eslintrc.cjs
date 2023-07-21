@@ -1,12 +1,10 @@
 module.exports = {
     parser: '@typescript-eslint/parser',
     root: true,
-    extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:svelte/recommended',
-        'prettier'
-    ],
+    extends: ['plugin:@typescript-eslint/recommended', 'plugin:svelte/recommended', 'prettier'],
+    rules: {
+        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+    },
     overrides: [
         {
             files: ['*.svelte'],

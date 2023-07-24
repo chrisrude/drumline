@@ -129,7 +129,7 @@ function read_into_rows_and_bands(lines: string[]): [Row[], Band[]] {
 
     return [
         row_clues.map((clues) => ({ clues, words: [] })),
-        band_clues.map((clues, idx) => (initBand(row_clues.length, idx, clues))),
+        band_clues.map((clues, idx) => initBand(row_clues.length, idx, clues))
     ];
 }
 

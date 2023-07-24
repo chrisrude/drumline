@@ -3,7 +3,18 @@ export {
     addPuzzleWordRow,
     clearPuzzleWordBand,
     clearPuzzleWordRow,
-    createWordAtLocation, firstEmptyBandCell, firstEmptyRowCell, getBandCoords, getBandNumberFromCoords, initBand, isClueDone, isInWord, nextCellInRow, nextEmptyCellInBand, nextEmptyCellInRow, offsetWithinBand
+    createWordAtLocation,
+    firstEmptyBandCell,
+    firstEmptyRowCell,
+    getBandCoords,
+    getBandNumberFromCoords,
+    initBand,
+    isClueDone,
+    isInWord,
+    nextCellInRow,
+    nextEmptyCellInBand,
+    nextEmptyCellInRow,
+    offsetWithinBand
 };
 export type { Band, Cell, Clue, Puzzle, Row };
 
@@ -170,9 +181,9 @@ const initBand = (size: number, bandNumber: number, clues: Clue[]): Band => {
         clues,
         words: [],
         band_number: bandNumber,
-        coords,
+        coords
     };
-}
+};
 
 export const nextCellInBand = (size: number, i: number, j: number, backwards: boolean) => {
     const RIGHT = [0, 1];

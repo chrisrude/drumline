@@ -1,6 +1,8 @@
 <script lang="ts">
     import PuzzleEntry from '$lib/components/PuzzleEntry.svelte';
     import PuzzleView from '$lib/components/PuzzleView.svelte';
+    import type { GameState } from '$lib/game_state';
+    import { storedGameState } from '$lib/game_state_store';
     import { storedPuzzle } from '$lib/puzzle_store';
     import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
@@ -8,21 +10,29 @@
 
     export let data: import('./$types').PageData;
     export let puzzle = data.puzzle;
+    export let gameState: GameState | null = null;
     const loading = writable(true);
 
     onMount(async () => {
         loading.set(false);
     });
 
-    $: {
-        if (puzzle) {
-            storedPuzzle.set(puzzle);
+    storedGameState.subscribe((value) => {
+        gameState = value;
+    });
+
+    function saveGameState() {
+        if (gameState) {
+            storedGameState.set(gameState);
         }
     }
+    $: gameState !== null && saveGameState();
 
     const clean_puzzle = () => {
         puzzle = null;
         storedPuzzle.set(null);
+        gameState = null;
+        storedGameState.set(null);
     };
 </script>
 
@@ -31,12 +41,12 @@
 </svelte:head>
 
 {#if !$loading}
-    {#if puzzle}
+    {#if puzzle && gameState}
         <div transition:blur={{ amount: '1vw' }} class="fly-holder">
-            <PuzzleView bind:puzzle on:deletePuzzle={clean_puzzle} />
+            <PuzzleView bind:gameState on:deletePuzzle={clean_puzzle} />
         </div>
     {:else}
-        <PuzzleEntry bind:puzzle />
+        <PuzzleEntry bind:puzzle bind:gameState />
     {/if}
 {/if}
 

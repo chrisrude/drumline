@@ -1,33 +1,15 @@
 <script lang="ts">
-    import type { Puzzle } from '$lib/puzzle';
-    import {
-        BAND_IDENTIFIERS,
-        addPuzzleWordBand,
-        addPuzzleWordRow,
-        clearPuzzleWordBand,
-        clearPuzzleWordRow,
-        createWordAtLocation,
-        firstEmptyBandCell,
-        firstEmptyRowCell,
-        getBandNumberFromCoords,
-        isInWord,
-        nextCellInBand,
-        nextCellInRow,
-        nextEmptyCellInBand,
-        nextEmptyCellInRow,
-        offsetWithinBand
-    } from '$lib/puzzle';
+    import { BAND_IDENTIFIERS } from '$lib/clue_parser';
+    import { clear, clearSegment, markSegment, set } from '$lib/game_actions';
+    import type { GameState } from '$lib/game_state';
+    import { GridLocation } from '$lib/puzzle';
     import { createEventDispatcher } from 'svelte';
 
-    export let puzzle: Puzzle;
-    export let size = puzzle.size;
+    export let gameState: GameState;
     export let highlightRow: number = -1;
     export let highlightBand: number = -1;
-    export let selectedRow: number = -1;
-    export let selectedCol: number = -1;
+    export let cursorLocation: GridLocation = GridLocation.NONE;
     export let currentClue: string = '';
-
-    export const center = Math.floor(size / 2);
 
     let deleteDialog: HTMLDialogElement;
     let deleteDialogButton: HTMLButtonElement;
@@ -43,10 +25,11 @@
         highlightBand = -1;
         // if we're not in the highlighted row, go to the first
         // empty cell in the row.
-        if (selectedRow === highlightRow) {
+        if (cursorLocation.row === highlightRow) {
             return;
         }
-        [selectedRow, selectedCol] = firstEmptyRowCell(puzzle, highlightRow);
+        const row = gameState.puzzle.rows[highlightRow];
+        cursorLocation = gameState.firstEmptyCell(row);
     };
 
     const gotoBand = () => {
@@ -54,13 +37,15 @@
             return;
         }
         highlightRow = -1;
-        // if we're not in the band, go to the first
-        // empty cell in the band, clockwise
-        const selectedBand = getBandNumberFromCoords(selectedRow, selectedCol, size);
-        if (selectedBand === highlightBand) {
+        // if the cursor happens to be in the band already, leave it there
+        const cursorBand = gameState.puzzle.getBandNumberAtLocation(cursorLocation);
+        if (cursorBand === highlightBand) {
             return;
         }
-        [selectedRow, selectedCol] = firstEmptyBandCell(puzzle, highlightBand);
+        // if we're not in the band, move cursor to the first
+        // empty cell in the band
+        const band = gameState.puzzle.bands[highlightBand];
+        cursorLocation = gameState.firstEmptyCell(band);
     };
 
     // update current clue
@@ -69,24 +54,21 @@
     const updateCurrentClue = () => {
         clearDragging();
 
-        if (highlightRow === -1 && highlightBand === -1) {
+        if (
+            (highlightRow === -1 && highlightBand === -1) ||
+            highlightBand >= gameState.puzzle.bands.length
+        ) {
             currentClue = '';
             return;
         }
-        // todo: keep highlightBand from getting an invalid value instead?
-        if (highlightBand >= puzzle.bands.length) {
-            currentClue = '';
-            return;
-        }
-        const clues =
-            highlightRow === -1
-                ? puzzle.bands[highlightBand].clues
-                : puzzle.rows[highlightRow].clues;
+        const clues = isUsingBand()
+            ? gameState.puzzle.bands[highlightBand].clues
+            : gameState.puzzle.rows[highlightRow].clues;
         currentClue = clues.map((clue) => clue.text).join(' / ');
     };
 
     export const getCellClass = (i: number, j: number) => {
-        const bandNumber = getBandNumberFromCoords(i, j, size);
+        const bandNumber = gameState.puzzle.getBandNumberAt(i, j);
         return bandNumber % 2 === 0 ? 'even-band' : 'odd-band';
     };
 
@@ -94,95 +76,104 @@
         return highlightBand !== -1;
     }
 
-    export const nextCell = (backwards: boolean) => {
-        if (isUsingBand()) {
-            return nextCellInBand(puzzle.size, selectedRow, selectedCol, backwards);
+    export const nextCell = (backwards: boolean): GridLocation => {
+        const clueList = gameState.puzzle.getClueListAtLocation(cursorLocation, isUsingBand());
+        if (backwards) {
+            return clueList.prevCell(cursorLocation);
         } else {
-            return nextCellInRow(puzzle.size, selectedRow, selectedCol, backwards);
+            return clueList.nextCell(cursorLocation);
         }
     };
 
-    function findSquareToGroup(): [number, number] | null {
-        // are we using the current square?
-        let startRow,
-            startCol = -1;
-        if (
-            puzzle.grid[selectedRow][selectedCol].text === ' ' ||
-            isInWord(puzzle, selectedRow, selectedCol, isUsingBand())
-        ) {
-            // is the previous square in the row/band filled in?
-            [startRow, startCol] = nextCell(true);
-        } else {
-            startRow = selectedRow;
-            startCol = selectedCol;
-        }
-        if (startRow === -1 || startCol === -1) {
-            // nothing to do
+    function emptyOrInAnswer(location: GridLocation): boolean {
+        const answerSegments = gameState.getAnswerSegmentsAtLocation(location, isUsingBand());
+        return gameState.isEmpty(location) || answerSegments.in_answer_at_location(location)[0];
+    }
+
+    // returns the location of the square which can be added to an answer, after
+    // inspecting both the cursor's square and then the previous square.
+    // If neither square is valid, returns null.
+    // A square can be added to an answer if it has text in it, and is not already
+    // part of an answer.
+    function findSquareToGroup(): GridLocation | null {
+        if (cursorLocation.is_none()) {
             return null;
         }
-        if (puzzle.grid[startRow][startCol].text === ' ') {
+        const startLocation = emptyOrInAnswer(cursorLocation) ? nextCell(true) : cursorLocation;
+        if (emptyOrInAnswer(startLocation)) {
             return null;
         }
-        if (isInWord(puzzle, startRow, startCol, isUsingBand())) {
-            return null;
-        }
-        return [startRow, startCol];
+        return startLocation;
     }
 
     export const canGroupIntoAnswer = () => {
-        if (selectedRow === -1 || selectedCol === -1) {
+        if (cursorLocation.is_none()) {
             return false;
         }
-        if (selectedRow === center && selectedCol === center) {
+        if (
+            cursorLocation.row === gameState.center.row &&
+            cursorLocation.col === gameState.center.col
+        ) {
             return false;
         }
         return null != findSquareToGroup();
     };
 
+    function getBandNumberFromCursor() {
+        return gameState.puzzle.getBandNumberAtLocation(cursorLocation);
+    }
+
     export const groupIntoAnswer = () => {
-        const result = findSquareToGroup();
-        if (result === null) {
+        const groupNexus = findSquareToGroup();
+        if (groupNexus === null) {
             return;
         }
-        const [startRow, startCol] = result;
-        createWordAtLocation(puzzle, startRow, startCol, isUsingBand());
+        const answerSegments = gameState.getAnswerSegmentsAtLocation(cursorLocation, isUsingBand());
+        const [idxStart, idxEnd] = gameState.findWordBoundsAtLocation(groupNexus, answerSegments);
+
+        const action = markSegment(answerSegments.clue_list, idxStart, idxEnd);
+        gameState.apply(action);
+
         // do an assignment to trigger a re-render
         mouseDragging = true;
         mouseDragging = false;
+        gameState = gameState;
     };
 
     export const canUngroupAnswer = () => {
-        if (selectedRow === -1 || selectedCol === -1) {
+        if (cursorLocation.is_none()) {
             return false;
         }
-        if (selectedRow === center && selectedCol === center) {
+        if (
+            cursorLocation.row === gameState.center.row &&
+            cursorLocation.col === gameState.center.col
+        ) {
             return false;
         }
-        return isInWord(puzzle, selectedRow, selectedCol, isUsingBand());
+        const answerSegments = gameState.getAnswerSegmentsAtLocation(cursorLocation, isUsingBand());
+        return answerSegments.in_answer_at_location(cursorLocation)[0];
     };
 
     export const nextEmptyCell = (backwards: boolean) => {
-        if (isUsingBand()) {
-            return nextEmptyCellInBand(puzzle, selectedRow, selectedCol, backwards);
-        } else {
-            return nextEmptyCellInRow(puzzle, selectedRow, selectedCol, backwards);
+        if (backwards) {
+            return gameState.prevEmptyCell(cursorLocation, isUsingBand());
         }
+        return gameState.nextEmptyCell(cursorLocation, isUsingBand());
     };
 
-    function clearWordAtSelection(): boolean {
-        if (!isInWord(puzzle, selectedRow, selectedCol, isUsingBand())) {
+    function clearAnswerAtLocation(): boolean {
+        if (!canUngroupAnswer()) {
             return false;
         }
-        if (isUsingBand()) {
-            const band = getBandNumberFromCoords(selectedRow, selectedCol, size);
-            const bandIdx = offsetWithinBand(selectedRow, selectedCol, size);
-            clearPuzzleWordBand(puzzle, band, bandIdx);
-        } else {
-            clearPuzzleWordRow(puzzle, selectedRow, selectedCol);
-        }
+        const clueList = gameState.puzzle.getClueListAtLocation(cursorLocation, isUsingBand());
+        const index = clueList.indexAtLocation(cursorLocation);
+        const action = clearSegment(clueList, index);
+        gameState.apply(action);
+
         // do an assignment to trigger a re-render
         mouseDragging = true;
         mouseDragging = false;
+        gameState = gameState;
         return true;
     }
 
@@ -192,38 +183,37 @@
         if (event.altKey || event.ctrlKey || event.metaKey) {
             return;
         }
-        if (selectedRow === -1 || selectedCol === -1) {
-            return;
+        if (cursorLocation.is_none()) {
+            return false;
         }
         if (highlightBand === -1 && highlightRow === -1) {
             return;
         }
-        let newRow = selectedRow;
-        let newCol = selectedCol;
+        let newLocation = new GridLocation(cursorLocation.row, cursorLocation.col);
         switch (event.key) {
             case 'ArrowDown':
-                if (newRow < size - 1) {
-                    newRow = newRow + 1;
+                if (newLocation.row < gameState.puzzle.size - 1) {
+                    newLocation.row += 1;
                 }
                 break;
             case 'ArrowUp':
-                if (newRow > 0) {
-                    newRow = newRow - 1;
+                if (newLocation.row > 0) {
+                    newLocation.row -= 1;
                 }
                 break;
             case 'ArrowLeft':
-                if (newCol > 0) {
-                    newCol = newCol - 1;
+                if (newLocation.col > 0) {
+                    newLocation.col -= 1;
                 }
                 break;
             case 'ArrowRight':
-                if (newCol < size - 1) {
-                    newCol = newCol + 1;
+                if (newLocation.col < gameState.puzzle.size - 1) {
+                    newLocation.col += 1;
                 }
                 break;
             case 'Tab':
-                [newRow, newCol] = nextCell(event.shiftKey);
-                highlight(newRow, newCol);
+                newLocation = nextCell(event.shiftKey);
+                highlight(newLocation);
                 event.preventDefault();
                 return;
             case 'Escape':
@@ -253,20 +243,20 @@
             case 'Backspace':
                 // first, if our current square is in a word,
                 // clear the word and do nothing else
-                if (clearWordAtSelection()) {
+                if (clearAnswerAtLocation()) {
                     event.preventDefault();
                     return;
                 }
 
                 // check to see if we're in an empty square, if so
                 // move to the previous square
-                if (puzzle.grid[selectedRow][selectedCol].text === ' ') {
-                    [newRow, newCol] = nextCell(true);
-                    highlight(newRow, newCol);
+                if (!gameState.getCell(cursorLocation).is_filled()) {
+                    newLocation = nextCell(true);
+                    highlight(newLocation);
 
                     // again, check to see if this new square is in a word
                     // if so clear the word and do nothing else
-                    if (clearWordAtSelection()) {
+                    if (clearAnswerAtLocation()) {
                         event.preventDefault();
                         return;
                     }
@@ -274,36 +264,40 @@
 
                 // no word to clear, so just clear the character in the
                 // current square
-                puzzle.grid[selectedRow][selectedCol].text = ' ';
+                const action = clear(cursorLocation);
+                gameState.apply(action);
+                gameState = gameState;
                 event.preventDefault();
                 return;
             default:
                 if (event.key.length === 1) {
-                    puzzle.grid[selectedRow][selectedCol].text = event.key;
+                    const action = set(cursorLocation, event.key);
+                    gameState.apply(action);
+                    gameState = gameState;
                     event.preventDefault();
                     // move to next cell, either in the row or the band
-                    [newRow, newCol] = nextEmptyCell(false);
+                    newLocation = nextEmptyCell(false);
                 } else {
                     // don't stop default behavior
                     return;
                 }
         }
-        highlight(newRow, newCol);
+        highlight(newLocation);
         event.preventDefault();
     };
 
     function toggleSelection() {
         if (highlightRow !== -1) {
-            highlightBand = getBandNumberFromCoords(selectedRow, selectedCol, size);
+            highlightBand = getBandNumberFromCursor();
             highlightRow = -1;
         } else {
-            highlightRow = selectedRow;
+            highlightRow = cursorLocation.row;
             highlightBand = -1;
         }
     }
 
-    export const highlight = (i: number, j: number, from_click: boolean = false) => {
-        if (selectedRow === i && selectedCol === j) {
+    export const highlight = (newLocation: GridLocation, from_click: boolean = false) => {
+        if (cursorLocation == newLocation) {
             // do nothing
             if (from_click) {
                 toggleSelection();
@@ -313,22 +307,21 @@
         // if the last highlight was a row, keep that
         // otherwise, highlight the band
         if (highlightRow !== -1) {
-            highlightRow = i;
+            highlightRow = newLocation.row;
         } else {
-            highlightBand = getBandNumberFromCoords(i, j, size);
+            highlightBand = gameState.puzzle.getBandNumberAtLocation(newLocation);
         }
-        selectedRow = i;
-        selectedCol = j;
+        cursorLocation = newLocation;
     };
 
     function clearDragging() {
-        draggingStart = [-1, -1];
-        draggingEnd = [-1, -1];
+        draggingStart = GridLocation.NONE;
+        draggingEnd = GridLocation.NONE;
         mouseDragging = false;
     }
 
-    export let draggingStart: [number, number] = [-1, -1];
-    export let draggingEnd: [number, number] = [-1, -1];
+    export let draggingStart: GridLocation = GridLocation.NONE;
+    export let draggingEnd: GridLocation = GridLocation.NONE;
     export let mouseDragging = false;
 
     export const onDragStart = (event: MouseEvent, i: number, j: number) => {
@@ -339,26 +332,16 @@
             return;
         }
         mouseDragging = true;
-        draggingEnd = draggingStart = [i, j];
+        draggingEnd = draggingStart = new GridLocation(i, j);
         event.preventDefault();
     };
 
-    function orderByPath(
-        start: [number, number],
-        end: [number, number]
-    ): [[number, number], [number, number]] {
-        let options: [number, [number, number]][];
-        if (isUsingBand()) {
-            options = [
-                [offsetWithinBand(start[0], start[1], puzzle.size), start],
-                [offsetWithinBand(end[0], end[1], puzzle.size), end]
-            ];
-        } else {
-            options = [
-                [start[1], start],
-                [end[1], end]
-            ];
-        }
+    function orderByPath(start: GridLocation, end: GridLocation): [GridLocation, GridLocation] {
+        const clueList = gameState.puzzle.getClueListAtLocation(start, isUsingBand());
+        let options: [number, GridLocation][] = [
+            [clueList.indexAtLocation(start), start],
+            [clueList.indexAtLocation(end), end]
+        ];
         options.sort((a, b) => a[0] - b[0]);
         return [options[0][1], options[1][1]];
     }
@@ -367,10 +350,10 @@
         if (!isUsingBand()) {
             return -1;
         }
-        if (-1 === draggingStart[0] || -1 === draggingStart[1]) {
+        if (draggingStart.is_none()) {
             return -1;
         }
-        return getBandNumberFromCoords(draggingStart[0], draggingStart[1], size);
+        return gameState.puzzle.getBandNumberAtLocation(draggingStart);
     }
 
     export const onDragOver = (event: MouseEvent, i: number, j: number) => {
@@ -378,18 +361,18 @@
             return;
         }
         if (isUsingBand()) {
-            const band = getBandNumberFromCoords(i, j, size);
+            const band = gameState.puzzle.getBandNumberAt(i, j);
             if (band !== getDraggingBand()) {
                 // do nothing
                 return;
             }
         } else {
-            if (i !== draggingStart[0]) {
+            if (i !== draggingStart.row) {
                 // do nothing
                 return;
             }
         }
-        draggingEnd = [i, j];
+        draggingEnd = new GridLocation(i, j);
         event.preventDefault();
     };
 
@@ -398,24 +381,24 @@
             return false;
         }
         // if we don't have an end, we're not on the path
-        if (draggingEnd[0] === -1 && draggingEnd[1] === -1) {
+        if (draggingEnd.is_none()) {
             return false;
         }
         // if we haven't dragged anywhere, we're not on the path
-        if (draggingStart[0] == draggingEnd[0] && draggingStart[1] == draggingEnd[1]) {
+        if (draggingStart === draggingEnd) {
             return false;
         }
 
         if (isUsingBand()) {
-            const band = getBandNumberFromCoords(i, j, size);
-            if (band !== getDraggingBand()) {
+            const band = gameState.puzzle.getClueListAt(i, j, true);
+            if (band.index !== getDraggingBand()) {
                 // do nothing
                 return;
             }
             // is the cell on or between the start and end of the drag?
-            const bandStartIdx = offsetWithinBand(draggingStart[0], draggingStart[1], puzzle.size);
-            const bandEndIdx = offsetWithinBand(draggingEnd[0], draggingEnd[1], puzzle.size);
-            const cellIdx = offsetWithinBand(i, j, puzzle.size);
+            const bandStartIdx = band.indexAtLocation(draggingStart);
+            const bandEndIdx = band.indexAtLocation(draggingEnd);
+            const cellIdx = band.indexAt(i, j);
 
             const minIdx = Math.min(bandStartIdx, bandEndIdx);
             const maxIdx = Math.max(bandStartIdx, bandEndIdx);
@@ -425,12 +408,12 @@
             return false;
         }
         // row path
-        if (i !== draggingStart[0]) {
+        if (i !== draggingStart.row) {
             return false;
         }
 
-        const minCol = Math.min(draggingStart[1], draggingEnd[1]);
-        const maxCol = Math.max(draggingStart[1], draggingEnd[1]);
+        const minCol = Math.min(draggingStart.col, draggingEnd.col);
+        const maxCol = Math.max(draggingStart.col, draggingEnd.col);
         if (j >= minCol && j <= maxCol) {
             return true;
         }
@@ -449,91 +432,60 @@
         // sort the start and end
 
         // if we don't have an end, we're not on the path
-        if (draggingEnd[0] === -1 && draggingEnd[1] === -1) {
+        if (draggingEnd.is_none()) {
             return false;
         }
 
         // if we haven't dragged anywhere, we're not on the path
-        if (draggingStart[0] == draggingEnd[0] && draggingStart[1] == draggingEnd[1]) {
+        if (draggingStart === draggingEnd) {
             return false;
         }
 
         [draggingStart, draggingEnd] = orderByPath(draggingStart, draggingEnd);
 
-        if (isUsingBand()) {
-            const start_offset = offsetWithinBand(draggingStart[0], draggingStart[1], puzzle.size);
-            const end_offset = offsetWithinBand(draggingEnd[0], draggingEnd[1], puzzle.size);
-            const bandIdx = getBandNumberFromCoords(draggingStart[0], draggingStart[1], size);
-            addPuzzleWordBand(puzzle, bandIdx, start_offset, end_offset);
-        } else {
-            addPuzzleWordRow(puzzle, draggingStart[0], draggingStart[1], draggingEnd[1]);
-        }
+        const clueList = gameState.puzzle.getClueListAtLocation(draggingStart, isUsingBand());
 
-        // todo: why not save already?
-        puzzle = puzzle;
+        const action = markSegment(
+            clueList,
+            clueList.indexAtLocation(draggingStart),
+            clueList.indexAtLocation(draggingEnd)
+        );
+        gameState.apply(action);
+        gameState = gameState;
         event.preventDefault();
         clearDragging();
     };
 
-    export const isInRowWord = (i: number, j: number) => {
-        const words = puzzle.rows[i].words;
-        for (const word of words) {
-            if (word[0] <= j && word[1] >= j) {
-                return true;
-            }
-        }
-        return false;
+    export const isInRowWord = (i: number, j: number): boolean => {
+        const rowSegments = gameState.getAnswerSegmentsAt(i, j, false);
+        return rowSegments.in_answer_at(i, j)[0];
     };
 
     export const isInBandWord = (i: number, j: number) => {
-        const band = getBandNumberFromCoords(i, j, size);
-        const bandOffset = offsetWithinBand(i, j, size);
-        const words = puzzle.bands[band].words;
-        for (const word of words) {
-            if (word[0] <= bandOffset && word[1] >= bandOffset) {
-                return true;
-            }
-        }
-        return false;
+        const bandSegments = gameState.getAnswerSegmentsAt(i, j, true);
+        return bandSegments.in_answer_at(i, j)[0];
     };
 
-    function isRowWordTerminus(i: number, j: number, useStart: boolean): boolean {
-        const words = puzzle.rows[i].words;
-        for (const word of words) {
-            if (j === (useStart ? word[0] : word[1])) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function isBandWordTerminus(i: number, j: number, useStart: boolean): boolean {
-        const bandIdx = offsetWithinBand(i, j, size);
-        const band = getBandNumberFromCoords(i, j, size);
-        const words = puzzle.bands[band].words;
-        for (const word of words) {
-            if (bandIdx === (useStart ? word[0] : word[1])) {
-                return true;
-            }
-        }
-        return false;
-    }
     export const isRowWordStart = (i: number, j: number) => {
-        return isRowWordTerminus(i, j, true);
+        const rowSegments = gameState.getAnswerSegmentsAt(i, j, false);
+        return rowSegments.in_answer_at(i, j)[1];
     };
     export const isRowWordEnd = (i: number, j: number) => {
-        return isRowWordTerminus(i, j, false);
+        const rowSegments = gameState.getAnswerSegmentsAt(i, j, false);
+        return rowSegments.in_answer_at(i, j)[2];
     };
     export const isBandWordStart = (i: number, j: number) => {
-        return isBandWordTerminus(i, j, true);
+        const bandSegments = gameState.getAnswerSegmentsAt(i, j, true);
+        return bandSegments.in_answer_at(i, j)[1];
     };
     export const isBandWordEnd = (i: number, j: number) => {
-        return isBandWordTerminus(i, j, false);
+        const bandSegments = gameState.getAnswerSegmentsAt(i, j, true);
+        return bandSegments.in_answer_at(i, j)[2];
     };
 
     function bandSide(i: number, j: number) {
-        const band = getBandNumberFromCoords(i, j, size);
-        const backSide = size - 1 - band;
+        const band = gameState.puzzle.getBandNumberAt(i, j);
+        const backSide = gameState.puzzle.size - 1 - band;
         if (i === band && j !== backSide) {
             return [1, j === band];
         }
@@ -546,7 +498,7 @@
         if (j === band) {
             return [4, i === backSide];
         }
-        throw new Error('bandSide called on non-band cell');
+        throw new Error('bandSide called on non-band cell: ' + i + ', ' + j);
     }
 
     export const isBandCorner = (i: number, j: number, corner: number) => {
@@ -565,7 +517,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="grid"
-    style="--puzzle-size: {size}"
+    style="--puzzle-size: {gameState.puzzle.size}"
     class:bandMode={highlightBand !== -1}
     class:rowMode={highlightRow !== -1}
 >
@@ -573,29 +525,25 @@
         <button
             on:click={toggleSelection}
             title="Switch to row mode [space]"
-            disabled={selectedRow === -1 || selectedCol === -1 || highlightRow !== -1}
-            >➡️ select row</button
+            disabled={cursorLocation.is_none() || highlightRow !== -1}>➡️ select row</button
         >
         <button
             on:click={toggleSelection}
             title="Switch to band mode [space]"
-            disabled={selectedRow === -1 || selectedCol === -1 || highlightBand !== -1}
-            >↩️ select band</button
+            disabled={cursorLocation.is_none() || highlightBand !== -1}>↩️ select band</button
         >
 
         <button
             on:click={groupIntoAnswer}
-            disabled={selectedRow === -1 ||
-                selectedCol === -1 ||
+            disabled={cursorLocation.is_none() ||
                 (mouseDragging && !mouseDragging) ||
                 !canGroupIntoAnswer()}
             title="Group these letters into answer [period]">⛶ mark as answer</button
         >
 
         <button
-            on:click={() => clearWordAtSelection()}
-            disabled={selectedRow === -1 ||
-                selectedCol === -1 ||
+            on:click={() => clearAnswerAtLocation()}
+            disabled={cursorLocation.is_none() ||
                 (mouseDragging && !mouseDragging) ||
                 !canUngroupAnswer()}
             title="Remove this answer [backspace]">⛝ unmark answer</button
@@ -627,25 +575,26 @@
             <p>{currentClue}</p>
         </div>
     </div>
-    {#each { length: size } as _, i}
+    {#each { length: gameState.puzzle.size } as _, i}
         <div class="row">
             <div class="row-number">{i + 1}</div>
 
-            {#each { length: size } as _, j}
+            {#each { length: gameState.puzzle.size } as _, j}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                {#if i === center && j === center}
+                {#if gameState.center.row === i && gameState.center.col === j}
                     <div
                         class="letter center-cell"
-                        class:selected={selectedRow === i && selectedCol === j}
+                        class:selected={cursorLocation.row === i && cursorLocation.col === j}
                         on:click={toggleSelection}
                     />
                 {:else}
                     <div
                         class="letter {getCellClass(i, j)}"
-                        class:selected={selectedRow === i && selectedCol === j}
+                        class:selected={cursorLocation.row === i && cursorLocation.col === j}
                         class:highlightRow={highlightRow === i}
-                        class:highlightBand={highlightBand === getBandNumberFromCoords(i, j, size)}
+                        class:highlightBand={highlightBand ===
+                            gameState.puzzle.getBandNumberAt(i, j)}
                         class:dragover={draggingEnd && draggingStart && onPath(i, j)}
                         class:rowWord={highlightRow != -1 &&
                             (!mouseDragging || mouseDragging) &&
@@ -673,16 +622,16 @@
                         class:bandSideS={isBandSide(i, j, 3)}
                         class:bandCornerSW={isBandCorner(i, j, 4)}
                         class:bandSideW={isBandSide(i, j, 4)}
-                        on:click={() => highlight(i, j, true)}
+                        on:click={() => highlight(new GridLocation(i, j), true)}
                         on:mousedown={(event) => onDragStart(event, i, j)}
                         on:mouseenter={(event) => onDragOver(event, i, j)}
                     >
-                        {#if i === j && i < center}
+                        {#if i === j && i < gameState.center.row}
                             <div class="band-letter">
                                 {BAND_IDENTIFIERS[i]}
                             </div>
                         {/if}
-                        {puzzle.grid[i][j].text}
+                        {gameState.grid[i][j].text}
                     </div>
                 {/if}
             {/each}

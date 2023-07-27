@@ -1,414 +1,265 @@
-export {
-    addPuzzleWordBand,
-    addPuzzleWordRow,
-    clearPuzzleWordBand,
-    clearPuzzleWordRow,
-    createWordAtLocation,
-    firstEmptyBandCell,
-    firstEmptyRowCell,
-    getBandCoords,
-    getBandNumberFromCoords,
-    initBand,
-    isClueDone,
-    isInWord,
-    nextCellInRow,
-    nextEmptyCellInBand,
-    nextEmptyCellInRow,
-    offsetWithinBand
+export { GridLocation, Puzzle, clueListId };
+export type {
+    Band,
+    Clue,
+    ClueList,
+    ClueListIdentifier,
+    ClueListKind,
+    GridLocationType,
+    PuzzleType,
+    Row
 };
-export type { Band, Cell, Clue, Puzzle, Row };
 
-// shouldn't be more than 26, or we'll run out of letters
-const MAX_LENGTH = 26;
-// numbers 1-26, as strings
-export const ROW_IDENTIFIERS = Array.from({ length: MAX_LENGTH }, (_, i) => (i + 1).toString());
-// upper-case letters A-Z
-export const BAND_IDENTIFIERS = Array.from({ length: MAX_LENGTH }, (_, i) =>
-    String.fromCharCode(i + 65)
-);
-// lower case a-z
-export const CLUE_IDENTIFIERS = BAND_IDENTIFIERS.map((letter) => letter.toLowerCase());
+import { BAND_IDENTIFIERS, ROW_IDENTIFIERS, parse_clues } from './clue_parser';
+
+type GridLocationType = {
+    row: number;
+    col: number;
+};
+
+class GridLocation implements GridLocationType {
+    static readonly NONE = new GridLocation(-1, -1);
+
+    row: number;
+    col: number;
+
+    constructor(row: number, col: number) {
+        this.row = row;
+        this.col = col;
+    }
+    is_none(): boolean {
+        return this.row === GridLocation.NONE.row && this.col === GridLocation.NONE.col;
+    }
+}
 
 type Clue = {
-    // a single letter, starting with 'a'
-    identifier: string;
     text: string;
+    label: string;
+    clue_index: number;
 };
 
-// Row, is a type of ClueList
-type Row = {
-    clues: Clue[];
+type ClueListKind = 'band' | 'row';
 
-    // start, end offset (inclusive)
-    words: [number, number][];
+type ClueListIdentifier = {
+    readonly index: number;
+    readonly kind: ClueListKind;
 };
 
-type Band = {
-    clues: Clue[];
-    words: [number, number][];
-    band_number: number;
-    coords: [number, number][];
+function clueListId(id: ClueListIdentifier): string {
+    return `${id.kind}-${id.index}`;
+}
+
+type ClueList = ClueListIdentifier & {
+    readonly clues: Clue[];
+    readonly locations: GridLocationType[];
+    readonly heading: string;
+
+    indexAt(row: number, col: number): number;
+    indexAtLocation(x: GridLocationType): number;
+    nextCell(x: GridLocationType): GridLocation;
+    prevCell(x: GridLocationType): GridLocation;
 };
 
-type Cell = {
-    text: string;
-};
+function locationsForBand(size: number, band_index: number): GridLocation[] {
+    // we have a size*size grid, and we want to return the locations for the nth band,
+    // in clockwise order, starting from the top left corner
 
-type Puzzle = {
-    input_text: string;
-    size: number;
+    const locations: GridLocation[] = [];
+    for (let col = band_index; col < size - band_index; col++) {
+        locations.push(new GridLocation(band_index, col));
+    }
+    for (let row = band_index + 1; row < size - band_index - 1; row++) {
+        locations.push(new GridLocation(row, size - band_index - 1));
+    }
+    for (let col = size - band_index - 1; col >= band_index + 1; col--) {
+        locations.push(new GridLocation(size - band_index - 1, col));
+    }
+    for (let row = size - band_index - 1; row >= band_index; row--) {
+        locations.push(new GridLocation(row, band_index));
+    }
+    return locations;
+}
 
-    rows: Row[];
+abstract class ClueListBase implements ClueList {
+    readonly kind: ClueListKind;
+    readonly heading: string;
+    readonly index: number;
+    readonly clues: Clue[];
+    readonly locations: GridLocation[];
+
+    constructor(
+        kind: ClueListKind,
+        heading: string,
+        index: number,
+        clues: Clue[],
+        locations: GridLocation[]
+    ) {
+        this.kind = kind;
+        this.heading = heading;
+        this.index = index;
+        this.clues = clues;
+        this.locations = locations;
+    }
+
+    indexAtLocation = (location: GridLocationType): number => {
+        return this.indexAt(location.row, location.col);
+    };
+
+    indexAt = (row: number, col: number): number => {
+        const result = this.locations.findIndex((loc) => loc.row === row && loc.col === col);
+        if (result === -1) {
+            throw new Error(
+                `indexOfLocation: location (${row},${col}) not found in ${this.kind} ${this.index}`
+            );
+        }
+        return result;
+    };
+
+    abstract nextCell(x: GridLocationType): GridLocation;
+    abstract prevCell(x: GridLocationType): GridLocation;
+}
+
+class Band extends ClueListBase {
+    readonly center: number;
+    constructor(band_index: number, clues: Clue[], size: number) {
+        const heading = BAND_IDENTIFIERS[band_index];
+        const locations = locationsForBand(size, band_index);
+        super('band', heading, band_index, clues, locations);
+        this.center = Math.floor(size / 2);
+    }
+
+    // for bands, nextCell when called at the end of the band
+    // wraps around to the beginning of the band.  Same with
+    // prevCell at the beginning.
+    nextCell = (x: GridLocation): GridLocation => {
+        if (x.is_none()) {
+            return this.locations[0];
+        }
+        if (x.col === this.center && x.row === this.center) {
+            // we're in the middle, don't move
+            return x;
+        }
+        const idx = this.indexAtLocation(x);
+        return this.locations[(idx + 1) % this.locations.length];
+    };
+
+    prevCell = (x: GridLocation): GridLocation => {
+        if (x.col === this.center && x.row === this.center) {
+            // we're in the middle, don't move
+            return x;
+        }
+        const idx = this.indexAtLocation(x);
+        return this.locations[(idx + this.locations.length - 1) % this.locations.length];
+    };
+}
+
+function locationsForRow(num_rows: number, row_index: number): GridLocation[] {
+    // we have a row, and want to return the locations for the idx'th row.
+    // this is easy.
+    return Array.from({ length: num_rows }, (_, i) => new GridLocation(row_index, i));
+}
+
+class Row extends ClueListBase {
+    readonly center: number;
+
+    constructor(row_index: number, clues: Clue[], size: number) {
+        const heading = ROW_IDENTIFIERS[row_index];
+        const locations = locationsForRow(size, row_index);
+        super('row', heading, row_index, clues, locations);
+        this.center = Math.floor(size / 2);
+    }
+
+    // for rows, nextCell when called at the end of the row
+    // just stays there.  Same with prevCell at the beginning.
+    nextCell = (x: GridLocation): GridLocation => {
+        if (x.is_none()) {
+            return this.locations[0];
+        }
+        if (x.row !== this.index) {
+            throw new Error(`nextCell: location ${x} not in row ${this.index}`);
+        }
+        let nextCol = Math.min(x.col + 1, this.locations.length - 1);
+        // one exception: skip the center square
+        if (this.index === this.center && nextCol === this.center) {
+            nextCol += 1;
+        }
+        return new GridLocation(this.index, nextCol);
+    };
+
+    prevCell = (x: GridLocation): GridLocation => {
+        if (x.row !== this.index) {
+            throw new Error(`nextCell: location ${x} not in row ${this.index}`);
+        }
+        let prevCol = Math.max(x.col - 1, 0);
+        // one exception: skip the center square
+        if (this.index === this.center && prevCol === this.center) {
+            prevCol -= 1;
+        }
+        return new GridLocation(this.index, prevCol);
+    };
+}
+
+/////////////////////////////////////////
+// puzzle
+//
+// all static information, not related to a solve attempt
+//
+type PuzzleType = {
     bands: Band[];
-
-    grid: Cell[][];
+    original_text: string;
+    rows: Row[];
+    size: number;
 };
-
-// take input like the following and return a Puzzle object
-
-// ROWS
-// 1 a first row clue
-// b second row clue
-// 2 a first row clue
-// of the second row
-// b second row clue of the second row
-// 3 a first row clue.  it's ok for there just to be one
-//
-//
-// BANDS
-// A a first band clue
-// of the outermost band
-// b if we had a second band,
-// it would start with a capital B
-// but we don't since we only have 3
-// rows.  Instead this clue is just
-// very long.
 
 const getBandNumberFromCoords = (i: number, j: number, size: number) => {
     const rowOffset = Math.min(i, size - i - 1);
     const colOffset = Math.min(j, size - j - 1);
     const band = Math.min(rowOffset, colOffset);
-    if (band >= Math.floor(size / 2)) {
-        return band - 1;
-    }
     return band;
 };
 
-const nextCellInRow = (
-    size: number,
-    i: number,
-    j: number,
-    backwards: boolean
-): [number, number] => {
-    let newCol = j;
+class Puzzle implements PuzzleType {
+    bands: Band[];
+    original_text: string;
+    rows: Row[];
+    size: number;
 
-    const step = backwards ? -1 : 1;
-    const fnDone = backwards ? (idx: number) => idx <= 0 : (idx: number) => idx >= size - 1;
-    const center = Math.floor(size / 2);
+    constructor(text: string) {
+        this.original_text = text;
+        const [row_clues, band_clues] = parse_clues(text);
+        this.size = row_clues.length;
+        this.rows = row_clues.map((clues, i) => new Row(i, clues, this.size));
+        this.bands = band_clues.map((clues, i) => new Band(i, clues, this.size));
+    }
 
-    while (!fnDone(newCol)) {
-        newCol = newCol + step;
-        if (newCol === center && i === center) {
-            continue;
+    getBandNumberAt(row: number, col: number): number {
+        return getBandNumberFromCoords(row, col, this.size);
+    }
+
+    getBandNumberAtLocation(location: GridLocation): number {
+        return getBandNumberFromCoords(location.row, location.col, this.size);
+    }
+
+    getClueListAt(row: number, col: number, use_band: boolean): ClueList {
+        if (use_band) {
+            // we're using bands, so we need to figure out which band we're in
+            // and then return that band's identifier
+            const band_index = getBandNumberFromCoords(row, col, this.size);
+            return this.bands[band_index];
         }
-        return [i, newCol];
+        // we're using rows, which is easy, just pick the right row
+        return this.rows[row];
     }
 
-    // no empty cells in the row, so go to the first cell
-    return [i, j];
-};
-
-// go to next empty cell in row, or stay at current cell if there is no next empty cell
-const nextEmptyCellInRow = (
-    puzzle: Puzzle,
-    i: number,
-    j: number,
-    backwards: boolean
-): [number, number] => {
-    let newCol = j;
-
-    const step = backwards ? -1 : 1;
-    const fnDone = backwards ? (idx: number) => idx < 0 : (idx: number) => idx >= puzzle.size;
-    const center = Math.floor(puzzle.size / 2);
-
-    while (!fnDone(newCol)) {
-        if (puzzle.grid[i][newCol].text === ' ' && !(newCol === center && i === center)) {
-            return [i, newCol];
+    getClueListAtLocation(location: GridLocation, use_band: boolean): ClueList {
+        if (use_band) {
+            // we're using bands, so we need to figure out which band we're in
+            // and then return that band's identifier
+            const band_index = getBandNumberFromCoords(location.row, location.col, this.size);
+            const clamped_index = Math.min(band_index, this.bands.length - 1);
+            return this.bands[clamped_index];
         }
-        newCol = newCol + step;
+        // we're using rows, which is easy, just pick the right row
+        return this.rows[location.row];
     }
-
-    // no empty cells in the row, so go to the first cell
-    return [i, j];
-};
-
-// go to next empty cell in band, or stay at current cell if this one
-// is empty, or there is no next empty cell
-const nextEmptyCellInBand = (
-    puzzle: Puzzle,
-    i: number,
-    j: number,
-    backwards: boolean
-): [number, number] => {
-    let newIdx = offsetWithinBand(i, j, puzzle.size);
-    const bandCoords = getBandCoords(puzzle.size, getBandNumberFromCoords(i, j, puzzle.size));
-    const step = backwards ? -1 : 1;
-
-    // loop up to puzzle.size^2 times.  This shouldn't be necessary
-    // but good to have a termination condition
-    for (let k = 0; k < puzzle.size * puzzle.size; k++) {
-        const [newRow, newCol] = bandCoords[newIdx];
-        if (puzzle.grid[newRow][newCol].text === ' ') {
-            return [newRow, newCol];
-        }
-        newIdx = (newIdx + bandCoords.length + step) % bandCoords.length;
-        if (bandCoords[newIdx][0] === i && bandCoords[newIdx][1] === j) {
-            break;
-        }
-    }
-
-    // no empty cells in the row, so go to the first cell
-    return [i, j];
-};
-
-function isInGrid(size: number, i: number, j: number) {
-    return i >= 0 && i < size && j >= 0 && j < size;
-}
-
-const initBand = (size: number, bandNumber: number, clues: Clue[]): Band => {
-    const coords = getBandCoords(size, bandNumber);
-    return {
-        clues,
-        words: [],
-        band_number: bandNumber,
-        coords
-    };
-};
-
-export const nextCellInBand = (size: number, i: number, j: number, backwards: boolean) => {
-    const RIGHT = [0, 1];
-    const DOWN = [1, 0];
-    const LEFT = [0, -1];
-    const UP = [-1, 0];
-
-    // look right, down, left, up for the next cell in the band
-    const bandNumber = getBandNumberFromCoords(i, j, size);
-    // if in min column, look up and right
-    // if in max column, look down and left
-    // if in min row, look right and down
-    // if in max row, look left and up
-    const directions: number[][] = [];
-    if (i === bandNumber) {
-        directions.push(RIGHT);
-    }
-    if (i === size - bandNumber - 1) {
-        directions.push(LEFT);
-    }
-    if (j === bandNumber) {
-        directions.push(UP);
-    }
-    if (j === size - bandNumber - 1) {
-        directions.push(DOWN);
-    }
-
-    for (const [rowOffset, colOffset] of directions) {
-        const newRow = i + (backwards ? -rowOffset : rowOffset);
-        const newCol = j + (backwards ? -colOffset : colOffset);
-        if (
-            isInGrid(size, newRow, newCol) &&
-            getBandNumberFromCoords(newRow, newCol, size) === bandNumber
-        ) {
-            return [newRow, newCol];
-        }
-    }
-    throw new Error('Could not find next cell in band');
-};
-
-const getBandCoords = (size: number, bandIdx: number): [number, number][] => {
-    const coords: [number, number][] = [];
-    for (let i = bandIdx; i < size - bandIdx; i++) {
-        coords.push([bandIdx, i]);
-    }
-    for (let i = bandIdx + 1; i < size - bandIdx - 1; i++) {
-        coords.push([i, size - bandIdx - 1]);
-    }
-    for (let i = size - bandIdx - 1; i >= bandIdx + 1; i--) {
-        coords.push([size - bandIdx - 1, i]);
-    }
-    for (let i = size - bandIdx - 1; i >= bandIdx; i--) {
-        coords.push([i, bandIdx]);
-    }
-    return coords;
-};
-
-const offsetWithinBand = (i: number, j: number, size: number): number => {
-    const bandIdx = getBandNumberFromCoords(i, j, size);
-    const badCoords = getBandCoords(size, bandIdx);
-    for (let k = 0; k < badCoords.length; k++) {
-        if (badCoords[k][0] === i && badCoords[k][1] === j) {
-            return k;
-        }
-    }
-    throw new Error('offset not within band');
-};
-
-const firstEmptyRowCell = (puzzle: Puzzle, rowNumber: number): [number, number] => {
-    return nextEmptyCellInRow(puzzle, rowNumber, 0, false);
-};
-
-const firstEmptyBandCell = (puzzle: Puzzle, bandNumber: number): [number, number] => {
-    const bandCoords = getBandCoords(puzzle.size, bandNumber);
-    return nextEmptyCellInBand(puzzle, bandCoords[0][0], bandCoords[0][1], false);
-};
-
-const isClueDone = (puzzle: Puzzle, isBand: boolean, clueIdx: number): boolean => {
-    // is puzzle undefined
-    if (puzzle === undefined) {
-        return false;
-    }
-    if (isBand) {
-        const coords = getBandCoords(puzzle.size, clueIdx);
-        for (const [i, j] of coords) {
-            if (puzzle.grid[i][j].text === ' ') {
-                return false;
-            }
-        }
-        return true;
-    }
-    const row: number = clueIdx;
-    const middle = Math.floor(puzzle.size / 2);
-    // check to see if all the squares in this row are filled in
-    for (let i = 0; i < puzzle.size; i++) {
-        if (puzzle.grid[row][i].text === ' ') {
-            if (row === middle && i === middle) {
-                // middle square is allowed to be empty
-                continue;
-            }
-            return false;
-        }
-    }
-    return true;
-};
-
-function removeOverlappingWords(wordGroups: [number, number][], idxStart: number, idxEnd: number) {
-    // given the new range [idxStart, idxEnd], removes all elements from
-    // wordGroups which overlap with that range
-    return wordGroups.filter((group) => {
-        if (group[0] < idxStart) {
-            return group[1] < idxStart;
-        } else {
-            return idxEnd < group[0];
-        }
-    });
-}
-
-function clearPuzzleWordRow(puzzle: Puzzle, rowIdx: number, colIdx: number) {
-    puzzle.rows[rowIdx].words = removeOverlappingWords(puzzle.rows[rowIdx].words, colIdx, colIdx);
-}
-
-function clearPuzzleWordBand(puzzle: Puzzle, bandIdx: number, bandOffset: number) {
-    puzzle.bands[bandIdx].words = removeOverlappingWords(
-        puzzle.bands[bandIdx].words,
-        bandOffset,
-        bandOffset
-    );
-}
-
-function addPuzzleWordGroup(words: [number, number][], idxStart: number, idxEnd: number) {
-    words = removeOverlappingWords(words, idxStart, idxEnd);
-    words.push([idxStart, idxEnd]);
-    // sort words by idxStart
-    words.sort((a: [number, number], b: [number, number]) => {
-        return a[0] - b[0];
-    });
-    return words;
-}
-
-function addPuzzleWordBand(puzzle: Puzzle, bandIdx: number, startIdx: number, endIdx: number) {
-    puzzle.bands[bandIdx].words = addPuzzleWordGroup(puzzle.bands[bandIdx].words, startIdx, endIdx);
-}
-
-function addPuzzleWordRow(puzzle: Puzzle, rowIdx: number, startCol: number, endCol: number) {
-    puzzle.rows[rowIdx].words = addPuzzleWordGroup(puzzle.rows[rowIdx].words, startCol, endCol);
-}
-
-function isInWordList(words: [number, number][], offset: number) {
-    for (const [start, end] of words) {
-        if (start <= offset && offset <= end) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function createWordAtLocation(puzzle: Puzzle, i: number, j: number, useBand: boolean) {
-    if (useBand) {
-        const bandNumber = getBandNumberFromCoords(i, j, puzzle.size);
-        const bandOffset = offsetWithinBand(i, j, puzzle.size);
-        const bandCoords = getBandCoords(puzzle.size, bandNumber);
-
-        // look backwards for a square that has a letter in it and is not
-        // part of an existing word
-        let startIdx = bandOffset;
-        for (let k = bandOffset - 1; k >= 0; k--) {
-            const [row, col] = bandCoords[k];
-            if (puzzle.grid[row][col].text === ' ') {
-                break;
-            }
-            if (isInWordList(puzzle.bands[bandNumber].words, k)) {
-                break;
-            }
-            startIdx = k;
-        }
-
-        // look forwards for the same thing
-        let endIdx = bandOffset;
-        for (let k = bandOffset + 1; k < bandCoords.length; k++) {
-            const [row, col] = bandCoords[k];
-            if (puzzle.grid[row][col].text === ' ') {
-                break;
-            }
-            if (isInWordList(puzzle.bands[bandNumber].words, k)) {
-                break;
-            }
-            endIdx = k;
-        }
-        addPuzzleWordBand(puzzle, bandNumber, startIdx, endIdx);
-    } else {
-        // look backwards for a square that has a letter in it and is not
-        // part of an existing word
-        let startIdx = j;
-        for (let k = j - 1; k >= 0; k--) {
-            if (puzzle.grid[i][k].text === ' ') {
-                break;
-            }
-            if (isInWordList(puzzle.rows[i].words, k)) {
-                break;
-            }
-            startIdx = k;
-        }
-        // look forwards for the same thing
-        let endIdx = j;
-        for (let k = j + 1; k < puzzle.size; k++) {
-            if (puzzle.grid[i][k].text === ' ') {
-                break;
-            }
-            if (isInWordList(puzzle.rows[i].words, k)) {
-                break;
-            }
-            endIdx = k;
-        }
-        addPuzzleWordRow(puzzle, i, startIdx, endIdx);
-    }
-}
-
-function isInWord(puzzle: Puzzle, i: number, j: number, useBand: boolean) {
-    if (useBand) {
-        const bandNumber = getBandNumberFromCoords(i, j, puzzle.size);
-        const bandOffset = offsetWithinBand(i, j, puzzle.size);
-
-        return isInWordList(puzzle.bands[bandNumber].words, bandOffset);
-    }
-    const wordList = puzzle.rows[i].words;
-    return isInWordList(wordList, j);
 }

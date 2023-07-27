@@ -1,20 +1,19 @@
 <script lang="ts">
     import ClueGrid from '$lib/components/ClueGrid.svelte';
     import ClueList from '$lib/components/ClueList.svelte';
-    import { isPuzzleComplete } from '$lib/puzzle_store';
     import { createEventDispatcher } from 'svelte';
     import { Confetti } from 'svelte-confetti';
 
-    import type { Puzzle } from '$lib/puzzle';
+    import type { GameState } from '$lib/game_state';
 
-    export let puzzle: Puzzle;
+    export let gameState: GameState;
     export let highlightRow = -1;
     export let highlightBand = -1;
 
     const dispatch = createEventDispatcher();
 </script>
 
-{#if isPuzzleComplete(puzzle)}
+{#if gameState.is_solved}
     <div class="confetti-container">
         <Confetti
             amount={100}
@@ -43,7 +42,7 @@
         <ClueGrid
             bind:highlightRow
             bind:highlightBand
-            bind:puzzle
+            bind:gameState
             on:deletePuzzle={() => {
                 dispatch('deletePuzzle');
             }}
@@ -52,19 +51,18 @@
     <div class="clue-sets">
         <div class="clue-set">
             <ClueList
-                bind:puzzle
+                bind:gameState
                 clueTitle="Rows"
-                clueSection={puzzle.rows}
+                clueLists={gameState.puzzle.rows}
                 bind:highlightIdx={highlightRow}
             />
         </div>
         <div class="clue-set">
             <ClueList
-                bind:puzzle
+                bind:gameState
                 clueTitle="Bands"
-                clueSection={puzzle.bands}
+                clueLists={gameState.puzzle.bands}
                 bind:highlightIdx={highlightBand}
-                useLetters={true}
             />
         </div>
     </div>

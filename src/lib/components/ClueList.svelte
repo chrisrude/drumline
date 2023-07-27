@@ -1,21 +1,16 @@
 <script lang="ts">
-    import type { Band, Puzzle, Row } from '$lib/puzzle';
-    import { isClueDone } from '$lib/puzzle';
+    import type { GameState } from '$lib/game_state';
+    import type { ClueList } from '$lib/puzzle';
     import ClueDisplay from './ClueDisplay.svelte';
 
-    export let clueSection: Band[] | Row[];
+    export let clueLists: ClueList[];
     export let clueTitle: string;
-    export let useLetters: boolean = false;
     export let highlightIdx: number = -1;
-    export let puzzle: Puzzle;
+    export let gameState: GameState;
     let clueGroup: HTMLDivElement;
 
     const gotoClue = (idx: number) => {
-        if (useLetters) {
-            highlightIdx = idx;
-        } else {
-            highlightIdx = idx;
-        }
+        highlightIdx = idx;
     };
     $: highlightIdx != -1 && scrollToClue();
 
@@ -43,6 +38,10 @@
             }
         }
     }
+    function isClueDone(gameState: GameState, index: number) {
+        const answers = gameState.getAnswerSegments(clueLists[index]);
+        return answers.isComplete();
+    }
 </script>
 
 <div class="clues">
@@ -50,21 +49,17 @@
         {clueTitle}
     </div>
     <div class="clues-groups" bind:this={clueGroup}>
-        {#each clueSection as clueList, idx}
+        {#each clueLists as clueList, idx}
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="clues-groups-group"
                 class:highlightClue={highlightIdx === idx}
-                class:clueDone={isClueDone(puzzle, useLetters, idx)}
+                class:clueDone={isClueDone(gameState, idx)}
                 on:click={() => gotoClue(idx)}
             >
                 <div class="clues-group-title">
-                    {#if useLetters}
-                        {String.fromCharCode(65 + idx)}
-                    {:else}
-                        {idx + 1}
-                    {/if}
+                    {clueList.heading}
                 </div>
                 <div class="clues-group-list">
                     {#each clueList.clues as clue}

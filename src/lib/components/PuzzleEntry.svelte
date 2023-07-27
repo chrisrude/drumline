@@ -1,10 +1,13 @@
 <script lang="ts">
-    import type { Puzzle } from '$lib/puzzle';
-    import { loadPuzzle, storedPuzzle } from '$lib/puzzle_store';
+    import { GameState } from '$lib/game_state';
+    import { storedGameState } from '$lib/game_state_store';
+    import { Puzzle } from '$lib/puzzle';
+    import { storedPuzzle } from '$lib/puzzle_store';
 
     /** @type {import('./$types').PageData} */
 
     export let puzzle: Puzzle | null;
+    export let gameState: GameState | null;
 
     export let inputText = '';
     export let parseError = '';
@@ -12,8 +15,10 @@
 
     const parse_puzzle = () => {
         try {
-            puzzle = loadPuzzle(inputText);
+            puzzle = new Puzzle(inputText);
             storedPuzzle.set(puzzle);
+            gameState = new GameState(puzzle);
+            storedGameState.set(gameState);
             parseError = '';
         } catch (error) {
             if (error instanceof Error) {
@@ -22,16 +27,17 @@
         }
     };
 
-    $: {
+    function savePuzzle() {
         if (puzzle) {
             storedPuzzle.set(puzzle);
         }
     }
+    $: puzzle !== null && savePuzzle();
 
     $: {
         if (inputText) {
             try {
-                tentativePuzzle = loadPuzzle(inputText);
+                tentativePuzzle = new Puzzle(inputText);
                 parseError = '';
             } catch (error) {
                 tentativePuzzle = null;

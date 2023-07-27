@@ -74,7 +74,7 @@ function locationsForBand(size: number, band_index: number): GridLocation[] {
     for (let col = size - band_index - 1; col >= band_index + 1; col--) {
         locations.push(new GridLocation(size - band_index - 1, col));
     }
-    for (let row = size - band_index - 1; row >= band_index; row--) {
+    for (let row = size - band_index - 1; row >= band_index + 1; row--) {
         locations.push(new GridLocation(row, band_index));
     }
     return locations;
@@ -149,7 +149,8 @@ class Band extends ClueListBase {
             return x;
         }
         const idx = this.indexAtLocation(x);
-        return this.locations[(idx + this.locations.length - 1) % this.locations.length];
+        const nextLoc = (idx + this.locations.length - 1) % this.locations.length;
+        return this.locations[nextLoc];
     };
 }
 

@@ -1,6 +1,8 @@
 <script>
     import Header from './Header.svelte';
     import './styles.css';
+
+    import '@fontsource/fira-mono/';
 </script>
 
 <div class="app">

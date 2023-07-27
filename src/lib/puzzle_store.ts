@@ -22,7 +22,13 @@ storedPuzzle.subscribe((value) => {
 });
 
 function loadPuzzleFromJson(storedString: string): Puzzle {
-    const original_text = JSON.parse(storedString);
+    let original_text = JSON.parse(storedString);
+
+    // is there an "original_text" attr on original_text?
+    // this is what the previous code did
+    if (typeof original_text == 'object' && 'input_text' in original_text) {
+        original_text = original_text.input_text;
+    }
     const result = new Puzzle(original_text);
     return result;
 }

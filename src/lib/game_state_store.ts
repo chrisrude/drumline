@@ -2,7 +2,7 @@ export { set_from_json, storedGameState, to_json };
 
 import { browser } from '$app/environment';
 import { GameState } from '$lib/game_state';
-import { clueListId, type ClueList, type Puzzle } from '$lib/puzzle';
+import { clueListId, type ClueList } from '$lib/puzzle';
 import { storedPuzzle } from '$lib/puzzle_store';
 import { writable } from 'svelte/store';
 
@@ -18,11 +18,14 @@ storedPuzzle.subscribe((puzzle) => {
     if (!browser) {
         return;
     }
+
+    const puzzleState = new GameState(puzzle);
+
     const storedString = window.localStorage.getItem(GAME_STATE_STORE) ?? null;
-    if (!storedString) {
-        return;
+    if (storedString && storedString.length > 0) {
+        set_from_json(storedString, puzzleState);
     }
-    const puzzleState = loadGameStateFromJson(storedString, puzzle);
+
     storedGameState.set(puzzleState);
 });
 
@@ -135,10 +138,4 @@ function set_from_json(json: string, gameState: GameState): void {
     // set answer_segments
     set_clue_lists(gameState, gameState.puzzle.rows, row_segments);
     set_clue_lists(gameState, gameState.puzzle.bands, band_segments);
-}
-
-function loadGameStateFromJson(json: string, puzzle: Puzzle): GameState {
-    const result = new GameState(puzzle);
-    set_from_json(json, result);
-    return result;
 }

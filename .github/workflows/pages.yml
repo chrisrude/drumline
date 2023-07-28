@@ -29,8 +29,9 @@ jobs:
               id: pages
             - uses: actions/setup-node@v3
               with:
-                  node-version: 16
-                  cache: 'npm'
+                node-version-file: '.nvmrc'
+                cache-dependency-path: './client/package-lock.json'
+                cache: 'npm'
             - run: npm ci
               working-directory: ./client
             - run: npm run build

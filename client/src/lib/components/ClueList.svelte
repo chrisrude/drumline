@@ -1,6 +1,5 @@
 <script lang="ts">
-    import type { GameState } from '$lib/game_state';
-    import type { ClueList } from '$lib/puzzle';
+    import type { ClueList, GameState } from 'drumline-lib';
     import ClueDisplay from './ClueDisplay.svelte';
 
     export let clueLists: ClueList[];

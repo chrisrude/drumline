@@ -1,6 +1,6 @@
 export { set_from_json, to_json };
 
-import { GameState } from "./game_state";
+import type { GameState } from "./game_state";
 import { clueListId, type ClueList } from "./puzzle";
 
 function to_json(gameState: GameState): string {

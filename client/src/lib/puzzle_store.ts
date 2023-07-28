@@ -1,7 +1,7 @@
 export { initialValue, storedPuzzle };
 
 import { browser } from '$app/environment';
-import { Puzzle } from '$lib/puzzle';
+import { Puzzle } from 'drumline-lib';
 
 import { writable } from 'svelte/store';
 

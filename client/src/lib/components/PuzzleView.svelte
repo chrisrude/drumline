@@ -1,10 +1,9 @@
 <script lang="ts">
     import ClueGrid from '$lib/components/ClueGrid.svelte';
     import ClueList from '$lib/components/ClueList.svelte';
+    import type { GameState } from 'drumline-lib';
     import { createEventDispatcher } from 'svelte';
     import { Confetti } from 'svelte-confetti';
-
-    import type { GameState } from '$lib/game_state';
 
     export let gameState: GameState;
     export let highlightRow = -1;

@@ -1,6 +1,7 @@
 // todo make this right
 
-import { GameState } from "./lib/game_state";
-import { Puzzle } from "./lib/puzzle";
-
-export { GameState, Puzzle };
+export * from "./lib/game_actions";
+export * from "./lib/game_state";
+export * from "./lib/game_state_json";
+export * from "./lib/puzzle";
+export * from "./lib/solver";

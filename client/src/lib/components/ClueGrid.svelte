@@ -1,8 +1,6 @@
 <script lang="ts">
-    import { BAND_IDENTIFIERS } from '$lib/clue_parser';
-    import { clear, clearSegment, markSegment, set } from '$lib/game_actions';
-    import type { GameState } from '$lib/game_state';
-    import { GridLocation } from '$lib/puzzle';
+    import { GameState, GridLocation, clear, clearSegment, markSegment, set } from 'drumline-lib';
+    import { BAND_IDENTIFIERS } from 'drumline-lib/lib/clue_parser';
     import { createEventDispatcher } from 'svelte';
 
     export let gameState: GameState;

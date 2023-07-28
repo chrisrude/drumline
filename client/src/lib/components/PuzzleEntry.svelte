@@ -1,8 +1,7 @@
 <script lang="ts">
-    import { GameState } from '$lib/game_state';
     import { storedGameState } from '$lib/game_state_store';
-    import { Puzzle } from '$lib/puzzle';
     import { storedPuzzle } from '$lib/puzzle_store';
+    import { GameState, Puzzle } from 'drumline-lib';
 
     /** @type {import('./$types').PageData} */
 

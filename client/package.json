@@ -47,6 +47,7 @@
     "type": "module",
     "dependencies": {
         "@fontsource/fira-mono": "^4.5.10",
+        "drumline-lib": "file:../common",
         "svelte-confetti": "^1.2.4"
     }
 }

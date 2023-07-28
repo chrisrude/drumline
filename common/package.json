@@ -1,0 +1,33 @@
+{
+  "name": "drumline-lib",
+  "version": "0.0.3",
+  "description": "Common modules for drumline, shared between server and client",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test:unit",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write .",
+    "test:unit": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrisrude/drumline.git"
+  },
+  "author": "Christopher Rude <chris@rudesoftware.net>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chrisrude/drumline/issues"
+  },
+  "homepage": "https://github.com/chrisrude/drumline#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.9.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6",
+    "vitest": "^0.32.2"
+  },
+  "type": "module"
+}

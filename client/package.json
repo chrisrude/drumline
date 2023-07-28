@@ -1,6 +1,18 @@
 {
-    "name": "drumline",
+    "name": "@chrisrude/drumline-client",
     "version": "0.0.3",
+    "description": "A UI for solving marching band style crosswords in a browswer",
+    "homepage": "https://github.com/chrisrude/drumline",
+    "bugs": "https://github.com/chrisrude/drumline/issues",
+    "author": {
+        "name": "Christopher Rude",
+        "email": "chris@rudesoftware.net"
+    },
+    "license": "MIT",
+    "repository": "chrisrude/drumline",
+    "engines": {
+        "node": ">=18.17.0"
+    },
     "scripts": {
         "dev": "vite dev --host",
         "build": "vite build",

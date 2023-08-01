@@ -1,9 +1,9 @@
 <script lang="ts">
     import PuzzleEntry from '$lib/components/PuzzleEntry.svelte';
     import PuzzleView from '$lib/components/PuzzleView.svelte';
-    import type { GameState } from '$lib/game_state';
     import { storedGameState } from '$lib/game_state_store';
     import { storedPuzzle } from '$lib/puzzle_store';
+    import type { GameActions, GameState } from 'drumline-lib';
     import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
     import { blur } from 'svelte/transition';
@@ -21,11 +21,18 @@
         gameState = value;
     });
 
-    function saveGameState() {
+    const applyGameState = (event: CustomEvent<GameActions>) => {
+        const action = event.detail as GameActions;
+        if (gameState && action) {
+            gameState = gameState.apply(action);
+        }
+    };
+
+    const saveGameState = () => {
         if (gameState) {
             storedGameState.set(gameState);
         }
-    }
+    };
     $: gameState !== null && saveGameState();
 
     const clean_puzzle = () => {
@@ -43,7 +50,7 @@
 {#if !$loading}
     {#if puzzle && gameState}
         <div transition:blur={{ amount: '1vw' }} class="fly-holder">
-            <PuzzleView bind:gameState on:deletePuzzle={clean_puzzle} />
+            <PuzzleView bind:gameState on:deletePuzzle={clean_puzzle} on:apply={applyGameState} />
         </div>
     {:else}
         <PuzzleEntry bind:puzzle bind:gameState />

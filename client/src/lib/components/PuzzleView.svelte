@@ -45,6 +45,9 @@
             on:deletePuzzle={() => {
                 dispatch('deletePuzzle');
             }}
+            on:applyPuzzle={(action) => {
+                dispatch('apply', action);
+            }}
         />
     </div>
     <div class="clue-sets">

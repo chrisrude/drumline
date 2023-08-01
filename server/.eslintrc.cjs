@@ -12,7 +12,7 @@ module.exports = {
         extraFileExtensions: ['.svelte']
     },
     env: {
-        browser: true,
+        browser: false,
         es2017: true,
         node: true
     }

@@ -130,12 +130,11 @@
         const [idxStart, idxEnd] = gameState.findWordBoundsAtLocation(groupNexus, answerSegments);
 
         const action = markSegment(answerSegments.clue_list, idxStart, idxEnd);
-        gameState.apply(action);
+        dispatch('apply', action);
 
         // do an assignment to trigger a re-render
         mouseDragging = true;
         mouseDragging = false;
-        gameState = gameState;
     };
 
     export const canUngroupAnswer = () => {
@@ -166,12 +165,11 @@
         const clueList = gameState.puzzle.getClueListAtLocation(cursorLocation, isUsingBand());
         const index = clueList.indexAtLocation(cursorLocation);
         const action = clearSegment(clueList, index);
-        gameState.apply(action);
+        dispatch('apply', action);
 
         // do an assignment to trigger a re-render
         mouseDragging = true;
         mouseDragging = false;
-        gameState = gameState;
         return true;
     }
 
@@ -263,15 +261,13 @@
                 // no word to clear, so just clear the character in the
                 // current square
                 const action = clear(cursorLocation);
-                gameState.apply(action);
-                gameState = gameState;
+                dispatch('apply', action);
                 event.preventDefault();
                 return;
             default:
                 if (event.key.length === 1) {
                     const action = set(cursorLocation, event.key);
-                    gameState.apply(action);
-                    gameState = gameState;
+                    dispatch('apply', action);
                     event.preventDefault();
                     // move to next cell, either in the row or the band
                     newLocation = nextEmptyCell(false);
@@ -448,8 +444,7 @@
             clueList.indexAtLocation(draggingStart),
             clueList.indexAtLocation(draggingEnd)
         );
-        gameState.apply(action);
-        gameState = gameState;
+        dispatch('apply', action);
         event.preventDefault();
         clearDragging();
     };

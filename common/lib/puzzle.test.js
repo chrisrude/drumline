@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { Puzzle } from "./puzzle";
+import { describe, expect, it } from 'vitest';
+import { Puzzle } from './puzzle';
 
 const FIRST_TEST = `
 ROWS
@@ -162,20 +162,20 @@ b aaaaaa aaaaaa out to aaaaaa
 G a aaaaaa aaaaaa, in
 aaaaaa: 2 wds.`;
 
-describe("puzzle input test", () => {
-  it("puzzle 37 loads correctly", () => {
-    const puzzle = new Puzzle(FIRST_TEST);
-    expect(puzzle).not.toBe(null);
-    // expect three bands and 7 rows
-    expect(puzzle.bands.length).toBe(3);
-    expect(puzzle.rows.length).toBe(7);
-  });
+describe('puzzle input test', () => {
+    it('puzzle 37 loads correctly', () => {
+        const puzzle = new Puzzle(FIRST_TEST);
+        expect(puzzle).not.toBe(null);
+        // expect three bands and 7 rows
+        expect(puzzle.bands.length).toBe(3);
+        expect(puzzle.rows.length).toBe(7);
+    });
 
-  it("puzzle 66 loads correctly", () => {
-    const puzzle = new Puzzle(SECOND_TEST);
-    expect(puzzle).not.toBe(null);
-    // expect three bands and 7 rows
-    expect(puzzle.bands.length).toBe(7);
-    expect(puzzle.rows.length).toBe(15);
-  });
+    it('puzzle 66 loads correctly', () => {
+        const puzzle = new Puzzle(SECOND_TEST);
+        expect(puzzle).not.toBe(null);
+        // expect three bands and 7 rows
+        expect(puzzle.bands.length).toBe(7);
+        expect(puzzle.rows.length).toBe(15);
+    });
 });

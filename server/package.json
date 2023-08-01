@@ -1,12 +1,13 @@
 {
-    "name": "drumline-lib",
+    "name": "drumline-server",
     "version": "0.0.3",
-    "description": "Common modules for drumline, shared between server and client",
-    "main": "index.js",
+    "description": "Service to coordinate co-solving across multiple drumline crossword clients.",
+    "main": "index.ts",
     "scripts": {
-        "test": "npm run test:unit",
-        "lint": "prettier --check . && eslint .",
         "format": "prettier --write .",
+        "lint": "prettier --check . && eslint .",
+        "start": "tsc && node dist/index.js",
+        "test": "npm run test:unit",
         "test:unit": "vitest"
     },
     "repository": {
@@ -19,7 +20,15 @@
         "url": "https://github.com/chrisrude/drumline/issues"
     },
     "homepage": "https://github.com/chrisrude/drumline#readme",
+    "dependencies": {
+        "drumline-lib": "file:../common",
+        "ws": "^8.13.0"
+    },
     "devDependencies": {
+        "@types/drumline-lib": "file:../common",
+        "@types/node": "^20.4.5",
+        "@types/websocket": "^1.0.5",
+        "@types/ws": "^8.5.5",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
         "eslint": "^8.45.0",
@@ -28,10 +37,5 @@
         "prettier": "^3.0.0",
         "typescript": "^5.1.6",
         "vitest": "^0.32.2"
-    },
-    "dependencies": {
-        "@types/uuid": "^9.0.2",
-        "uuid": "^9.0.0"
-    },
-    "type": "module"
+    }
 }

@@ -7,13 +7,12 @@ import {
     Puzzle,
     UserId,
     actionToString,
-    isBasicallyTheSameAction,
+    areActionsEqual,
     set_from_json,
     stringToAction,
     to_json,
     type GameActions
 } from 'drumline-lib';
-import { createEventDispatcher } from 'svelte';
 import { writable } from 'svelte/store';
 import {
     NetworkClient,
@@ -31,40 +30,6 @@ const storedGameState = writable<GameState | null>(null);
 export const gameState: GameState | null = null;
 let user_id: UserId | null = null;
 
-const dispatch = createEventDispatcher();
-
-storedPuzzle.subscribe((puzzle) => {
-    if (!puzzle) {
-        storedGameState.set(null);
-        return;
-    }
-    if (!browser) {
-        return;
-    }
-
-    const storedPrivateUuid = window.localStorage.getItem(UUID_STORE) ?? null;
-    user_id = new UserId(storedPrivateUuid);
-
-    const puzzleState = new NetworkedGameState(puzzle, user_id);
-
-    const storedString = window.localStorage.getItem(GAME_STATE_STORE) ?? null;
-    if (storedString && storedString.length > 0) {
-        set_from_json(storedString, puzzleState);
-    }
-
-    storedGameState.set(puzzleState);
-});
-
-storedGameState.subscribe((value) => {
-    if (browser) {
-        if (value) {
-            const json = to_json(value);
-            window.localStorage.setItem(GAME_STATE_STORE, json);
-        } else {
-            window.localStorage.removeItem(GAME_STATE_STORE);
-        }
-    }
-});
 
 class NetworkedGameState extends GameState {
     // actions which the server has sent to us
@@ -149,7 +114,7 @@ class NetworkedGameState extends GameState {
         if (this._status == 'connected') {
             this.on_connected();
         }
-        dispatch(msg.type);
+        // todo: trigger a re-render somehow?
     }
 
     on_connected() {
@@ -191,7 +156,7 @@ class NetworkedGameState extends GameState {
         }
         // peek at first element in _pending_actions
         const pending_action = this._pending_actions[0];
-        const matches = isBasicallyTheSameAction(pending_action, action);
+        const matches = areActionsEqual(pending_action, action);
         if (!matches) {
             return false;
         }
@@ -209,3 +174,36 @@ class NetworkedGameState extends GameState {
         return probably_sent;
     }
 }
+
+storedPuzzle.subscribe((puzzle) => {
+    if (!puzzle) {
+        storedGameState.set(null);
+        return;
+    }
+    if (!browser) {
+        return;
+    }
+
+    const storedPrivateUuid = window.localStorage.getItem(UUID_STORE) ?? null;
+    user_id = new UserId(storedPrivateUuid);
+
+    const puzzleState = new NetworkedGameState(puzzle, user_id);
+
+    const storedString = window.localStorage.getItem(GAME_STATE_STORE) ?? null;
+    if (storedString && storedString.length > 0) {
+        set_from_json(storedString, puzzleState);
+    }
+
+    storedGameState.set(puzzleState);
+});
+
+storedGameState.subscribe((value) => {
+    if (browser) {
+        if (value) {
+            const json = to_json(value);
+            window.localStorage.setItem(GAME_STATE_STORE, json);
+        } else {
+            window.localStorage.removeItem(GAME_STATE_STORE);
+        }
+    }
+});

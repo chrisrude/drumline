@@ -2,13 +2,19 @@
     "name": "drumline-lib",
     "version": "0.0.3",
     "description": "Common modules for drumline, shared between server and client",
-    "main": "index.js",
+    "main": "dist/index.mjs",
+    "types": "dist/index.d.ts",
     "scripts": {
-        "test": "npm run test:unit",
-        "lint": "prettier --check . && eslint .",
+        "build": "rollup -c",
+        "clean": "rm -rf ./dist",
         "format": "prettier --write .",
+        "lint": "prettier --check . && eslint .",
+        "test": "npm run test:unit",
         "test:unit": "vitest"
     },
+    "files": [
+        "dist"
+    ],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/chrisrude/drumline.git"
@@ -20,13 +26,18 @@
     },
     "homepage": "https://github.com/chrisrude/drumline#readme",
     "devDependencies": {
+        "@rollup/plugin-node-resolve": "^15.1.0",
+        "@rollup/plugin-terser": "^0.4.3",
+        "@types/uuid": "^9.0.2",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
         "eslint": "^8.45.0",
         "eslint-config-prettier": "^8.9.0",
         "eslint-plugin-prettier": "^5.0.0",
         "prettier": "^3.0.0",
+        "tslib": "^2.6.1",
         "typescript": "^5.1.6",
+        "uuid": "^9.0.0",
         "vitest": "^0.32.2"
     },
     "dependencies": {

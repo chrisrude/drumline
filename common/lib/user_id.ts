@@ -22,6 +22,6 @@ class UserId {
         }
 
         // make a public UUID too
-        this.public_uuid = uuidv5(this.private_uuid, uuidv5.URL + UUID_NAMESPACE);
+        this.public_uuid = uuidv5(uuidv5.URL + UUID_NAMESPACE, this.private_uuid);
     }
 }

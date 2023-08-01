@@ -4,6 +4,10 @@
     "description": "Service to coordinate co-solving across multiple drumline crossword clients.",
     "main": "index.ts",
     "scripts": {
+        "build": "rollup -c",
+        "watch": "rollup -c -w",
+        "dev": "node dist/index.mjs",
+        "clean": "rm -rf ./dist",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
         "start": "tsc && node dist/index.js",
@@ -25,7 +29,9 @@
         "ws": "^8.13.0"
     },
     "devDependencies": {
-        "@types/drumline-lib": "file:../common",
+        "@rollup/plugin-commonjs": "^25.0.3",
+        "@rollup/plugin-node-resolve": "^15.1.0",
+        "@rollup/plugin-terser": "^0.4.3",
         "@types/node": "^20.4.5",
         "@types/websocket": "^1.0.5",
         "@types/ws": "^8.5.5",
@@ -35,7 +41,9 @@
         "eslint-config-prettier": "^8.9.0",
         "eslint-plugin-prettier": "^5.0.0",
         "prettier": "^3.0.0",
+        "tslib": "^2.6.1",
         "typescript": "^5.1.6",
         "vitest": "^0.32.2"
-    }
+    },
+    "type": "module"
 }

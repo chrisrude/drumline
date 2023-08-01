@@ -15,6 +15,7 @@
     "homepage": "https://github.com/chrisrude/drumline#readme",
     "workspaces": [
         "client",
-        "common"
+        "common",
+        "server"
     ]
 }

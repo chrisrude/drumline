@@ -9,13 +9,13 @@ export default {
         dir: 'dist',
         format: 'esm',
         entryFileNames: '[name].mjs',
-        sourcemap: "inline"
+        sourcemap: 'inline'
     },
 
     plugins: [
         nodeResolve(),
         commonjs({ extensions: ['.js', '.ts'] }), // the ".ts" extension is required
-        typescript({ compilerOptions: { module: 'CommonJS', module: "esnext" } }),
+        typescript({ compilerOptions: { module: 'CommonJS', module: 'esnext' } }),
         terser({
             format: {
                 comments: 'some',

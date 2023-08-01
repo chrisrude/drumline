@@ -11,14 +11,6 @@
         "forceConsistentCasingInFileNames": true,
         "esModuleInterop": true
     },
-    "include": [
-        "./.svelte-kit/ambient.d.ts",
-        "src/**/*.js",
-        "src/**/*.ts",
-        "src/**/*.svelte",
-    ],
-    "exclude": [
-        "node_modules",
-        "./dist"
-    ]
+    "include": ["./.svelte-kit/ambient.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"],
+    "exclude": ["node_modules", "./dist"]
 }

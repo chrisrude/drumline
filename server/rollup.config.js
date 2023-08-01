@@ -9,8 +9,9 @@ export default {
         dir: 'dist',
         format: 'esm',
         entryFileNames: '[name].mjs',
-        sourcemap: true
+        sourcemap: "inline"
     },
+
     plugins: [
         commonjs(),
         nodeResolve(),

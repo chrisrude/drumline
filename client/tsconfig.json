@@ -1,0 +1,24 @@
+{
+    "extends": "./.svelte-kit/tsconfig.json",
+    "compilerOptions": {
+        "target": "es6",
+        "module": "ES6",
+        "declaration": true,
+        "outDir": "./build",
+        "sourceMap": true,
+        "strict": true,
+        "moduleResolution": "bundler",
+        "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": true
+    },
+    "include": [
+        "./.svelte-kit/ambient.d.ts",
+        "src/**/*.js",
+        "src/**/*.ts",
+        "src/**/*.svelte",
+    ],
+    "exclude": [
+        "node_modules",
+        "./dist"
+    ]
+}

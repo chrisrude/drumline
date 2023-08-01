@@ -5,6 +5,7 @@
     "main": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "scripts": {
+        "dev": "rollup -w -c",
         "build": "rollup -c",
         "clean": "rm -rf ./dist",
         "format": "prettier --write .",
@@ -26,8 +27,10 @@
     },
     "homepage": "https://github.com/chrisrude/drumline#readme",
     "devDependencies": {
+        "@rollup/plugin-commonjs": "^25.0.3",
         "@rollup/plugin-node-resolve": "^15.1.0",
         "@rollup/plugin-terser": "^0.4.3",
+        "@rollup/plugin-typescript": "^11.1.2",
         "@types/uuid": "^9.0.2",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",

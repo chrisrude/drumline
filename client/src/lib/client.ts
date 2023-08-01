@@ -109,7 +109,6 @@ class NetworkClient {
     }
 
     on_message = (message: MessageEvent) => {
-        console.log(message.data);
         this.callback({
             type: 'data',
             message: message.data

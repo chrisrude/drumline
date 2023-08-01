@@ -131,10 +131,6 @@
 
         const action = markSegment(answerSegments.clue_list, idxStart, idxEnd);
         dispatch('apply', action);
-
-        // do an assignment to trigger a re-render
-        mouseDragging = true;
-        mouseDragging = false;
     };
 
     export const canUngroupAnswer = () => {
@@ -166,10 +162,6 @@
         const index = clueList.indexAtLocation(cursorLocation);
         const action = clearSegment(clueList, index);
         dispatch('apply', action);
-
-        // do an assignment to trigger a re-render
-        mouseDragging = true;
-        mouseDragging = false;
         return true;
     }
 
@@ -529,16 +521,14 @@
         <button
             on:click={groupIntoAnswer}
             disabled={cursorLocation.is_none() ||
-                (mouseDragging && !mouseDragging) ||
+                (!gameState && gameState) ||
                 !canGroupIntoAnswer()}
             title="Group these letters into answer [period]">⛶ mark as answer</button
         >
 
         <button
             on:click={() => clearAnswerAtLocation()}
-            disabled={cursorLocation.is_none() ||
-                (mouseDragging && !mouseDragging) ||
-                !canUngroupAnswer()}
+            disabled={cursorLocation.is_none() || (!gameState && gameState) || !canUngroupAnswer()}
             title="Remove this answer [backspace]">⛝ unmark answer</button
         >
 
@@ -590,22 +580,22 @@
                             gameState.puzzle.getBandNumberAt(i, j)}
                         class:dragover={draggingEnd && draggingStart && onPath(i, j)}
                         class:rowWord={highlightRow != -1 &&
-                            (!mouseDragging || mouseDragging) &&
+                            (!gameState || gameState) &&
                             isInRowWord(i, j)}
                         class:rowWordEnd={highlightRow != -1 &&
-                            (!mouseDragging || mouseDragging) &&
+                            (!gameState || gameState) &&
                             isRowWordEnd(i, j)}
                         class:rowWordStart={highlightRow != -1 &&
-                            (!mouseDragging || mouseDragging) &&
+                            (!gameState || gameState) &&
                             isRowWordStart(i, j)}
                         class:bandWord={highlightBand != -1 &&
-                            (!mouseDragging || mouseDragging) &&
+                            (!gameState || gameState) &&
                             isInBandWord(i, j)}
                         class:bandWordStart={highlightBand != -1 &&
-                            (!mouseDragging || mouseDragging) &&
+                            (!gameState || gameState) &&
                             isBandWordStart(i, j)}
                         class:bandWordEnd={highlightBand != -1 &&
-                            (!mouseDragging || mouseDragging) &&
+                            (!gameState || gameState) &&
                             isBandWordEnd(i, j)}
                         class:bandCornerNW={isBandCorner(i, j, 1)}
                         class:bandSideN={isBandSide(i, j, 1)}

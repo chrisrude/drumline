@@ -161,7 +161,7 @@ function stringToAction(str: string): GameActions {
         default:
             throw new Error('Invalid action: ' + str);
     }
-    numProperties.push('user_id');
+    strProperties.push('user_id');
     numProperties.push('change_count');
 
     validateProperties(obj, numProperties, strProperties);

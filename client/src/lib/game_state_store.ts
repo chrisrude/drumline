@@ -67,13 +67,18 @@ class NetworkedGameState extends GameState {
         }
         super.apply(action);
 
-        // add to our pending actions using our public UUID
-        action.user_id = this._user_id.public_uuid;
+        // add to our pending actions.  Do this first
+        // in case the server fails to respond, or the
+        // callback is called super fast.
         this._pending_actions.push(action);
 
         // send it to the server using our private UUID
         action.user_id = this._user_id.private_uuid;
         this._sendActionToServer(action);
+
+        // change user_id to public so that we can match
+        // it up with the server's response later
+        action.user_id = this._user_id.public_uuid;
 
         return this;
     }
@@ -92,11 +97,14 @@ class NetworkedGameState extends GameState {
 
             // was this an action that we sent and are waiting for acknowledgement of?
             const was_pending = this.maybeCompletePendingAction(action);
-            if (!was_pending) {
+            if (was_pending) {
                 // we had already applied this action, so we don't need to
                 // apply it again.
-                this.apply(action);
+                console.log('Action was already applied: ', action);
+                return;
             }
+            console.log('New action: ', action);
+            super.apply(action);
 
             // directly reapply all our pending actions...
             // todo: I think this is always ok to do without "undoing"
@@ -107,6 +115,9 @@ class NetworkedGameState extends GameState {
 
             // add to our received actions
             this._applied_actions.push(action);
+
+            // todo: is this a good way to do this?
+            storedGameState.set(this);
 
             return;
         }
@@ -159,6 +170,7 @@ class NetworkedGameState extends GameState {
         const pending_action = this._pending_actions[0];
         const matches = areActionsEqual(pending_action, action);
         if (!matches) {
+            console.log('Action did not match pending action: ', action, pending_action);
             return false;
         }
         // let's take it out of _pending_actions

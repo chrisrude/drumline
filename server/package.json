@@ -6,7 +6,7 @@
     "scripts": {
         "build": "rollup -c",
         "watch": "rollup -c -w",
-        "dev": "node dist/index.mjs",
+        "dev": "rollup -c && node dist/index.mjs",
         "clean": "rm -rf ./dist",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",

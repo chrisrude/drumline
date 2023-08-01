@@ -45,8 +45,8 @@
             on:deletePuzzle={() => {
                 dispatch('deletePuzzle');
             }}
-            on:applyPuzzle={(action) => {
-                dispatch('apply', action);
+            on:apply={(action) => {
+                dispatch('apply', action.detail);
             }}
         />
     </div>

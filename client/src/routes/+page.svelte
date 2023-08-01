@@ -22,7 +22,7 @@
     });
 
     const applyGameState = (event: CustomEvent<GameActions>) => {
-        const action = event.detail as GameActions;
+        const action = event.detail;
         if (gameState && action) {
             gameState = gameState.apply(action);
         }

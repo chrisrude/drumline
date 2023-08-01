@@ -30,7 +30,7 @@ class EchoServer extends WebSocketServer {
         });
     }
 
-    on_connection(ws: WebSocket) {
+    on_connection = (ws: WebSocket) => {
         console.log('Connected');
 
         ws.on('error', console.error);
@@ -38,17 +38,16 @@ class EchoServer extends WebSocketServer {
 
         // send already known actions to the client
         for (const action of this.actions) {
-            const strData = action.toString();
+            const strData = actionToString(action);
             ws.send(strData);
         }
     }
 
-    on_incoming_message(data: RawData, isBinary: boolean) {
+    on_incoming_message = (data: RawData, isBinary: boolean) => {
         if (isBinary) {
             console.error('Received binary data on websocket, ignoring');
             return;
         }
-        console.log('Received %s', data);
         const strData = data.toString('utf8');
         const action = stringToAction(strData);
 

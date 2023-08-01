@@ -129,12 +129,6 @@ class NetworkedGameState extends GameState {
 
     on_connected = () => {
         // todo: send confirmed actions too?
-        for (const action of this._applied_actions) {
-            const probably_sent = this._sendActionToServer(action);
-            if (!probably_sent) {
-                return;
-            }
-        }
         for (const action of this._pending_actions) {
             const probably_sent = this._sendActionToServer(action);
             if (!probably_sent) {

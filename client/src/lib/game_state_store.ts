@@ -58,9 +58,10 @@ class NetworkedGameState extends GameState {
         this._status = 'disconnected';
         this._user_id = user_id;
         this._ws_client = new NetworkClient(CONNECTION_INFO, this.callback);
+        this._ws_client.connect();
     }
 
-    apply(action: GameActions): NetworkedGameState {
+    apply = (action: GameActions): NetworkedGameState => {
         if (action.user_id !== '') {
             throw new Error('Cannot apply action with user_id');
         }
@@ -81,7 +82,7 @@ class NetworkedGameState extends GameState {
         return this._status;
     }
 
-    callback(msg: NetworkClientEvent) {
+    callback = (msg: NetworkClientEvent) => {
         if ('data' === msg.type) {
             if (msg.message === undefined || msg.message === null) {
                 throw new Error('No message in data event');
@@ -117,7 +118,7 @@ class NetworkedGameState extends GameState {
         // todo: trigger a re-render somehow?
     }
 
-    on_connected() {
+    on_connected = () => {
         // send all of the actions we know about, starting with
         // the applied actions, then the pending actions.
         // if we can't send one, then we'll stop and hopefully
@@ -145,7 +146,7 @@ class NetworkedGameState extends GameState {
     }
 
     // returns true if the action was in _pending_actions and was removed
-    maybeCompletePendingAction(action: GameActions): boolean {
+    maybeCompletePendingAction = (action: GameActions): boolean => {
         // was this action from our user_id?
         if (action.user_id !== this._user_id.public_uuid) {
             return false;

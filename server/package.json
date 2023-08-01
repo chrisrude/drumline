@@ -10,7 +10,7 @@
         "clean": "rm -rf ./dist",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
-        "start": "tsc && node dist/index.js",
+        "start": "tsc && node dist/index.mjs",
         "test": "npm run test:unit",
         "test:unit": "vitest"
     },

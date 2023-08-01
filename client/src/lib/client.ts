@@ -13,7 +13,38 @@ interface ConnectionInfo {
     port: number;
 }
 
-const RECONNECT_TIMEOUT_MS: number = 1000;
+class ExponentialBackoffFactor {
+    readonly c_min: number;
+    readonly c_max: number;
+
+    c: number;
+
+    constructor(min: number, max: number) {
+        this.c_min = min;
+        this.c_max = max;
+        this.c = min;
+    }
+
+    next(): number {
+        const c = this._next_c();
+        const exp_c = Math.pow(2, c);
+        // return random number between 0 and exp_c
+        return Math.floor(Math.random() * exp_c);
+    }
+
+    _next_c(): number {
+        if (this.c === this.c_max) {
+            return this.c;
+        }
+        this.c += 1;
+        return this.c;
+    }
+
+    reset() {
+        this.c = this.c_min;
+    }
+}
+const RECONNECT_TIMEOUT_UNIT_MS: number = 100;
 
 type NetworkClientStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
 
@@ -31,49 +62,53 @@ type SetTimeoutType = ReturnType<typeof setTimeout>;
 class NetworkClient {
     readonly callback: NetworkClientEventCallback;
     readonly connection_info: ConnectionInfo;
+    readonly factor: ExponentialBackoffFactor;
 
     close_forever: boolean;
     reconnect_timeout: SetTimeoutType | null;
+
     ws: WebSocket | null;
 
     constructor(connection_info: ConnectionInfo, callback: NetworkClientEventCallback) {
         this.callback = callback;
         this.connection_info = connection_info;
+        this.factor = new ExponentialBackoffFactor(0, 10);
         this.close_forever = false;
         this.reconnect_timeout = null;
         this.ws = null;
     }
 
-    make_url() {
+    make_url = () => {
         const { use_tls, host, port } = this.connection_info;
         const protocol = use_tls ? 'wss' : 'ws';
         return `${protocol}://${host}:${port}/`;
     }
 
-    on_open() {
+    on_open = () => {
         console.log('Connected to server: ', this.make_url());
-        this.clearTimeout();
+        this.clear_timeout();
+        this.factor.reset();
         this.callback({
             type: 'connected'
         });
     }
 
-    on_close() {
-        this.clearTimeout();
-        console.log('Disconnected from server');
+    on_close = () => {
         if (this.close_forever) {
             this.callback({
                 type: 'disconnected'
             });
             return;
         }
-        this.reconnect_timeout = setTimeout(this.connect, RECONNECT_TIMEOUT_MS);
+        this._close_internal();
+        const total_timeout_ms = RECONNECT_TIMEOUT_UNIT_MS * this.factor.next();
+        this.reconnect_timeout = setTimeout(this.connect, total_timeout_ms);
         this.callback({
             type: 'reconnecting'
         });
     }
 
-    on_message(message: MessageEvent) {
+    on_message = (message: MessageEvent) => {
         console.log(message.data);
         this.callback({
             type: 'data',
@@ -81,8 +116,10 @@ class NetworkClient {
         });
     }
 
-    connect() {
+    connect = () => {
+        console.log('Connecting to server');
         if (this.ws !== null) {
+            console.log('Already connected');
             return;
         }
         const url = this.make_url();
@@ -93,7 +130,7 @@ class NetworkClient {
         this.ws.addEventListener('close', this.on_close);
     }
 
-    clearTimeout() {
+    clear_timeout = () => {
         if (this.reconnect_timeout === null) {
             return;
         }
@@ -101,16 +138,21 @@ class NetworkClient {
         this.reconnect_timeout = null;
     }
 
-    close() {
-        this.clearTimeout();
+    close = () => {
         this.close_forever = true;
+        this._close_internal();
+    }
+
+    _close_internal = () => {
+        this.clear_timeout();
         if (this.ws === null) {
             return;
         }
         this.ws.close();
+        this.ws = null;
     }
 
-    send(message: string): boolean {
+    send = (message: string): boolean => {
         if (this.ws === null || this.ws.readyState !== WebSocket.OPEN) {
             console.log('Socket not connected');
             return false;

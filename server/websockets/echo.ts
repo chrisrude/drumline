@@ -1,7 +1,12 @@
+import { webcrypto } from 'crypto';
 import { GameActions, UserId, actionToString, areActionsEqual, stringToAction } from 'drumline-lib';
 import { AddressInfo } from 'net';
 import { RawData, ServerOptions, WebSocket, WebSocketServer } from 'ws';
 export { EchoServer };
+
+// do this so that crypto.getRandomValues() is available
+// see https://github.com/uuidjs/uuid#getrandomvalues-not-supported
+webcrypto.randomUUID();
 
 class EchoServer extends WebSocketServer {
     actions: GameActions[];

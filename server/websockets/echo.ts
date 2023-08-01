@@ -42,7 +42,7 @@ class EchoServer extends WebSocketServer {
             const strData = actionToString(action);
             ws.send(strData);
         }
-    }
+    };
 
     on_incoming_message = (data: RawData, isBinary: boolean) => {
         if (isBinary) {
@@ -56,8 +56,7 @@ class EchoServer extends WebSocketServer {
 
         // change user_id from private to public
         // make sure uuid is valid and a v5 uuid
-        if (!action.user_id || !uuidValidate(action.user_id) ||
-            uuidVersion(action.user_id) !== 4) {
+        if (!action.user_id || !uuidValidate(action.user_id) || uuidVersion(action.user_id) !== 4) {
             console.error('Action has invalid invalid user_id.');
             return;
         }
@@ -93,5 +92,5 @@ class EchoServer extends WebSocketServer {
                 client.send(newData, { binary: false });
             }
         });
-    }
+    };
 }

@@ -30,7 +30,6 @@ const storedGameState = writable<GameState | null>(null);
 export const gameState: GameState | null = null;
 let user_id: UserId | null = null;
 
-
 class NetworkedGameState extends GameState {
     // actions which the server has sent to us
     _applied_actions: GameActions[];
@@ -81,7 +80,7 @@ class NetworkedGameState extends GameState {
         action.user_id = this._user_id.public_uuid;
 
         return this;
-    }
+    };
 
     get status(): NetworkClientStatus {
         return this._status;
@@ -125,7 +124,7 @@ class NetworkedGameState extends GameState {
             this.on_connected();
         }
         // todo: trigger a re-render somehow?
-    }
+    };
 
     on_connected = () => {
         // todo: send confirmed actions too?
@@ -135,7 +134,7 @@ class NetworkedGameState extends GameState {
                 return;
             }
         }
-    }
+    };
 
     // returns true if the action was in _pending_actions and was removed
     maybeCompletePendingAction = (action: GameActions): boolean => {
@@ -157,7 +156,7 @@ class NetworkedGameState extends GameState {
         // let's take it out of _pending_actions
         this._pending_actions.shift();
         return true;
-    }
+    };
 
     _sendActionToServer(action: GameActions): boolean {
         const msg = actionToString(action);

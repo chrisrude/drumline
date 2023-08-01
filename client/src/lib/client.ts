@@ -82,7 +82,7 @@ class NetworkClient {
         const { use_tls, host, port } = this.connection_info;
         const protocol = use_tls ? 'wss' : 'ws';
         return `${protocol}://${host}:${port}/`;
-    }
+    };
 
     on_open = () => {
         console.log('Connected to server: ', this.make_url());
@@ -91,7 +91,7 @@ class NetworkClient {
         this.callback({
             type: 'connected'
         });
-    }
+    };
 
     on_close = () => {
         if (this.close_forever) {
@@ -106,14 +106,14 @@ class NetworkClient {
         this.callback({
             type: 'reconnecting'
         });
-    }
+    };
 
     on_message = (message: MessageEvent) => {
         this.callback({
             type: 'data',
             message: message.data
         });
-    }
+    };
 
     connect = () => {
         console.log('Connecting to server');
@@ -126,7 +126,7 @@ class NetworkClient {
         this.ws.addEventListener('open', this.on_open);
         this.ws.addEventListener('message', this.on_message);
         this.ws.addEventListener('close', this.on_close);
-    }
+    };
 
     clear_timeout = () => {
         if (this.reconnect_timeout === null) {
@@ -134,12 +134,12 @@ class NetworkClient {
         }
         clearTimeout(this.reconnect_timeout);
         this.reconnect_timeout = null;
-    }
+    };
 
     close = () => {
         this.close_forever = true;
         this._close_internal();
-    }
+    };
 
     _close_internal = () => {
         this.clear_timeout();
@@ -148,7 +148,7 @@ class NetworkClient {
         }
         this.ws.close();
         this.ws = null;
-    }
+    };
 
     send = (message: string): boolean => {
         if (this.ws === null || this.ws.readyState !== WebSocket.OPEN) {
@@ -168,5 +168,5 @@ class NetworkClient {
             console.log('Error sending message: ', e);
             return false;
         }
-    }
+    };
 }

@@ -1,12 +1,8 @@
-import { webcrypto } from 'crypto';
 import { GameActions, UserId, actionToString, areActionsEqual, stringToAction } from 'drumline-lib';
 import { AddressInfo } from 'net';
+import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { RawData, ServerOptions, WebSocket, WebSocketServer } from 'ws';
 export { EchoServer };
-
-// do this so that crypto.getRandomValues() is available
-// see https://github.com/uuidjs/uuid#getrandomvalues-not-supported
-webcrypto.randomUUID();
 
 class EchoServer extends WebSocketServer {
     actions: GameActions[];
@@ -59,6 +55,13 @@ class EchoServer extends WebSocketServer {
         console.log('Received action: ', action);
 
         // change user_id from private to public
+        // make sure uuid is valid and a v5 uuid
+        if (!action.user_id || !uuidValidate(action.user_id) ||
+            uuidVersion(action.user_id) !== 4) {
+            console.error('Action has invalid invalid user_id.');
+            return;
+        }
+
         const user_id: UserId = new UserId(action.user_id);
         action.user_id = user_id.public_uuid;
 

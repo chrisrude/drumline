@@ -118,7 +118,6 @@ class NetworkClient {
     connect = () => {
         console.log('Connecting to server');
         if (this.ws !== null) {
-            console.log('Already connected');
             return;
         }
         const url = this.make_url();

@@ -93,14 +93,12 @@ class NetworkedGameState extends GameState {
                 throw new Error('No message in data event');
             }
             const action = stringToAction(msg.message);
-            console.log('Received action: ', action);
 
             // was this an action that we sent and are waiting for acknowledgement of?
             const was_pending = this.maybeCompletePendingAction(action);
             if (was_pending) {
                 // we had already applied this action, so we don't need to
                 // apply it again.
-                console.log('Action was already applied: ', action);
                 return;
             }
             console.log('New action: ', action);
@@ -130,18 +128,7 @@ class NetworkedGameState extends GameState {
     }
 
     on_connected = () => {
-        // send all of the actions we know about, starting with
-        // the applied actions, then the pending actions.
-        // if we can't send one, then we'll stop and hopefully
-        // reconnect later.
-        //
-        // why do we do this?  Because it's possible for the backend
-        // to lose state if it crashes, so we want to make sure that
-        // it doesn't lose any of the actions that we know about.
-        //
-        // it also lets the server know the most recent action that
-        // we're aware of, so that it knows which actions are new
-        // to us.
+        // todo: send confirmed actions too?
         for (const action of this._applied_actions) {
             const probably_sent = this._sendActionToServer(action);
             if (!probably_sent) {

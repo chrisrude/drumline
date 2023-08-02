@@ -9,8 +9,6 @@ export type {
     MarkSegmentActionType,
     SetActionType
 };
-import type { ClueListIdentifier, GridLocationType } from './puzzle';
-
 export {
     GAME_ACTIONS,
     actionToString,
@@ -21,6 +19,9 @@ export {
     set,
     stringToAction
 };
+import type { ClueListIdentifier, GridLocationType } from './puzzle';
+import { validateProperties } from './validation';
+
 // these actions change the game state
 
 type GameActions = SetActionType | ClearActionType | MarkSegmentActionType | ClearSegmentActionType;
@@ -108,28 +109,6 @@ function clearSegment(clue_list: ClueListIdentifier, idx_cell: number): ClearSeg
         kind: clue_list.kind,
         idx_cell
     };
-}
-
-function validateProperties(
-    obj: { [s: string]: unknown },
-    numProperties: string[],
-    strProperties: string[]
-) {
-    if (obj === null) {
-        throw new Error('Invalid action: (null)');
-    }
-    for (const [key, value] of Object.entries(obj)) {
-        if (numProperties.includes(key)) {
-            if (typeof value !== 'number') {
-                throw new Error(`Invalid action: ${key} is not a number`);
-            }
-        }
-        if (strProperties.includes(key)) {
-            if (typeof value !== 'string') {
-                throw new Error(`Invalid action: ${key} is not a string`);
-            }
-        }
-    }
 }
 
 function stringToAction(str: string): GameActions {

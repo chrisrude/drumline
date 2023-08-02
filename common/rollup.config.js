@@ -2,6 +2,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+import path from 'node:path';
 
 export default {
     input: 'index.ts',
@@ -9,7 +10,14 @@ export default {
         dir: 'dist',
         format: 'esm',
         entryFileNames: '[name].mjs',
-        sourcemap: 'inline'
+        sourcemap: 'inline',
+        sourcemapPathTransform: (relativeSourcePath, sourcemapPath) => {
+            // will replace relative paths with absolute paths
+            return path.resolve(
+                path.dirname(sourcemapPath),
+                "lib/" + relativeSourcePath
+            );
+        },
     },
 
     plugins: [

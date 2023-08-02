@@ -1,7 +1,7 @@
 export { initialValue, storedPuzzle };
 
 import { browser } from '$app/environment';
-import { Puzzle } from 'drumline-lib';
+import { Puzzle, loadPuzzleFromJson } from 'drumline-lib';
 
 import { writable } from 'svelte/store';
 
@@ -20,15 +20,3 @@ storedPuzzle.subscribe((value) => {
         }
     }
 });
-
-function loadPuzzleFromJson(storedString: string): Puzzle {
-    let original_text = JSON.parse(storedString);
-
-    // is there an "original_text" attr on original_text?
-    // this is what the previous code did
-    if (typeof original_text == 'object' && 'input_text' in original_text) {
-        original_text = original_text.input_text;
-    }
-    const result = new Puzzle(original_text);
-    return result;
-}

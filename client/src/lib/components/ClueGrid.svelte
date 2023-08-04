@@ -257,6 +257,15 @@
                 event.preventDefault();
                 return;
             default:
+                // todo: change typing behavior:
+                //  - if the word is totally filled, typing will
+                //    overwrite letters, moving the cursor as if
+                //    the next space is blank.  If at the last space,
+                //    stay there.
+                //  - if the word is partially filled, look for an empty
+                //    square following the cursor... but if there is no
+                //    space following the cursor, find the first space
+                //    available in the word
                 if (event.key.length === 1) {
                     const action = set(cursorLocation, event.key);
                     dispatch('apply', action);
@@ -499,6 +508,7 @@
 
 <svelte:window on:keydown={onKeyDown} on:mouseup={onDragEnd} />
 
+<!-- todo: fix this -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="grid"

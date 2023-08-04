@@ -1,32 +1,40 @@
-export type {
-    ClearActionType,
-    ClearSegmentActionType,
-    ClueListActionType,
-    GameActionKinds,
-    GameActionType,
-    GameActions,
-    GridActionType,
-    MarkSegmentActionType,
-    SetActionType
-};
 export {
     GAME_ACTIONS,
     actionToString,
     areActionsEqual,
     clear,
     clearSegment,
+    joinPuzzle,
+    leavePuzzle,
     markSegment,
     set,
     stringToAction
+};
+export type {
+    ClearActionType,
+    ClearSegmentActionType,
+    ClueListActionType,
+    CreatePuzzleActionType,
+    GameActionKinds,
+    GameActionType,
+    GameActions,
+    GridActionType,
+    JoinPuzzleActionType,
+    LeavePuzzleActionType,
+    MarkSegmentActionType,
+    SetActionType,
+    SolveIdActionType
 };
 import type { ClueListIdentifier, GridLocationType } from './puzzle';
 import { validateProperties } from './validation';
 
 // these actions change the game state
 
-type GameActions = SetActionType | ClearActionType | MarkSegmentActionType | ClearSegmentActionType;
+// todo: hello isn't really an action, it's a message... maybe it should be a different type?
 
-const GAME_ACTIONS = ['set', 'clear', 'markSegment', 'clearSegment'] as const;
+type GameActions = JoinPuzzleActionType | LeavePuzzleActionType | SetActionType | ClearActionType | MarkSegmentActionType | ClearSegmentActionType;
+
+const GAME_ACTIONS = ['joinPuzzle', 'leavePuzzle', 'set', 'clear', 'markSegment', 'clearSegment'] as const;
 
 type GameActionKinds = (typeof GAME_ACTIONS)[number];
 type GameActionType = {
@@ -34,6 +42,25 @@ type GameActionType = {
     user_id: string;
     change_count: number;
 };
+
+type CreatePuzzleActionType = GameActionType & {
+    action: 'createPuzzle';
+    change_count: -1;
+    puzzle_input: string;
+}
+
+type SolveIdActionType = GameActionType & {
+    solve_id: string;
+};
+
+type JoinPuzzleActionType = SolveIdActionType & {
+    action: 'joinPuzzle';
+};
+
+type LeavePuzzleActionType = GameActionType & {
+    action: 'leavePuzzle';
+};
+
 
 // takes an i,j location on the grid
 type GridActionType = GameActionType & GridLocationType;
@@ -111,6 +138,23 @@ function clearSegment(clue_list: ClueListIdentifier, idx_cell: number): ClearSeg
     };
 }
 
+function joinPuzzle(solve_id: string): JoinPuzzleActionType {
+    return {
+        action: 'joinPuzzle',
+        user_id: '',
+        change_count: -1,
+        solve_id
+    };
+}
+
+function leavePuzzle(): LeavePuzzleActionType {
+    return {
+        action: 'leavePuzzle',
+        user_id: '',
+        change_count: -1
+    };
+}
+
 function stringToAction(str: string): GameActions {
     if (str === null) {
         throw new Error('Invalid action: (null)');
@@ -136,6 +180,11 @@ function stringToAction(str: string): GameActions {
             strProperties.push('kind');
             numProperties.push('idx_cell_start');
             numProperties.push('idx_cell_end');
+            break;
+        case 'joinPuzzle':
+            strProperties.push('solve_id');
+            break;
+        case 'leavePuzzle':
             break;
         default:
             throw new Error('Invalid action: ' + str);
@@ -213,6 +262,15 @@ function areActionsEqual(a: GameActions, b: GameActions): boolean {
                     return false;
                 }
             }
+            break;
+        case 'joinPuzzle':
+            const solve_id_a = a as SolveIdActionType;
+            const solve_id_b = b as SolveIdActionType;
+            if (solve_id_a.solve_id !== solve_id_b.solve_id) {
+                return false;
+            }
+            break;
+        case 'leavePuzzle':
             break;
     }
 

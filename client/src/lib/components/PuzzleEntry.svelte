@@ -1,23 +1,22 @@
 <script lang="ts">
-    import { storedGameState } from '$lib/game_state_store';
+    import { user_id } from '$lib/game_state_store';
     import { storedPuzzle } from '$lib/puzzle_store';
-    import { GameState, Puzzle } from 'drumline-lib';
+    import { Puzzle } from 'drumline-lib';
+    import { get } from 'svelte/store';
 
-    /** @type {import('./$types').PageData} */
-
-    export let puzzle: Puzzle | null;
-    export let gameState: GameState | null;
-
-    export let inputText = '';
-    export let parseError = '';
-    export let tentativePuzzle: Puzzle | null = null;
+    let validInput = false;
+    let inputText = get(storedPuzzle)?.original_text ?? '';
+    let parseError = '';
 
     const parse_puzzle = () => {
+        if (!user_id) {
+            throw new Error('user_id is not set');
+        }
         try {
-            puzzle = new Puzzle(inputText);
-            storedPuzzle.set(puzzle);
-            gameState = new GameState(puzzle);
-            storedGameState.set(gameState);
+            if (null === user_id) {
+                throw new Error('user_id is not set');
+            }
+            storedPuzzle.set(new Puzzle(inputText));
             parseError = '';
         } catch (error) {
             if (error instanceof Error) {
@@ -26,27 +25,21 @@
         }
     };
 
-    function savePuzzle() {
-        if (puzzle) {
-            storedPuzzle.set(puzzle);
-        }
-    }
-    $: puzzle !== null && savePuzzle();
-
     $: {
         if (inputText) {
             try {
-                tentativePuzzle = new Puzzle(inputText);
+                new Puzzle(inputText);
                 parseError = '';
+                validInput = true;
             } catch (error) {
-                tentativePuzzle = null;
                 if (error instanceof Error) {
                     parseError = error.message;
                 }
+                validInput = false;
             }
         } else {
-            tentativePuzzle = null;
             parseError = '';
+            validInput = false;
         }
     }
 </script>
@@ -61,7 +54,7 @@
 
             <div class="puzzle-entry-input">
                 <textarea bind:value={inputText} rows="20" />
-                <button on:click={parse_puzzle} disabled={tentativePuzzle === null}
+                <button on:click={parse_puzzle} disabled={!validInput}
                     >🥁🥁🥁 let's play 🥁🥁🥁</button
                 >
             </div>

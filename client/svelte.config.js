@@ -5,7 +5,13 @@ import sveltePreprocess from 'svelte-preprocess';
 const config = {
     appDir: 'app',
     kit: {
-        adapter: adapter({})
+        adapter: adapter({
+            // pages: 'build',
+            // assets: 'build',
+            fallback: "/index.js",
+            // precompress: false,
+            // strict: true
+        })
     },
     preprocess: sveltePreprocess()
 };

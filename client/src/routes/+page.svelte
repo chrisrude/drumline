@@ -1,44 +1,25 @@
 <script lang="ts">
     import PuzzleEntry from '$lib/components/PuzzleEntry.svelte';
     import PuzzleView from '$lib/components/PuzzleView.svelte';
-    import { storedGameState } from '$lib/game_state_store';
+    import { solveClient, storedGameState } from '$lib/game_state_store';
     import { storedPuzzle } from '$lib/puzzle_store';
-    import type { GameActions, GameState } from 'drumline-lib';
+    import type { GameActions } from 'drumline-lib';
     import { onMount } from 'svelte';
-    import { writable } from 'svelte/store';
     import { blur } from 'svelte/transition';
 
-    export let data: import('./$types').PageData;
-    export let puzzle = data.puzzle;
-    export let gameState: GameState | null = null;
-    const loading = writable(true);
+    export let loading = true;
 
     onMount(async () => {
-        loading.set(false);
+        loading = false;
     });
 
-    storedGameState.subscribe((value) => {
-        gameState = value;
-    });
-
-    const applyGameState = (event: CustomEvent<GameActions>) => {
+    const apply = (event: CustomEvent<GameActions>) => {
         const action = event.detail;
-        if (gameState && action) {
-            gameState = gameState.apply(action);
-        }
+        solveClient!.apply(action);
     };
-
-    const saveGameState = () => {
-        if (gameState) {
-            storedGameState.set(gameState);
-        }
-    };
-    $: gameState !== null && saveGameState();
 
     const clean_puzzle = () => {
-        puzzle = null;
         storedPuzzle.set(null);
-        gameState = null;
         storedGameState.set(null);
     };
 </script>
@@ -47,13 +28,17 @@
     <title>drumline</title>
 </svelte:head>
 
-{#if !$loading}
-    {#if puzzle && gameState}
+{#if !loading}
+    {#if $storedPuzzle && $storedGameState}
         <div transition:blur={{ amount: '1vw' }} class="fly-holder">
-            <PuzzleView bind:gameState on:deletePuzzle={clean_puzzle} on:apply={applyGameState} />
+            <PuzzleView
+                bind:gameState={$storedGameState}
+                on:deletePuzzle={clean_puzzle}
+                on:apply={apply}
+            />
         </div>
     {:else}
-        <PuzzleEntry bind:puzzle bind:gameState />
+        <PuzzleEntry />
     {/if}
 {/if}
 

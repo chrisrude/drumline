@@ -115,9 +115,10 @@ class AnswerSegments {
 type SegmentMap = Map<string, AnswerSegments>;
 
 type GameStateType = {
-    grid: Cell[][];
     answer_segments: SegmentMap;
+    grid: Cell[][];
     is_solved: boolean;
+    solve_id: string;
 };
 
 class GameState implements GameStateType {
@@ -126,6 +127,7 @@ class GameState implements GameStateType {
     readonly puzzle: Puzzle;
     readonly grid: Cell[][];
     is_solved: boolean;
+    solve_id: string;
 
     constructor(puzzle: Puzzle) {
         this.answer_segments = new Map<string, AnswerSegments>();
@@ -142,6 +144,7 @@ class GameState implements GameStateType {
             Array.from({ length: puzzle.size }, () => new Cell())
         );
         this.is_solved = false;
+        this.solve_id = '';
     }
 
     apply(action: GameActionType): GameState {
@@ -187,6 +190,7 @@ class GameState implements GameStateType {
                 answer_segments.clearSegment(clear_segment_action.idx_cell);
                 break;
             }
+
         }
         return this;
     }

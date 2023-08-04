@@ -1,10 +1,10 @@
-export { NetworkClient };
+export { WSClient };
 export type {
     ConnectionInfo,
-    NetworkClientEvent,
-    NetworkClientEventCallback,
-    NetworkClientEventType,
-    NetworkClientStatus
+    WSClientEvent,
+    WSClientEventCallback,
+    WSClientEventType,
+    WSClientStatus
 };
 
 interface ConnectionInfo {
@@ -46,21 +46,22 @@ class ExponentialBackoffFactor {
 }
 const RECONNECT_TIMEOUT_UNIT_MS: number = 100;
 
-type NetworkClientStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
+type WSClientStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
 
-type NetworkClientEventType = NetworkClientStatus | 'data';
+type WSClientEventType = WSClientStatus | 'data';
 
-interface NetworkClientEvent {
-    type: NetworkClientEventType;
+interface WSClientEvent {
+    type: WSClientEventType;
     message?: string;
 }
 
-type NetworkClientEventCallback = (event: NetworkClientEvent) => void;
+type WSClientEventCallback = (event: WSClientEvent) => void;
 
 type SetTimeoutType = ReturnType<typeof setTimeout>;
 
-class NetworkClient {
-    readonly callback: NetworkClientEventCallback;
+// a websocket client that automatically reconnects
+class WSClient {
+    readonly callback: WSClientEventCallback;
     readonly connection_info: ConnectionInfo;
     readonly factor: ExponentialBackoffFactor;
 
@@ -69,7 +70,7 @@ class NetworkClient {
 
     ws: WebSocket | null;
 
-    constructor(connection_info: ConnectionInfo, callback: NetworkClientEventCallback) {
+    constructor(connection_info: ConnectionInfo, callback: WSClientEventCallback) {
         this.callback = callback;
         this.connection_info = connection_info;
         this.factor = new ExponentialBackoffFactor(0, 10);
@@ -94,19 +95,24 @@ class NetworkClient {
     };
 
     on_close = () => {
+        this._close_internal();
         if (this.close_forever) {
             this.callback({
                 type: 'disconnected'
             });
             return;
         }
-        this._close_internal();
-        const total_timeout_ms = RECONNECT_TIMEOUT_UNIT_MS * this.factor.next();
-        this.reconnect_timeout = setTimeout(this.connect, total_timeout_ms);
+        this.schedule_reconnect();
         this.callback({
             type: 'reconnecting'
         });
     };
+
+    schedule_reconnect = () => {
+        this.clear_timeout();
+        const total_timeout_ms = RECONNECT_TIMEOUT_UNIT_MS * this.factor.next();
+        this.reconnect_timeout = setTimeout(this.connect, total_timeout_ms);
+    }
 
     on_message = (message: MessageEvent) => {
         this.callback({
@@ -137,6 +143,7 @@ class NetworkClient {
     };
 
     close = () => {
+        console.log('Closing connection');
         this.close_forever = true;
         this._close_internal();
     };
@@ -146,8 +153,10 @@ class NetworkClient {
         if (this.ws === null) {
             return;
         }
-        this.ws.close();
+        const ws = this.ws;
         this.ws = null;
+        ws.close();
+        console.log('Connection closed');
     };
 
     send = (message: string): boolean => {

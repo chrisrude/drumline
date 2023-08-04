@@ -1,11 +1,9 @@
-import { toUtf8 } from 'base-emoji';
 import { Puzzle, UserId, loadPuzzleFromJson, savePuzzleToJson } from 'drumline-lib';
-import { subtle } from 'node:crypto';
 import { RedisClientType, createClient } from 'redis';
+import { puzzleHmacName } from '../crypto';
 
 import redisJson from '@redis/json';
 
-const HASH_ALGORITHM = 'sha512';
 const RESULT_OK = 'OK';
 
 export { PuzzleRedisClient };
@@ -16,17 +14,24 @@ const modules = {
 };
 export type JsonRedisClient = RedisClientType<typeof modules>;
 
-
 class PuzzleRedisClient {
     private readonly client: JsonRedisClient;
 
-    constructor() {
+    constructor(
+        url: string | undefined,
+        username: string | undefined,
+        password: string | undefined,
+    ) {
         this.client = createClient({
+            url,
+            username,
+            password,
             modules,
         });
     }
 
-    connect = async (): Promise<void> => {
+    connect = async (
+    ): Promise<void> => {
         return this.client.connect();
     }
 
@@ -40,7 +45,7 @@ class PuzzleRedisClient {
     // text and the user_id.
     savePuzzle = async (puzzle: Puzzle, user_id: UserId): Promise<string> => {
         const puzzle_json = savePuzzleToJson(puzzle);
-        return this.puzzleHmacName(puzzle, user_id).then(async (hmac_key) => {
+        return puzzleHmacName(puzzle, user_id.private_uuid).then(async (hmac_key) => {
             return this.client.redisJson.set(this.solvePuzzleKey(hmac_key), '$', puzzle_json).then((result) => {
                 if (RESULT_OK !== result) {
                     throw new Error(`result of set for puzzle is ${result}`);
@@ -68,21 +73,6 @@ class PuzzleRedisClient {
             }
             return loadPuzzleFromJson(json);
         });
-    }
-
-    // input text should be the json encoding of the puzzle, with the private user_id appended
-    // output should be the sha512 hash of the input text
-    puzzleHmac = (puzzle: Puzzle, user_id: UserId): Promise<ArrayBuffer> => {
-        const inputText = JSON.stringify(puzzle) + user_id.private_uuid;
-
-        const ec = new TextEncoder();
-        const data = ec.encode(inputText);
-        return subtle.digest(HASH_ALGORITHM, data);
-    }
-
-    // returns a string representation of the hash
-    puzzleHmacName = async (puzzle: Puzzle, user_id: UserId): Promise<string> => {
-        return this.puzzleHmac(puzzle, user_id).then((hash) => { return toUtf8(hash) });
     }
 
     solvePuzzleKey = (hmac_key: string): string => {

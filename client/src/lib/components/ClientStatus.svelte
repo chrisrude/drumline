@@ -1,7 +1,7 @@
 <script lang="ts">
-    import type { NetworkClientEventType } from '$lib/client';
+    import type { WSClientEventType } from '$lib/ws_client';
 
-    export let status: NetworkClientEventType = 'disconnected';
+    export let status: WSClientEventType = 'disconnected';
 </script>
 
 <div class="networkStatus">

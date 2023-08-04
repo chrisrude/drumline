@@ -1,4 +1,3 @@
-
 // todo: use keys from doppler
 export const SECRET_PUZZLE_ID_SALT = 'keyboard cat';
 export const SECRET_COOKIE_SALT = 'keyboard cat';

@@ -11,7 +11,6 @@ const storedString = browser ? window.localStorage.getItem(PUZZLE_STORE) ?? null
 const initialValue = storedString ? loadPuzzleFromJson(storedString) : null;
 const storedPuzzle = writable<Puzzle | null>(initialValue);
 
-
 storedPuzzle.subscribe((puzzle) => {
     if (puzzle) {
         window.localStorage.setItem(PUZZLE_STORE, JSON.stringify(puzzle.original_text));

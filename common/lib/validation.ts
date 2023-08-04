@@ -1,4 +1,3 @@
-
 export { validateProperties };
 
 const validateProperties = (
@@ -21,4 +20,4 @@ const validateProperties = (
             }
         }
     }
-}
+};

@@ -30,7 +30,7 @@ class LoginManager {
         session.private_uuid = private_uuid;
 
         res.status(200).send({ result: 'OK', message: 'logged in' });
-    }
+    };
 
     logout = async (req: Request, res: Response) => {
         console.log(`logout`);
@@ -39,7 +39,7 @@ class LoginManager {
         session.private_uuid = undefined;
 
         res.status(200).send({ result: 'OK', message: 'logged out' });
-    }
+    };
 
     try_create_user_id = (uuid: string): UserId | null => {
         // make sure uuid is valid and a v5 uuid
@@ -52,7 +52,7 @@ class LoginManager {
         } catch {
             return null;
         }
-    }
+    };
 
     validate_private_uuid_cookie = (req: Request, _res: Response, next: NextFunction) => {
         console.log(`validate_private_uuid_cookie: ${req.cookies}`);
@@ -69,12 +69,12 @@ class LoginManager {
             }
         }
         next();
-    }
+    };
 
     get_private_uuid_maybe = (req: Request): string | null => {
         const session: CookieSessionInterfaces.CookieSessionObject = req.session;
         return session.private_uuid || null;
-    }
+    };
 
     get_private_uuid_fo_sho = (req: Request): string => {
         const session: CookieSessionInterfaces.CookieSessionObject = req.session;
@@ -83,9 +83,9 @@ class LoginManager {
             throw new Error('private_uuid not found');
         }
         return result;
-    }
+    };
 
     is_logged_in = (req: Request): boolean => {
         return this.get_private_uuid_maybe(req) !== null;
-    }
+    };
 }

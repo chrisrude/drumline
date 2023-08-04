@@ -8,7 +8,7 @@ const config = {
         adapter: adapter({
             // pages: 'build',
             // assets: 'build',
-            fallback: "/index.js",
+            fallback: '/index.js'
             // precompress: false,
             // strict: true
         })

@@ -1,4 +1,4 @@
-declare module 'base-emoji'
+declare module 'base-emoji';
 
 declare function toUtf8(buf: Buffer): string;
 declare function toNames(buf: Buffer): string;

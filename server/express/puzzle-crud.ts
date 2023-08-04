@@ -1,4 +1,3 @@
-
 import { Puzzle } from 'drumline-lib';
 import { Express, Request, Response } from 'express';
 import { puzzleHmacName } from '../crypto';
@@ -10,7 +9,6 @@ export { PuzzleCrudder };
 // app.set('trust proxy', 1) // trust first proxy
 
 class PuzzleCrudder {
-
     // todo: use redis to store solve puzzles
 
     readonly _app: Express;
@@ -38,16 +36,19 @@ class PuzzleCrudder {
 
         const puzzle_ids = Array.from(this._map_puzzle_id_to_creator_uuid.keys());
         const my_puzzle_ids = puzzle_ids.filter((puzzle_id) => {
-            return null !== private_uuid && private_uuid === this._map_puzzle_id_to_creator_uuid.get(puzzle_id);
+            return (
+                null !== private_uuid &&
+                private_uuid === this._map_puzzle_id_to_creator_uuid.get(puzzle_id)
+            );
         });
 
         // todo: should we send other puzzle_ids?
         res.send({
             result: 'OK',
             puzzle_ids,
-            my_puzzle_ids,
+            my_puzzle_ids
         });
-    }
+    };
 
     read_puzzle = (req: Request, res: Response) => {
         const id = req.params.id;
@@ -62,9 +63,9 @@ class PuzzleCrudder {
         }
         res.send({
             result: 'OK',
-            puzzle: puzzle,
+            puzzle: puzzle
         });
-    }
+    };
 
     create_puzzle = async (req: Request, res: Response) => {
         console.log(`create_puzzle`);
@@ -92,9 +93,9 @@ class PuzzleCrudder {
 
         res.send({
             result: 'OK',
-            puzzle_id: puzzle_id,
+            puzzle_id: puzzle_id
         });
-    }
+    };
 
     delete_puzzle = async (req: Request, res: Response) => {
         console.log(`delete_puzzle`);
@@ -123,7 +124,7 @@ class PuzzleCrudder {
         this._map_puzzle_id_to_puzzle.delete(id);
 
         res.send({
-            result: 'OK',
+            result: 'OK'
         });
-    }
+    };
 }

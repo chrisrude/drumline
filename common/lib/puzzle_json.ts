@@ -7,12 +7,12 @@ const loadPuzzleFromJson = (storedString: string): Puzzle | null => {
     try {
         return new Puzzle(json);
     } catch (e) {
-        console.error("could not load puzzle from json: ", e);
+        console.error('could not load puzzle from json: ', e);
         return null;
     }
-}
+};
 
 const savePuzzleToJson = (puzzle: Puzzle): string => {
     const json = JSON.stringify(puzzle);
     return json;
-}
+};

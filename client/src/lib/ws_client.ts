@@ -112,7 +112,7 @@ class WSClient {
         this.clear_timeout();
         const total_timeout_ms = RECONNECT_TIMEOUT_UNIT_MS * this.factor.next();
         this.reconnect_timeout = setTimeout(this.connect, total_timeout_ms);
-    }
+    };
 
     on_message = (message: MessageEvent) => {
         this.callback({

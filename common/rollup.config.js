@@ -13,11 +13,8 @@ export default {
         sourcemap: 'inline',
         sourcemapPathTransform: (relativeSourcePath, sourcemapPath) => {
             // will replace relative paths with absolute paths
-            return path.resolve(
-                path.dirname(sourcemapPath),
-                "lib/" + relativeSourcePath
-            );
-        },
+            return path.resolve(path.dirname(sourcemapPath), 'lib/' + relativeSourcePath);
+        }
     },
 
     plugins: [

@@ -190,7 +190,6 @@ class GameState implements GameStateType {
                 answer_segments.clearSegment(clear_segment_action.idx_cell);
                 break;
             }
-
         }
         return this;
     }

@@ -1,11 +1,18 @@
-import { actionToString, areActionsEqual, joinPuzzle, leavePuzzle, stringToAction, type GameActions, type UserId } from "drumline-lib";
-import { storedGameState } from "./game_state_store";
-import type { WSClient, WSClientEvent } from "./ws_client";
+import {
+    actionToString,
+    areActionsEqual,
+    joinPuzzle,
+    leavePuzzle,
+    stringToAction,
+    type GameActions,
+    type UserId
+} from 'drumline-lib';
+import { storedGameState } from './game_state_store';
+import type { WSClient, WSClientEvent } from './ws_client';
 
 export { SolveClient };
 
 class SolveClient {
-
     // actions which the server has sent to us
     readonly _applied_actions: GameActions[];
 
@@ -18,7 +25,6 @@ class SolveClient {
     readonly _user_id: UserId;
 
     readonly _ws_client: WSClient;
-
 
     constructor(solve_id: string, user_id: UserId, ws_client: WSClient) {
         console.log('NetworkedGameState constructor');
@@ -48,7 +54,7 @@ class SolveClient {
         if (action.user_id !== '') {
             throw new Error('Cannot apply action with user_id');
         }
-        // we expect that we have a game state, as the rest of the 
+        // we expect that we have a game state, as the rest of the
         // app is asking us to update it.
         storedGameState.update((game_state) => game_state!.apply(action));
 
@@ -79,27 +85,25 @@ class SolveClient {
             this._applied_actions.push(action);
 
             // todo: is this a good way to do this?
-            storedGameState.update(
-                (game_state) => {
-                    if (game_state === null) {
-                        // we must have closed the game and the server
-                        // sent us a message before we could tell it so
-                        console.log('Ignoring action because game is closed');
-                        return null;
-                    }
-
-                    console.log('New action: ', action);
-                    game_state = game_state.apply(action);
-
-                    // directly reapply all our pending actions...
-                    // todo: I think this is always ok to do without "undoing"
-                    // anything.  But is that correct?
-                    for (const pending_action of this._pending_actions) {
-                        game_state = game_state.apply(pending_action);
-                    }
-                    return game_state;
+            storedGameState.update((game_state) => {
+                if (game_state === null) {
+                    // we must have closed the game and the server
+                    // sent us a message before we could tell it so
+                    console.log('Ignoring action because game is closed');
+                    return null;
                 }
-            )
+
+                console.log('New action: ', action);
+                game_state = game_state.apply(action);
+
+                // directly reapply all our pending actions...
+                // todo: I think this is always ok to do without "undoing"
+                // anything.  But is that correct?
+                for (const pending_action of this._pending_actions) {
+                    game_state = game_state.apply(pending_action);
+                }
+                return game_state;
+            });
 
             return;
         }

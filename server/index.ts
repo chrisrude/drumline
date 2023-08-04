@@ -20,10 +20,12 @@ const app = express();
 // );
 // await redis_client.connect();
 
-app.use(cookieSession({
-    name: 'drumline-session',
-    secret: SECRET_COOKIE_SALT,
-}));
+app.use(
+    cookieSession({
+        name: 'drumline-session',
+        secret: SECRET_COOKIE_SALT
+    })
+);
 
 const http_server = http.createServer(app);
 const ws_server = new EchoServer({ port: 8080 });

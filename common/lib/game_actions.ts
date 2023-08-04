@@ -32,9 +32,22 @@ import { validateProperties } from './validation';
 
 // todo: hello isn't really an action, it's a message... maybe it should be a different type?
 
-type GameActions = JoinPuzzleActionType | LeavePuzzleActionType | SetActionType | ClearActionType | MarkSegmentActionType | ClearSegmentActionType;
+type GameActions =
+    | JoinPuzzleActionType
+    | LeavePuzzleActionType
+    | SetActionType
+    | ClearActionType
+    | MarkSegmentActionType
+    | ClearSegmentActionType;
 
-const GAME_ACTIONS = ['joinPuzzle', 'leavePuzzle', 'set', 'clear', 'markSegment', 'clearSegment'] as const;
+const GAME_ACTIONS = [
+    'joinPuzzle',
+    'leavePuzzle',
+    'set',
+    'clear',
+    'markSegment',
+    'clearSegment'
+] as const;
 
 type GameActionKinds = (typeof GAME_ACTIONS)[number];
 type GameActionType = {
@@ -47,7 +60,7 @@ type CreatePuzzleActionType = GameActionType & {
     action: 'createPuzzle';
     change_count: -1;
     puzzle_input: string;
-}
+};
 
 type SolveIdActionType = GameActionType & {
     solve_id: string;
@@ -60,7 +73,6 @@ type JoinPuzzleActionType = SolveIdActionType & {
 type LeavePuzzleActionType = GameActionType & {
     action: 'leavePuzzle';
 };
-
 
 // takes an i,j location on the grid
 type GridActionType = GameActionType & GridLocationType;

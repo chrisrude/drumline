@@ -13,9 +13,11 @@ const puzzleHmac = (puzzle: Puzzle, private_uuid: string): Promise<ArrayBuffer> 
     const ec = new TextEncoder();
     const data = ec.encode(inputText);
     return subtle.digest(SECRET_HASH_ALGORITHM, data);
-}
+};
 
 // returns a string representation of the hash
 const puzzleHmacName = async (puzzle: Puzzle, private_uuid: string): Promise<string> => {
-    return puzzleHmac(puzzle, private_uuid).then((hash) => { return toUtf8(hash) });
-}
+    return puzzleHmac(puzzle, private_uuid).then((hash) => {
+        return toUtf8(hash);
+    });
+};

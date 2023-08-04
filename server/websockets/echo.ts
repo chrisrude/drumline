@@ -1,4 +1,12 @@
-import { GameActions, JoinPuzzleActionType, LeavePuzzleActionType, UserId, actionToString, areActionsEqual, stringToAction } from 'drumline-lib';
+import {
+    GameActions,
+    JoinPuzzleActionType,
+    LeavePuzzleActionType,
+    UserId,
+    actionToString,
+    areActionsEqual,
+    stringToAction
+} from 'drumline-lib';
 import { AddressInfo } from 'net';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { RawData, ServerOptions, WebSocket, WebSocketServer } from 'ws';
@@ -6,7 +14,7 @@ export { EchoServer };
 
 enum ClientStatus {
     WAITING_FOR_HELLO,
-    LISTENING,
+    LISTENING
 }
 
 class ClientState {
@@ -62,11 +70,11 @@ class EchoServer extends WebSocketServer {
             throw new Error('Client state not found');
         }
         return client_state;
-    }
+    };
 
     has_solve_id = (solve_id: string): boolean => {
         return this.solve_actions.has(solve_id);
-    }
+    };
 
     get_solve_actions = (solve_id: string): GameActions[] => {
         const solve_actions = this.solve_actions.get(solve_id);
@@ -74,7 +82,7 @@ class EchoServer extends WebSocketServer {
             throw new Error('Solve actions not found');
         }
         return solve_actions;
-    }
+    };
 
     on_connection = (ws: WebSocket) => {
         console.log('Connected: %d clients', this.connected_clients.size + 1);
@@ -103,7 +111,7 @@ class EchoServer extends WebSocketServer {
             throw new Error('Invalid user_id');
         }
         client_state.user_id = new UserId(uuid);
-    }
+    };
 
     on_join_puzzle = (ws: WebSocket, joinPuzzle: JoinPuzzleActionType) => {
         const client_state = this.get_client_state(ws);
@@ -219,5 +227,5 @@ class EchoServer extends WebSocketServer {
             default:
                 this.on_puzzle_action_message(ws, action);
         }
-    }
+    };
 }

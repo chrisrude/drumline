@@ -4,8 +4,8 @@ import { browser } from '$app/environment';
 import { storedPuzzle } from '$lib/puzzle_store';
 import { GameState, UserId, set_from_json, to_json } from 'drumline-lib';
 import { writable } from 'svelte/store';
+import { ReconnectWsClient, type ConnectionInfo, type WSClientEvent } from './reconnect_ws_client';
 import { SolveClient } from './solve_client';
-import { WSClient, type ConnectionInfo, type WSClientEvent } from './ws_client';
 
 // our private v5 uuid for this user
 const STORAGE_KEY_UUID = 'drumline-uuid';
@@ -39,7 +39,7 @@ let user_id: UserId | null = null;
 
 let solveClient: SolveClient | null = null;
 
-const ws_client = new WSClient(CONNECTION_INFO, (msg: WSClientEvent) => {
+const ws_client = new ReconnectWsClient(CONNECTION_INFO, (msg: WSClientEvent) => {
     if (solveClient === null) {
         throw new Error('No solve client');
     }

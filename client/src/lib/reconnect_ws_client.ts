@@ -1,4 +1,4 @@
-export { WSClient };
+export { ReconnectWsClient };
 export type {
     ConnectionInfo,
     WSClientEvent,
@@ -60,7 +60,7 @@ type WSClientEventCallback = (event: WSClientEvent) => void;
 type SetTimeoutType = ReturnType<typeof setTimeout>;
 
 // a websocket client that automatically reconnects
-class WSClient {
+class ReconnectWsClient {
     readonly callback: WSClientEventCallback;
     readonly connection_info: ConnectionInfo;
     readonly factor: ExponentialBackoffFactor;

@@ -1,5 +1,5 @@
 import { Puzzle } from 'drumline-lib';
-import { Express, Request, Response } from 'express';
+import { Express, Request, Response, json } from 'express';
 import { puzzleHmacName } from '../crypto';
 import { LoginManager } from './login-manager';
 
@@ -22,10 +22,13 @@ class PuzzleCrudder {
         this._map_puzzle_id_to_creator_uuid = new Map<string, string>();
         this._map_puzzle_id_to_puzzle = new Map<string, Puzzle>();
 
-        app.post('/puzzle', this.create_puzzle);
-        app.get('/puzzle', this.list_puzzles);
-        app.get('/puzzle/:id', this.read_puzzle);
-        app.delete('/puzzle/:id', this.delete_puzzle);
+        // json middleware will parse json bodies
+        app.use(json());
+
+        app.post('/puzzles', this.create_puzzle);
+        app.get('/puzzles', this.list_puzzles);
+        app.get('/puzzles/:id', this.read_puzzle);
+        app.delete('/puzzles/:id', this.delete_puzzle);
     }
 
     list_puzzles = async (req: Request, res: Response) => {
@@ -43,7 +46,7 @@ class PuzzleCrudder {
         });
 
         // todo: should we send other puzzle_ids?
-        res.send({
+        res.status(200).send({
             result: 'OK',
             puzzle_ids,
             my_puzzle_ids
@@ -61,7 +64,7 @@ class PuzzleCrudder {
             res.status(404).send(`Puzzle ${id} not found`);
             return;
         }
-        res.send({
+        res.status(200).send({
             result: 'OK',
             puzzle: puzzle
         });
@@ -76,9 +79,11 @@ class PuzzleCrudder {
             return;
         }
 
+        const input_text = req.body.input_text;
+
         let puzzle: Puzzle;
         try {
-            puzzle = new Puzzle(req.body);
+            puzzle = new Puzzle(input_text);
         } catch (err) {
             res.status(400).send(`Invalid puzzle_input: ${err}`);
             return;
@@ -91,7 +96,7 @@ class PuzzleCrudder {
         this._map_puzzle_id_to_creator_uuid.set(puzzle_id, requester_private_uuid);
         this._map_puzzle_id_to_puzzle.set(puzzle_id, puzzle);
 
-        res.send({
+        res.status(201).location(`/puzzles/${puzzle_id}`).send({
             result: 'OK',
             puzzle_id: puzzle_id
         });
@@ -123,7 +128,7 @@ class PuzzleCrudder {
         this._map_puzzle_id_to_creator_uuid.delete(id);
         this._map_puzzle_id_to_puzzle.delete(id);
 
-        res.send({
+        res.status(200).send({
             result: 'OK'
         });
     };

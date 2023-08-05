@@ -29,7 +29,7 @@ class LoginManager {
         // store the user_id in the session
         session.private_uuid = private_uuid;
 
-        res.status(200).send({ result: 'OK', message: 'logged in' });
+        res.status(200).send({ result: 'OK' });
     };
 
     logout = async (req: Request, res: Response) => {
@@ -38,7 +38,7 @@ class LoginManager {
         const session: CookieSessionInterfaces.CookieSessionObject = req.session;
         session.private_uuid = undefined;
 
-        res.status(200).send({ result: 'OK', message: 'logged out' });
+        res.status(200).send({ result: 'OK' });
     };
 
     try_create_user_id = (uuid: string): UserId | null => {

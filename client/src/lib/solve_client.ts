@@ -8,7 +8,7 @@ import {
     type UserId
 } from 'drumline-lib';
 import { storedGameState } from './game_state_store';
-import type { WSClient, WSClientEvent } from './ws_client';
+import type { ReconnectWsClient, WSClientEvent } from './reconnect_ws_client';
 
 export { SolveClient };
 
@@ -24,9 +24,9 @@ class SolveClient {
 
     readonly _user_id: UserId;
 
-    readonly _ws_client: WSClient;
+    readonly _ws_client: ReconnectWsClient;
 
-    constructor(solve_id: string, user_id: UserId, ws_client: WSClient) {
+    constructor(solve_id: string, user_id: UserId, ws_client: ReconnectWsClient) {
         console.log('NetworkedGameState constructor');
         console.trace();
 

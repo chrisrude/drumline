@@ -1,4 +1,4 @@
-import type { AnswerSegments, CellGroup, GameState, Grid, GridAttributes } from "drumline-lib";
+import type { AnswerSegments, CellGroup, GameState, Grid, GridAttributes } from 'drumline-lib';
 
 export { canGroupIntoAnswer, canUngroupAnswer, findWordBounds };
 
@@ -13,20 +13,45 @@ export { canGroupIntoAnswer, canUngroupAnswer, findWordBounds };
  *   centered on that cell
  */
 
-const _cellGroupAndSegments = (gamestate: GameState, grid_attributes: GridAttributes, location: [number, number], use_band: boolean): [CellGroup, AnswerSegments] => {
+const _cellGroupAndSegments = (
+    gamestate: GameState,
+    grid_attributes: GridAttributes,
+    location: [number, number],
+    use_band: boolean
+): [CellGroup, AnswerSegments] => {
     const cell_attributes = grid_attributes.cells[location[0]][location[1]];
-    const answer_segments_list = use_band ? gamestate.band_answer_segments : gamestate.row_answer_segments;
+    const answer_segments_list = use_band
+        ? gamestate.band_answer_segments
+        : gamestate.row_answer_segments;
     const cell_group = use_band ? cell_attributes.band_group : cell_attributes.row_group;
     return [cell_group, answer_segments_list[cell_group.index]];
-}
+};
 
-const isInAnswer = (gamestate: GameState, grid_attributes: GridAttributes, location: [number, number], use_band: boolean): boolean => {
-    const [cell_group, answer_segments] = _cellGroupAndSegments(gamestate, grid_attributes, location, use_band);
+const isInAnswer = (
+    gamestate: GameState,
+    grid_attributes: GridAttributes,
+    location: [number, number],
+    use_band: boolean
+): boolean => {
+    const [cell_group, answer_segments] = _cellGroupAndSegments(
+        gamestate,
+        grid_attributes,
+        location,
+        use_band
+    );
     return answer_segments.in_answer_at_offset(cell_group.offset)[0];
 };
 
-const isEmptyOrInAnswer = (gamestate: GameState, grid_attributes: GridAttributes, location: [number, number], use_band: boolean): boolean => {
-    return !gamestate.cell(location).is_filled() || isInAnswer(gamestate, grid_attributes, location, use_band);
+const isEmptyOrInAnswer = (
+    gamestate: GameState,
+    grid_attributes: GridAttributes,
+    location: [number, number],
+    use_band: boolean
+): boolean => {
+    return (
+        !gamestate.cell(location).is_filled() ||
+        isInAnswer(gamestate, grid_attributes, location, use_band)
+    );
 };
 
 // returns the location of the square which can be added to an answer, after
@@ -34,7 +59,12 @@ const isEmptyOrInAnswer = (gamestate: GameState, grid_attributes: GridAttributes
 // If neither square is valid, returns null.
 // A square can be added to an answer if it has text in it, and is not already
 // part of an answer.
-const findSquareToGroup = (gamestate: GameState, grid_attributes: GridAttributes, location: [number, number], use_band: boolean): [number, number] | null => {
+const findSquareToGroup = (
+    gamestate: GameState,
+    grid_attributes: GridAttributes,
+    location: [number, number],
+    use_band: boolean
+): [number, number] | null => {
     const cell_attributes = grid_attributes.cells[location[0]][location[1]];
     if (cell_attributes.is_center) {
         return null;
@@ -49,11 +79,19 @@ const findSquareToGroup = (gamestate: GameState, grid_attributes: GridAttributes
     return null;
 };
 
-const canGroupIntoAnswer = (gamestate: GameState, grid_attributes: GridAttributes, location: [number, number], use_band: boolean): boolean =>
-    null !== findSquareToGroup(gamestate, grid_attributes, location, use_band);
+const canGroupIntoAnswer = (
+    gamestate: GameState,
+    grid_attributes: GridAttributes,
+    location: [number, number],
+    use_band: boolean
+): boolean => null !== findSquareToGroup(gamestate, grid_attributes, location, use_band);
 
-const canUngroupAnswer = (gamestate: GameState, grid_attributes: GridAttributes, location: [number, number], use_band: boolean): boolean =>
-    isInAnswer(gamestate, grid_attributes, location, use_band)
+const canUngroupAnswer = (
+    gamestate: GameState,
+    grid_attributes: GridAttributes,
+    location: [number, number],
+    use_band: boolean
+): boolean => isInAnswer(gamestate, grid_attributes, location, use_band);
 
 // returns the bounds of the largest contiguous group in the row/band
 // which:
@@ -64,9 +102,22 @@ const canUngroupAnswer = (gamestate: GameState, grid_attributes: GridAttributes,
 // this won't be called on a cell already part of an answer.
 // maximally, this could span from index 0 to n-1, where n is the number
 // of cells in the row or band.
-const findWordBounds = (grid: Grid, gamestate: GameState, grid_attributes: GridAttributes, location: [number, number], use_band: boolean): [number, number] => {
-    const [cell_group, answer_segments] = _cellGroupAndSegments(gamestate, grid_attributes, location, use_band);
-    const locations = (use_band ? grid_attributes.locations_for_band : grid_attributes.locations_for_row)[cell_group.index];
+const findWordBounds = (
+    grid: Grid,
+    gamestate: GameState,
+    grid_attributes: GridAttributes,
+    location: [number, number],
+    use_band: boolean
+): [number, number] => {
+    const [cell_group, answer_segments] = _cellGroupAndSegments(
+        gamestate,
+        grid_attributes,
+        location,
+        use_band
+    );
+    const locations = (
+        use_band ? grid_attributes.locations_for_band : grid_attributes.locations_for_row
+    )[cell_group.index];
 
     const fn_is_suitable_for_word = (idx: number): boolean => {
         const [row_next, col_next] = locations[idx];
@@ -94,5 +145,4 @@ const findWordBounds = (grid: Grid, gamestate: GameState, grid_attributes: GridA
         idxEnd = idxEndNext;
     }
     return [idxStart, idxEnd];
-}
-
+};

@@ -59,7 +59,7 @@ class AnswerSegments {
                 return remove.idx_end < segment.idx_start;
             }
         });
-    }
+    };
 
     markSegment = (segment: AnswerSegment): void => {
         // clear all segments that overlap with this one
@@ -68,11 +68,11 @@ class AnswerSegments {
         this.segments.sort((a, b) => {
             return a.idx_start - b.idx_start;
         });
-    }
+    };
 
     clearSegment = (idx_cell: number): void => {
         this.removeOverlappingSegments({ idx_start: idx_cell, idx_end: idx_cell });
-    }
+    };
 
     // total number of cells covered by a segment
     numAnsweredCells = (): number => {
@@ -80,7 +80,7 @@ class AnswerSegments {
         return this.segments.reduce((acc, segment) => {
             return acc + segment.idx_end - segment.idx_start + 1;
         }, 0);
-    }
+    };
 
     // returns: [is_in_answer, is_start_of_answer, is_end_of_answer]
     in_answer_at_offset = (offset: number): [boolean, boolean, boolean] => {
@@ -90,7 +90,7 @@ class AnswerSegments {
             }
         }
         return [false, false, false];
-    }
+    };
 }
 
 type Grid = Cell[][];
@@ -140,7 +140,7 @@ class GameState implements GameStateType {
                 this.applyGridAction(grid_action);
                 break;
         }
-    }
+    };
 
     applyClueListAction = (action: ClueListActionType): void => {
         const answer_segments = this.getAnswerSegments(action.kind, action.index);
@@ -159,7 +159,7 @@ class GameState implements GameStateType {
                 break;
             }
         }
-    }
+    };
 
     applyGridAction = (action: GridActionType): void => {
         const cell = this.grid[action.row][action.col];
@@ -176,7 +176,7 @@ class GameState implements GameStateType {
                 break;
             }
         }
-    }
+    };
 
     getAnswerSegments = (kind: ClueListKind, index: number): AnswerSegments => {
         const is_row = 'row' === kind;
@@ -188,18 +188,20 @@ class GameState implements GameStateType {
             throw new Error(`get_answer_list: invalid index ${index} for ${kind}`);
         }
         return answer_segments_list[index];
-    }
+    };
 
     updateIsSolved = (): void => {
         // count number of cells with something filled in
         const num_filled = this.grid.reduce((acc, row) => {
-            return acc + row.reduce((acc, cell) => {
-                return acc + (cell.is_filled() ? 1 : 0);
-            }, 0);
+            return (
+                acc +
+                row.reduce((acc, cell) => {
+                    return acc + (cell.is_filled() ? 1 : 0);
+                }, 0)
+            );
         }, 0);
         this.is_solved = num_filled === this.size * this.size - 1;
-    }
+    };
 
-    cell = (location: [number, number]): Cell =>
-        this.grid[location[0]][location[1]];
+    cell = (location: [number, number]): Cell => this.grid[location[0]][location[1]];
 }

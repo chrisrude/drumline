@@ -13,7 +13,6 @@ import { writable } from 'svelte/store';
 //   to a given solve
 // const STORAGE_KEY_PUZZLE_PREFIX = 'drumline-puzzle-';
 
-
 const PUZZLE_STORE = 'drumline-puzzle';
 
 const storedString = browser ? window.localStorage.getItem(PUZZLE_STORE) ?? null : null;
@@ -31,4 +30,3 @@ storedPuzzle.subscribe((puzzle) => {
 // two stores:
 //    puzzle_input_text store => puzzle raw input text
 //    puzzle store (derived from puzzle_id store) => puzzle object with that ID
-

@@ -1,7 +1,11 @@
 export { solveClient, storedGameState };
 
 import { browser } from '$app/environment';
-import { ReconnectWsClient, type ConnectionInfo, type WSClientEvent } from '$lib/network/reconnect_ws_client';
+import {
+    ReconnectWsClient,
+    type ConnectionInfo,
+    type WSClientEvent
+} from '$lib/network/reconnect_ws_client';
 import { SolveClient } from '$lib/network/solve_client';
 import { storedPuzzle } from '$lib/stores/puzzle_store';
 import { GameState, set_from_json, to_json } from 'drumline-lib';
@@ -18,7 +22,6 @@ const TODO_SOLVE_ID = '123';
 // todo: have a map of
 // _solve_id => GameState
 
-
 // currently known solve state
 //   this will be prepended to the solve ID for the key
 //   to a given solve
@@ -32,7 +35,6 @@ const CONNECTION_INFO: ConnectionInfo = {
     host: 'localhost',
     port: 8080
 };
-
 
 let solveClient: SolveClient | null = null;
 
@@ -57,7 +59,6 @@ storedPuzzle.subscribe((puzzle) => {
     if (!browser) {
         return;
     }
-
 
     // close out old connection before starting a new one
     cleanup();

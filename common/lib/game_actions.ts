@@ -75,7 +75,7 @@ type LeavePuzzleActionType = GameActionType & {
 type GridLocationType = {
     row: number;
     col: number;
-}
+};
 
 // takes an i,j location on the grid
 type GridActionType = GameActionType & GridLocationType;

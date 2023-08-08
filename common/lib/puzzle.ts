@@ -1,11 +1,5 @@
 export { Puzzle };
-export type {
-    Clue,
-    ClueList,
-    ClueListIdentifier,
-    ClueListKind,
-    PuzzleType
-};
+export type { Clue, ClueList, ClueListIdentifier, ClueListKind, PuzzleType };
 
 import { parse_clues } from './clue_parser';
 
@@ -47,24 +41,20 @@ class Puzzle implements PuzzleType {
     constructor(text: string) {
         this.original_text = text;
         const [row_clues, band_clues] = parse_clues(text);
-        this.band_clues = band_clues.map(
-            (clues, i) => {
-                return {
-                    index: i,
-                    kind: 'band',
-                    clues,
-                }
-            }
-        );
-        this.row_clues = row_clues.map(
-            (clues, i) => {
-                return {
-                    index: i,
-                    kind: 'row',
-                    clues,
-                }
-            }
-        );
+        this.band_clues = band_clues.map((clues, i) => {
+            return {
+                index: i,
+                kind: 'band',
+                clues
+            };
+        });
+        this.row_clues = row_clues.map((clues, i) => {
+            return {
+                index: i,
+                kind: 'row',
+                clues
+            };
+        });
         this.size = row_clues.length;
     }
 }

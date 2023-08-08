@@ -6,7 +6,7 @@ import {
     joinPuzzle,
     leavePuzzle,
     stringToAction,
-    type GameActions,
+    type GameActions
 } from 'drumline-lib';
 import { get } from 'svelte/store';
 import type { ReconnectWsClient, WSClientEvent } from './reconnect_ws_client';

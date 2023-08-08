@@ -1,14 +1,19 @@
 /***
  * This file contains the logic for moving the cursor after filling in a cell.
- * 
+ *
  * The inspiration for his is the NYT crossword app, which is something most
  * users are likely to be familiar with.
- * 
+ *
  * The state here is based on:
  * - the size of the grid (aka the )
  */
 
-import { nextIndexWithWrap, prevIndexWithWrap, type CellGroupLocations, type Grid } from 'drumline-lib';
+import {
+    nextIndexWithWrap,
+    prevIndexWithWrap,
+    type CellGroupLocations,
+    type Grid
+} from 'drumline-lib';
 
 export { firstEmptyCell, isEmpty, nextEmptyCell };
 
@@ -17,16 +22,20 @@ const isEmpty = (grid: Grid, location: [number, number]): boolean =>
 
 // cursor handling functions
 const firstEmptyCell = (
-    grid: Grid, locations: CellGroupLocations, use_band: boolean
-): [number, number] =>
-    nextEmptyCell(grid, locations, 0, use_band);
+    grid: Grid,
+    locations: CellGroupLocations,
+    use_band: boolean
+): [number, number] => nextEmptyCell(grid, locations, 0, use_band);
 
 const nextEmptyCell = (
-    grid: Grid, locations: CellGroupLocations, location_offset: number, use_band: boolean
+    grid: Grid,
+    locations: CellGroupLocations,
+    location_offset: number,
+    use_band: boolean
 ): [number, number] => {
     const fn_next_idx = use_band ? nextIndexWithWrap : prevIndexWithWrap;
     return _findEmptyCell(grid, locations, location_offset, fn_next_idx);
-}
+};
 
 const _findEmptyCell = (
     grid: Grid,
@@ -38,7 +47,7 @@ const _findEmptyCell = (
     let last_cell_idx = location_offset;
     let next_cell_idx = location_offset;
     let loop_count = 0;
-    while (next_cell_idx = fn_next_idx(locations, last_cell_idx)) {
+    while ((next_cell_idx = fn_next_idx(locations, last_cell_idx))) {
         const next_cell = locations[next_cell_idx];
         if (isEmpty(grid, next_cell)) {
             // we found an answer
@@ -62,4 +71,4 @@ const _findEmptyCell = (
     // none were filled
     const original_next_cell = fn_next_idx(locations, location_offset);
     return locations[original_next_cell];
-}
+};

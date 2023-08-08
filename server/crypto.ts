@@ -23,4 +23,4 @@ const solveHmac = async (puzzle: Puzzle, creator: UserId, salt: string): Promise
     combined_data.set(creator_data, puzzle_data.length);
 
     return await subtle.digest(SECRET_HASH_ALGORITHM, combined_data).then((hash) => toUtf8(hash));
-}
+};

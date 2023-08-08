@@ -1,6 +1,7 @@
 import { Puzzle } from 'drumline-lib';
 import { Express, Request, Response, json } from 'express';
-import { puzzleHmacName } from '../crypto';
+import { puzzleHmac } from '../crypto';
+import { SECRET_PUZZLE_ID_SALT } from '../secrets';
 import { LoginManager } from './login-manager';
 
 export { PuzzleCrudder };
@@ -92,7 +93,7 @@ class PuzzleCrudder {
         const requester_private_uuid = this._login_manager.get_private_uuid_fo_sho(req);
 
         // make ID for puzzle, userId
-        const puzzle_id = await puzzleHmacName(puzzle, requester_private_uuid);
+        const puzzle_id = await puzzleHmac(puzzle, SECRET_PUZZLE_ID_SALT);
         this._map_puzzle_id_to_creator_uuid.set(puzzle_id, requester_private_uuid);
         this._map_puzzle_id_to_puzzle.set(puzzle_id, puzzle);
 

@@ -1,24 +1,23 @@
-export { solveClient, storedGameState, user_id };
+export { solveClient, storedGameState };
 
 import { browser } from '$app/environment';
-import { storedPuzzle } from '$lib/puzzle_store';
-import { GameState, UserId, set_from_json, to_json } from 'drumline-lib';
+import { ReconnectWsClient, type ConnectionInfo, type WSClientEvent } from '$lib/network/reconnect_ws_client';
+import { SolveClient } from '$lib/network/solve_client';
+import { storedPuzzle } from '$lib/stores/puzzle_store';
+import { GameState, set_from_json, to_json } from 'drumline-lib';
 import { writable } from 'svelte/store';
-import { ReconnectWsClient, type ConnectionInfo, type WSClientEvent } from './reconnect_ws_client';
-import { SolveClient } from './solve_client';
 
-// our private v5 uuid for this user
-const STORAGE_KEY_UUID = 'drumline-uuid';
+// store for current solve id
+
+// derived store from puzzle store + solve id
+//   this will be the current game state
+
 const STORAGE_KEY_GAME_STATE = 'drumline-game-state';
 const TODO_SOLVE_ID = '123';
 
-// a list of solve IDs that are in progress
-// const STORAGE_KEY_PUZZLE_LIST = 'drumline-puzzle-list';
+// todo: have a map of
+// _solve_id => GameState
 
-// the serialized puzzle object
-//   this will be prepended to the solve ID for the key
-//   to a given solve
-// const STORAGE_KEY_PUZZLE_PREFIX = 'drumline-puzzle-';
 
 // currently known solve state
 //   this will be prepended to the solve ID for the key
@@ -34,8 +33,6 @@ const CONNECTION_INFO: ConnectionInfo = {
     port: 8080
 };
 
-let gameState: GameState | null = null;
-let user_id: UserId | null = null;
 
 let solveClient: SolveClient | null = null;
 
@@ -50,7 +47,6 @@ const cleanup = () => {
     console.log('cleaning up');
     solveClient?.close();
     solveClient = null;
-    gameState = null;
 };
 
 storedPuzzle.subscribe((puzzle) => {
@@ -62,15 +58,12 @@ storedPuzzle.subscribe((puzzle) => {
         return;
     }
 
-    const storedPrivateUuid = window.localStorage.getItem(STORAGE_KEY_UUID) ?? null;
-    // if we pass in null, we'll generated a new, unique, id
-    user_id = new UserId(storedPrivateUuid);
 
     // close out old connection before starting a new one
     cleanup();
 
-    gameState = new GameState(puzzle);
-    solveClient = new SolveClient(TODO_SOLVE_ID, user_id, ws_client);
+    const gameState = new GameState(puzzle.size, TODO_SOLVE_ID);
+    solveClient = new SolveClient(TODO_SOLVE_ID, ws_client);
 
     const storedString = window.localStorage.getItem(STORAGE_KEY_GAME_STATE) ?? null;
     if (storedString && storedString.length > 0) {

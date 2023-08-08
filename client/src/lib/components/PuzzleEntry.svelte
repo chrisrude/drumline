@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { user_id } from '$lib/game_state_store';
-    import { storedPuzzle } from '$lib/puzzle_store';
+    import { storedPuzzle } from '$lib/stores/puzzle_store';
     import { Puzzle } from 'drumline-lib';
     import { get } from 'svelte/store';
 
@@ -9,13 +8,7 @@
     let parseError = '';
 
     const parse_puzzle = () => {
-        if (!user_id) {
-            throw new Error('user_id is not set');
-        }
         try {
-            if (null === user_id) {
-                throw new Error('user_id is not set');
-            }
             storedPuzzle.set(new Puzzle(inputText));
             parseError = '';
         } catch (error) {

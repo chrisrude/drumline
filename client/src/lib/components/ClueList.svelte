@@ -1,16 +1,11 @@
 <script lang="ts">
-    import type { ClueList, GameState } from 'drumline-lib';
-    import ClueDisplay from './ClueDisplay.svelte';
+    import type { ClueList } from 'drumline-lib';
 
     export let clueLists: ClueList[];
     export let clueTitle: string;
     export let highlightIdx: number = -1;
-    export let gameState: GameState;
     let clueGroup: HTMLDivElement;
 
-    const gotoClue = (idx: number) => {
-        highlightIdx = idx;
-    };
     $: highlightIdx != -1 && scrollToClue();
 
     function scrollToClue() {
@@ -20,14 +15,13 @@
         }
         const clue = clueGroup.children[highlightIdx];
         if (clue instanceof HTMLElement) {
-            // do we need to scroll?
-
             let groupTop = clueGroup.scrollTop;
             let groupBottom = groupTop + clueGroup.clientHeight;
 
             let clueTop = clue.offsetTop;
             let clueBottom = clueTop + clue.clientHeight;
 
+            // if we're fully visible already, don't scroll
             let isClueVisible = clueTop >= groupTop && clueBottom <= groupBottom;
             if (!isClueVisible) {
                 clueGroup.scrollTo({
@@ -37,10 +31,6 @@
             }
         }
     }
-    function isClueDone(gameState: GameState, index: number) {
-        const answers = gameState.getAnswerSegments(clueLists[index]);
-        return answers.isComplete();
-    }
 </script>
 
 <div class="clues">
@@ -49,21 +39,25 @@
     </div>
     <div class="clues-groups" bind:this={clueGroup}>
         {#each clueLists as clueList, idx}
+            <!-- TODO: fix -->
+            <!-- TODO: fix headings, marking clues as done -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="clues-groups-group"
                 class:highlightClue={highlightIdx === idx}
-                class:clueDone={isClueDone(gameState, idx)}
-                on:click={() => gotoClue(idx)}
+                class:clueDone={false}
+                on:click={() => (highlightIdx = idx)}
             >
                 <div class="clues-group-title">
-                    {clueList.heading}
+                    {clueList.index}
                 </div>
                 <div class="clues-group-list">
                     {#each clueList.clues as clue}
                         <div class="clues-group-clue">
-                            <ClueDisplay {clue} />
+                            <div class="clue">
+                                <div class="clue-title">{clue.text}</div>
+                            </div>
                         </div>
                     {/each}
                 </div>

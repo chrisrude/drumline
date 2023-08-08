@@ -19,19 +19,17 @@ export type {
     GameActionType,
     GameActions,
     GridActionType,
+    GridLocationType,
     JoinPuzzleActionType,
     LeavePuzzleActionType,
     MarkSegmentActionType,
     SetActionType,
     SolveIdActionType
 };
-import type { ClueListIdentifier, GridLocationType } from './puzzle';
+import type { ClueListIdentifier } from './puzzle';
 import { validateProperties } from './validation';
 
 // these actions change the game state
-
-// todo: hello isn't really an action, it's a message... maybe it should be a different type?
-
 type GameActions =
     | JoinPuzzleActionType
     | LeavePuzzleActionType
@@ -73,6 +71,11 @@ type JoinPuzzleActionType = SolveIdActionType & {
 type LeavePuzzleActionType = GameActionType & {
     action: 'leavePuzzle';
 };
+
+type GridLocationType = {
+    row: number;
+    col: number;
+}
 
 // takes an i,j location on the grid
 type GridActionType = GameActionType & GridLocationType;

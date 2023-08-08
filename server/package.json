@@ -34,7 +34,6 @@
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.3",
-        "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.1.0",
         "@rollup/plugin-terser": "^0.4.3",
         "@types/cookie-session": "^2.0.44",

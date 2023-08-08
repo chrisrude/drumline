@@ -1,23 +1,26 @@
 import { toUtf8 } from 'base-emoji';
-import { Puzzle } from 'drumline-lib';
+import { Puzzle, UserId } from 'drumline-lib';
 import { subtle } from 'node:crypto';
-import { SECRET_HASH_ALGORITHM, SECRET_PUZZLE_ID_SALT } from './secrets';
 
-export { puzzleHmacName };
+export { puzzleHmac, solveHmac };
 
-// input text should be the json encoding of the puzzle, with the private user_id appended
-// output should be the sha512 hash of the input text
-const puzzleHmac = (puzzle: Puzzle, private_uuid: string): Promise<ArrayBuffer> => {
-    const inputText = JSON.stringify(puzzle) + private_uuid + SECRET_PUZZLE_ID_SALT;
-
-    const ec = new TextEncoder();
-    const data = ec.encode(inputText);
-    return subtle.digest(SECRET_HASH_ALGORITHM, data);
-};
+const SECRET_HASH_ALGORITHM = 'SHA-512';
 
 // returns a string representation of the hash
-const puzzleHmacName = async (puzzle: Puzzle, private_uuid: string): Promise<string> => {
-    return puzzleHmac(puzzle, private_uuid).then((hash) => {
-        return toUtf8(hash);
-    });
+const puzzleHmac = async (puzzle: Puzzle, salt: string): Promise<string> => {
+    const ec = new TextEncoder();
+    const data = ec.encode(puzzle.original_text + salt);
+    return await subtle.digest(SECRET_HASH_ALGORITHM, data).then((hash) => toUtf8(hash));
 };
+
+const solveHmac = async (puzzle: Puzzle, creator: UserId, salt: string): Promise<string> => {
+    const ec = new TextEncoder();
+    const puzzle_data = ec.encode(puzzle.original_text + salt);
+    const creator_data = ec.encode(creator.private_uuid + salt);
+
+    const combined_data = new Uint8Array(puzzle_data.length + creator_data.length);
+    combined_data.set(puzzle_data);
+    combined_data.set(creator_data, puzzle_data.length);
+
+    return await subtle.digest(SECRET_HASH_ALGORITHM, combined_data).then((hash) => toUtf8(hash));
+}

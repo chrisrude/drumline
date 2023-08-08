@@ -1,20 +1,45 @@
 <script lang="ts">
-    import { GameState, GridLocation, clear, clearSegment, markSegment, set } from 'drumline-lib';
+    import { firstEmptyCell, nextEmptyCell } from '$lib/cursor_logic';
+    import { solveClient } from '$lib/stores/game_state_store';
+    import { canGroupIntoAnswer, canUngroupAnswer, findWordBounds } from '$lib/word_grouping';
+    import {
+        GameState,
+        clear,
+        clearSegment,
+        markSegment,
+        memoizedGenerateGridAttributes,
+        set,
+        type BandGroup,
+        type BandSides,
+        type CellAttributes,
+        type GameActions,
+        type RowGroup
+    } from 'drumline-lib';
     import { BAND_IDENTIFIERS } from 'drumline-lib/lib/clue_parser';
-    import { createEventDispatcher } from 'svelte';
 
     export let gameState: GameState;
     export let highlightRow: number = -1;
     export let highlightBand: number = -1;
-    export let cursorLocation: GridLocation = GridLocation.NONE;
-    export let currentClue: string = '';
 
-    let deleteDialog: HTMLDialogElement;
-    let deleteDialogButton: HTMLButtonElement;
-    const dispatch = createEventDispatcher();
+    const LOCATION_NONE: [number, number] = [-1, -1];
+    let cursorLocation: [number, number] = [...LOCATION_NONE];
+
+    const gridAttributes = memoizedGenerateGridAttributes(gameState.size);
 
     $: highlightRow !== undefined && gotoRow();
     $: highlightBand !== undefined && gotoBand();
+
+    const apply = (action: GameActions) => solveClient!.apply(action);
+
+    const attributesAtCursor = (): CellAttributes => attributesAt(cursorLocation);
+
+    const attributesAt = ([i, j]: [number, number]): CellAttributes => gridAttributes.cells[i][j];
+
+    const currentGroup = (attr: CellAttributes): BandGroup | RowGroup =>
+        isUsingBand() ? attr.band_group : attr.row_group;
+
+    const isNone = ([i, j]: [number, number]): boolean =>
+        i === LOCATION_NONE[0] || j === LOCATION_NONE[1];
 
     const gotoRow = () => {
         if (-1 == highlightRow) {
@@ -23,11 +48,14 @@
         highlightBand = -1;
         // if we're not in the highlighted row, go to the first
         // empty cell in the row.
-        if (cursorLocation.row === highlightRow) {
+        if (attributesAtCursor().row_group.index === highlightRow) {
             return;
         }
-        const row = gameState.puzzle.rows[highlightRow];
-        cursorLocation = gameState.firstEmptyCell(row);
+        cursorLocation = firstEmptyCell(
+            gameState.grid,
+            gridAttributes.locations_for_row[highlightRow],
+            false
+        );
     };
 
     const gotoBand = () => {
@@ -36,226 +64,154 @@
         }
         highlightRow = -1;
         // if the cursor happens to be in the band already, leave it there
-        const cursorBand = gameState.puzzle.getBandNumberAtLocation(cursorLocation);
-        if (cursorBand === highlightBand) {
+        if (attributesAtCursor().band_group.index === highlightBand) {
             return;
         }
         // if we're not in the band, move cursor to the first
         // empty cell in the band
-        const band = gameState.puzzle.bands[highlightBand];
-        cursorLocation = gameState.firstEmptyCell(band);
+        cursorLocation = firstEmptyCell(
+            gameState.grid,
+            gridAttributes.locations_for_band[cursorCellGroup().index],
+            true
+        );
     };
 
-    // update current clue
-    $: (highlightRow || highlightBand) && updateCurrentClue();
+    const getCellClass = (i: number, j: number) =>
+        gridAttributes.cells[i][j].band_group.index % 2 === 0 ? 'even-band' : 'odd-band';
 
-    const updateCurrentClue = () => {
-        clearDragging();
+    const isUsingBand = () => highlightBand !== -1;
 
-        if (
-            (highlightRow === -1 && highlightBand === -1) ||
-            highlightBand >= gameState.puzzle.bands.length
-        ) {
-            currentClue = '';
+    const cursorCellGroup = (): RowGroup | BandGroup => currentGroup(attributesAtCursor());
+
+    const nextCell = (): [number, number] => cursorCellGroup().next;
+
+    const prevCell = (): [number, number] => cursorCellGroup().prev;
+
+    const nextEmptyCellAtCursor = () => {
+        const locations_list = isUsingBand()
+            ? gridAttributes.locations_for_band
+            : gridAttributes.locations_for_row;
+        const cellGroup = cursorCellGroup();
+        return nextEmptyCell(
+            gameState.grid,
+            locations_list[cellGroup.index],
+            cellGroup.offset,
+            isUsingBand()
+        );
+    };
+
+    const groupIntoAnswer = (): void => {
+        const wordBounds = findWordBounds(
+            gameState.grid,
+            gameState,
+            gridAttributes,
+            cursorLocation,
+            isUsingBand()
+        );
+        if (wordBounds === null) {
             return;
         }
-        const clues = isUsingBand()
-            ? gameState.puzzle.bands[highlightBand].clues
-            : gameState.puzzle.rows[highlightRow].clues;
-        currentClue = clues.map((clue) => clue.text).join(' / ');
+        const cellGroup = cursorCellGroup();
+        const action = markSegment(cellGroup, wordBounds[0], wordBounds[1]);
+        apply(action);
     };
 
-    export const getCellClass = (i: number, j: number) => {
-        const bandNumber = gameState.puzzle.getBandNumberAt(i, j);
-        return bandNumber % 2 === 0 ? 'even-band' : 'odd-band';
-    };
+    const canGroup = (): boolean =>
+        canGroupIntoAnswer(gameState, gridAttributes, cursorLocation, isUsingBand());
 
-    function isUsingBand() {
-        return highlightBand !== -1;
-    }
+    const canUngroup = (): boolean =>
+        canUngroupAnswer(gameState, gridAttributes, cursorLocation, isUsingBand());
 
-    export const nextCell = (backwards: boolean): GridLocation => {
-        const clueList = gameState.puzzle.getClueListAtLocation(cursorLocation, isUsingBand());
-        if (backwards) {
-            return clueList.prevCell(cursorLocation);
-        } else {
-            return clueList.nextCell(cursorLocation);
-        }
-    };
-
-    function emptyOrInAnswer(location: GridLocation): boolean {
-        const answerSegments = gameState.getAnswerSegmentsAtLocation(location, isUsingBand());
-        return gameState.isEmpty(location) || answerSegments.in_answer_at_location(location)[0];
-    }
-
-    // returns the location of the square which can be added to an answer, after
-    // inspecting both the cursor's square and then the previous square.
-    // If neither square is valid, returns null.
-    // A square can be added to an answer if it has text in it, and is not already
-    // part of an answer.
-    function findSquareToGroup(): GridLocation | null {
-        if (cursorLocation.is_none()) {
-            return null;
-        }
-        const startLocation = emptyOrInAnswer(cursorLocation) ? nextCell(true) : cursorLocation;
-        if (emptyOrInAnswer(startLocation)) {
-            return null;
-        }
-        return startLocation;
-    }
-
-    export const canGroupIntoAnswer = () => {
-        if (cursorLocation.is_none()) {
+    const clearAnswerAtLocation = (): boolean => {
+        if (!canUngroup()) {
             return false;
         }
-        if (
-            cursorLocation.row === gameState.center.row &&
-            cursorLocation.col === gameState.center.col
-        ) {
-            return false;
-        }
-        return null != findSquareToGroup();
-    };
-
-    function getBandNumberFromCursor() {
-        return gameState.puzzle.getBandNumberAtLocation(cursorLocation);
-    }
-
-    export const groupIntoAnswer = () => {
-        const groupNexus = findSquareToGroup();
-        if (groupNexus === null) {
-            return;
-        }
-        const answerSegments = gameState.getAnswerSegmentsAtLocation(cursorLocation, isUsingBand());
-        const [idxStart, idxEnd] = gameState.findWordBoundsAtLocation(groupNexus, answerSegments);
-
-        const action = markSegment(answerSegments.clue_list, idxStart, idxEnd);
-        dispatch('apply', action);
-    };
-
-    export const canUngroupAnswer = () => {
-        if (cursorLocation.is_none()) {
-            return false;
-        }
-        if (
-            cursorLocation.row === gameState.center.row &&
-            cursorLocation.col === gameState.center.col
-        ) {
-            return false;
-        }
-        const answerSegments = gameState.getAnswerSegmentsAtLocation(cursorLocation, isUsingBand());
-        return answerSegments.in_answer_at_location(cursorLocation)[0];
-    };
-
-    export const nextEmptyCell = (backwards: boolean) => {
-        if (backwards) {
-            return gameState.prevEmptyCell(cursorLocation, isUsingBand());
-        }
-        return gameState.nextEmptyCell(cursorLocation, isUsingBand());
-    };
-
-    function clearAnswerAtLocation(): boolean {
-        if (!canUngroupAnswer()) {
-            return false;
-        }
-        const clueList = gameState.puzzle.getClueListAtLocation(cursorLocation, isUsingBand());
-        const index = clueList.indexAtLocation(cursorLocation);
-        const action = clearSegment(clueList, index);
-        dispatch('apply', action);
+        const cellGroup = cursorCellGroup();
+        const action = clearSegment(cellGroup, cellGroup.offset);
+        apply(action);
         return true;
-    }
+    };
 
-    export const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: KeyboardEvent): void => {
         // In the switch-case we're updating our boolean flags whenever the
         // desired bound keys are pressed.
         if (event.altKey || event.ctrlKey || event.metaKey) {
             return;
         }
-        if (cursorLocation.is_none()) {
-            return false;
+        if (isNone(cursorLocation)) {
+            return;
         }
         if (highlightBand === -1 && highlightRow === -1) {
             return;
         }
-        let newLocation = new GridLocation(cursorLocation.row, cursorLocation.col);
+        let newLocation: [number, number] = [...cursorLocation];
         switch (event.key) {
             case 'ArrowDown':
-                if (newLocation.row < gameState.puzzle.size - 1) {
-                    newLocation.row += 1;
+                if (newLocation[0] < gameState.size - 1) {
+                    newLocation[0] += 1;
                 }
                 break;
             case 'ArrowUp':
-                if (newLocation.row > 0) {
-                    newLocation.row -= 1;
+                if (newLocation[0] > 0) {
+                    newLocation[0] -= 1;
                 }
                 break;
             case 'ArrowLeft':
-                if (newLocation.col > 0) {
-                    newLocation.col -= 1;
+                if (newLocation[1] > 0) {
+                    newLocation[1] -= 1;
                 }
                 break;
             case 'ArrowRight':
-                if (newLocation.col < gameState.puzzle.size - 1) {
-                    newLocation.col += 1;
+                if (newLocation[1] < gameState.size - 1) {
+                    newLocation[1] += 1;
                 }
                 break;
             case 'Tab':
-                newLocation = nextCell(event.shiftKey);
-                highlight(newLocation);
-                event.preventDefault();
-                return;
+                newLocation = event.shiftKey ? prevCell() : nextCell();
+                break;
             case 'Escape':
-                if (deleteDialog !== undefined && deleteDialog.open) {
-                    deleteDialog.close();
-                    event.preventDefault();
-                    return;
-                }
                 if (mouseDragging) {
                     clearDragging();
-                    event.preventDefault();
-                    return;
+                    break;
                 }
                 // nothing else special to do
                 return;
             case ' ':
                 toggleSelection();
-                event.preventDefault();
-                return;
+                break;
             case '.':
                 // find adjacent letters and mark them as a word
                 //
                 groupIntoAnswer();
-                event.preventDefault();
-                return;
-
+                break;
             case 'Backspace':
                 // first, if our current square is in a word,
                 // clear the word and do nothing else
                 if (clearAnswerAtLocation()) {
-                    event.preventDefault();
-                    return;
+                    break;
                 }
 
                 // check to see if we're in an empty square, if so
                 // move to the previous square
-                if (!gameState.getCell(cursorLocation).is_filled()) {
-                    newLocation = nextCell(true);
+                if (!gameState.cell(cursorLocation).is_filled()) {
+                    newLocation = prevCell();
                     highlight(newLocation);
 
                     // again, check to see if this new square is in a word
                     // if so clear the word and do nothing else
                     if (clearAnswerAtLocation()) {
-                        event.preventDefault();
-                        return;
+                        break;
                     }
                 }
 
                 // no word to clear, so just clear the character in the
                 // current square
-                const action = clear(cursorLocation);
-                dispatch('apply', action);
-                event.preventDefault();
-                return;
+                const action = clear({
+                    row: cursorLocation[0],
+                    col: cursorLocation[1]
+                });
+                apply(action);
+                break;
             default:
                 // todo: change typing behavior:
                 //  - if the word is totally filled, typing will
@@ -267,11 +223,17 @@
                 //    space following the cursor, find the first space
                 //    available in the word
                 if (event.key.length === 1) {
-                    const action = set(cursorLocation, event.key);
-                    dispatch('apply', action);
-                    event.preventDefault();
+                    const action = set(
+                        {
+                            row: cursorLocation[0],
+                            col: cursorLocation[1]
+                        },
+                        event.key
+                    );
+                    apply(action);
                     // move to next cell, either in the row or the band
-                    newLocation = nextEmptyCell(false);
+                    newLocation = nextEmptyCellAtCursor();
+                    break;
                 } else {
                     // don't stop default behavior
                     return;
@@ -281,17 +243,18 @@
         event.preventDefault();
     };
 
-    function toggleSelection() {
+    const toggleSelection = (): void => {
+        const groupIdx = cursorCellGroup().index;
         if (highlightRow !== -1) {
-            highlightBand = getBandNumberFromCursor();
+            highlightBand = groupIdx;
             highlightRow = -1;
         } else {
-            highlightRow = cursorLocation.row;
+            highlightRow = groupIdx;
             highlightBand = -1;
         }
-    }
+    };
 
-    export const highlight = (newLocation: GridLocation, from_click: boolean = false) => {
+    const highlight = (newLocation: [number, number], from_click: boolean = false) => {
         if (cursorLocation == newLocation) {
             // do nothing
             if (from_click) {
@@ -302,24 +265,24 @@
         // if the last highlight was a row, keep that
         // otherwise, highlight the band
         if (highlightRow !== -1) {
-            highlightRow = newLocation.row;
+            highlightRow = newLocation[0];
         } else {
-            highlightBand = gameState.puzzle.getBandNumberAtLocation(newLocation);
+            highlightBand = attributesAt(newLocation).band_group.index;
         }
         cursorLocation = newLocation;
     };
 
-    function clearDragging() {
-        draggingStart = GridLocation.NONE;
-        draggingEnd = GridLocation.NONE;
+    const clearDragging = (): void => {
+        draggingStart = [...LOCATION_NONE];
+        draggingEnd = [...LOCATION_NONE];
         mouseDragging = false;
-    }
+    };
 
-    export let draggingStart: GridLocation = GridLocation.NONE;
-    export let draggingEnd: GridLocation = GridLocation.NONE;
+    export let draggingStart: [number, number] = [...LOCATION_NONE];
+    export let draggingEnd: [number, number] = [...LOCATION_NONE];
     export let mouseDragging = false;
 
-    export const onDragStart = (event: MouseEvent, i: number, j: number) => {
+    const onDragStart = (event: MouseEvent, i: number, j: number) => {
         if (mouseDragging) {
             return;
         }
@@ -327,47 +290,49 @@
             return;
         }
         mouseDragging = true;
-        draggingEnd = draggingStart = new GridLocation(i, j);
+        draggingEnd = draggingStart = [i, j];
         event.preventDefault();
     };
 
-    function orderByPath(start: GridLocation, end: GridLocation): [GridLocation, GridLocation] {
-        const clueList = gameState.puzzle.getClueListAtLocation(start, isUsingBand());
-        let options: [number, GridLocation][] = [
-            [clueList.indexAtLocation(start), start],
-            [clueList.indexAtLocation(end), end]
-        ];
-        options.sort((a, b) => a[0] - b[0]);
-        return [options[0][1], options[1][1]];
-    }
+    const orderByPath = (
+        start: [number, number],
+        end: [number, number]
+    ): [[number, number], [number, number]] => {
+        const startInfo = currentGroup(attributesAt(start));
+        const endInfo = currentGroup(attributesAt(end));
+        if (startInfo.index > endInfo.index) {
+            return [end, start];
+        }
+        return [start, end];
+    };
 
-    function getDraggingBand() {
+    const getDraggingBand = (): number => {
         if (!isUsingBand()) {
             return -1;
         }
-        if (draggingStart.is_none()) {
+        if (isNone(draggingStart)) {
             return -1;
         }
-        return gameState.puzzle.getBandNumberAtLocation(draggingStart);
-    }
+        return attributesAt(draggingStart).band_group.index;
+    };
 
     export const onDragOver = (event: MouseEvent, i: number, j: number) => {
         if (!mouseDragging) {
             return;
         }
         if (isUsingBand()) {
-            const band = gameState.puzzle.getBandNumberAt(i, j);
+            const band = attributesAt([i, j]).band_group.index;
             if (band !== getDraggingBand()) {
                 // do nothing
                 return;
             }
         } else {
-            if (i !== draggingStart.row) {
+            if (i !== draggingStart[0]) {
                 // do nothing
                 return;
             }
         }
-        draggingEnd = new GridLocation(i, j);
+        draggingEnd = [i, j];
         event.preventDefault();
     };
 
@@ -376,7 +341,7 @@
             return false;
         }
         // if we don't have an end, we're not on the path
-        if (draggingEnd.is_none()) {
+        if (isNone(draggingEnd)) {
             return false;
         }
         // if we haven't dragged anywhere, we're not on the path
@@ -385,15 +350,17 @@
         }
 
         if (isUsingBand()) {
-            const band = gameState.puzzle.getClueListAt(i, j, true);
-            if (band.index !== getDraggingBand()) {
+            const cellInfoStart = attributesAt(draggingStart);
+            const cellInfoEnd = attributesAt(draggingEnd);
+            const cellInfoCurrent = attributesAt([i, j]);
+            if (cellInfoCurrent.band_group.index !== getDraggingBand()) {
                 // do nothing
                 return;
             }
             // is the cell on or between the start and end of the drag?
-            const bandStartIdx = band.indexAtLocation(draggingStart);
-            const bandEndIdx = band.indexAtLocation(draggingEnd);
-            const cellIdx = band.indexAt(i, j);
+            const bandStartIdx = cellInfoStart.band_group.index;
+            const bandEndIdx = cellInfoEnd.band_group.index;
+            const cellIdx = cellInfoCurrent.band_group.index;
 
             const minIdx = Math.min(bandStartIdx, bandEndIdx);
             const maxIdx = Math.max(bandStartIdx, bandEndIdx);
@@ -403,23 +370,19 @@
             return false;
         }
         // row path
-        if (i !== draggingStart.row) {
+        if (i !== draggingStart[0]) {
             return false;
         }
 
-        const minCol = Math.min(draggingStart.col, draggingEnd.col);
-        const maxCol = Math.max(draggingStart.col, draggingEnd.col);
+        const minCol = Math.min(draggingStart[1], draggingEnd[1]);
+        const maxCol = Math.max(draggingStart[1], draggingEnd[1]);
         if (j >= minCol && j <= maxCol) {
             return true;
         }
         return false;
     };
 
-    export const onDragEnd = (event: MouseEvent) => {
-        // also close delete dialog if it's open
-        if (deleteDialog !== undefined && deleteDialog.open) {
-            deleteDialog.close();
-        }
+    const onDragEnd = (event: MouseEvent) => {
         if (!mouseDragging) {
             return;
         }
@@ -427,7 +390,7 @@
         // sort the start and end
 
         // if we don't have an end, we're not on the path
-        if (draggingEnd.is_none()) {
+        if (isNone(draggingEnd)) {
             return false;
         }
 
@@ -438,71 +401,45 @@
 
         [draggingStart, draggingEnd] = orderByPath(draggingStart, draggingEnd);
 
-        const clueList = gameState.puzzle.getClueListAtLocation(draggingStart, isUsingBand());
+        const clueStart = currentGroup(attributesAt(draggingStart));
+        const clueEnd = currentGroup(attributesAt(draggingEnd));
 
-        const action = markSegment(
-            clueList,
-            clueList.indexAtLocation(draggingStart),
-            clueList.indexAtLocation(draggingEnd)
-        );
-        dispatch('apply', action);
+        const action = markSegment(clueStart, clueStart.offset, clueEnd.offset);
+        apply(action);
         event.preventDefault();
         clearDragging();
     };
 
-    export const isInRowWord = (i: number, j: number): boolean => {
-        const rowSegments = gameState.getAnswerSegmentsAt(i, j, false);
-        return rowSegments.in_answer_at(i, j)[0];
+    const row_word_attrs = (i: number, j: number): [boolean, boolean, boolean] => {
+        const attrs = attributesAt([i, j]);
+        return gameState.row_answer_segments[attrs.row_group.index].in_answer_at_offset(
+            attrs.row_group.offset
+        );
     };
 
-    export const isInBandWord = (i: number, j: number) => {
-        const bandSegments = gameState.getAnswerSegmentsAt(i, j, true);
-        return bandSegments.in_answer_at(i, j)[0];
+    const band_word_attrs = (i: number, j: number): [boolean, boolean, boolean] => {
+        const attrs = attributesAt([i, j]);
+        return gameState.band_answer_segments[attrs.band_group.index].in_answer_at_offset(
+            attrs.band_group.offset
+        );
     };
 
-    export const isRowWordStart = (i: number, j: number) => {
-        const rowSegments = gameState.getAnswerSegmentsAt(i, j, false);
-        return rowSegments.in_answer_at(i, j)[1];
-    };
-    export const isRowWordEnd = (i: number, j: number) => {
-        const rowSegments = gameState.getAnswerSegmentsAt(i, j, false);
-        return rowSegments.in_answer_at(i, j)[2];
-    };
-    export const isBandWordStart = (i: number, j: number) => {
-        const bandSegments = gameState.getAnswerSegmentsAt(i, j, true);
-        return bandSegments.in_answer_at(i, j)[1];
-    };
-    export const isBandWordEnd = (i: number, j: number) => {
-        const bandSegments = gameState.getAnswerSegmentsAt(i, j, true);
-        return bandSegments.in_answer_at(i, j)[2];
+    const isInRowWord = (i: number, j: number): boolean => row_word_attrs(i, j)[0];
+    const isRowWordStart = (i: number, j: number) => row_word_attrs(i, j)[1];
+    const isRowWordEnd = (i: number, j: number) => row_word_attrs(i, j)[2];
+
+    const isInBandWord = (i: number, j: number) => band_word_attrs(i, j)[0];
+    const isBandWordStart = (i: number, j: number) => band_word_attrs(i, j)[1];
+    const isBandWordEnd = (i: number, j: number) => band_word_attrs(i, j)[2];
+
+    const isBandCorner = (i: number, j: number, side: BandSides): boolean => {
+        const band_group = attributesAt([i, j]).band_group;
+        return band_group.is_corner && band_group.side === side;
     };
 
-    function bandSide(i: number, j: number) {
-        const band = gameState.puzzle.getBandNumberAt(i, j);
-        const backSide = gameState.puzzle.size - 1 - band;
-        if (i === band && j !== backSide) {
-            return [1, j === band];
-        }
-        if (j === backSide && i !== backSide) {
-            return [2, i === band];
-        }
-        if (i === backSide && j !== band) {
-            return [3, j === backSide];
-        }
-        if (j === band) {
-            return [4, i === backSide];
-        }
-        throw new Error('bandSide called on non-band cell: ' + i + ', ' + j);
-    }
-
-    export const isBandCorner = (i: number, j: number, corner: number) => {
-        const [side, isCorner] = bandSide(i, j);
-        return side === corner && isCorner;
-    };
-
-    export const isBandSide = (i: number, j: number, sideDesired: number) => {
-        const [side, isCorner] = bandSide(i, j);
-        return side === sideDesired && !isCorner;
+    const isBandSide = (i: number, j: number, side: BandSides): boolean => {
+        const band_group = attributesAt([i, j]).band_group;
+        return !band_group.is_corner && band_group.side === side;
     };
 </script>
 
@@ -512,7 +449,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="grid"
-    style="--puzzle-size: {gameState.puzzle.size}"
+    style="--puzzle-size: {gameState.size}"
     class:bandMode={highlightBand !== -1}
     class:rowMode={highlightRow !== -1}
 >
@@ -520,74 +457,47 @@
         <button
             on:click={toggleSelection}
             title="Switch to row mode [space]"
-            disabled={cursorLocation.is_none() || highlightRow !== -1}>➡️ select row</button
+            disabled={isNone(cursorLocation) || highlightRow !== -1}>➡️ select row</button
         >
         <button
             on:click={toggleSelection}
             title="Switch to band mode [space]"
-            disabled={cursorLocation.is_none() || highlightBand !== -1}>↩️ select band</button
+            disabled={isNone(cursorLocation) || highlightBand !== -1}>↩️ select band</button
         >
 
         <button
             on:click={groupIntoAnswer}
-            disabled={cursorLocation.is_none() ||
-                (!gameState && gameState) ||
-                !canGroupIntoAnswer()}
+            disabled={isNone(cursorLocation) || (!gameState && gameState) || !canGroup()}
             title="Group these letters into answer [period]">⛶ mark as answer</button
         >
 
         <button
             on:click={() => clearAnswerAtLocation()}
-            disabled={cursorLocation.is_none() || (!gameState && gameState) || !canUngroupAnswer()}
+            disabled={isNone(cursorLocation) || (!gameState && gameState) || !canUngroup()}
             title="Remove this answer [backspace]">⛝ unmark answer</button
         >
-
-        <button
-            class="rightmost"
-            tabindex="-1"
-            on:click={() => deleteDialog.showModal()}
-            bind:this={deleteDialogButton}
-            title="Delete this puzzle">🗑️ delete puzzle</button
-        >
-        <dialog
-            bind:this={deleteDialog}
-            on:close={() => {
-                deleteDialogButton.blur();
-            }}
-        >
-            <div class="deleteMessage">Delete puzzle now?</div>
-            <button on:click={() => dispatch('deletePuzzle')}
-                >⚠️ delete puzzle immediately ⚠️</button
-            >
-            <button on:click={() => deleteDialog.close()}>nevermind</button>
-        </dialog>
     </div>
 
-    <div class="row">
-        <div class="grid-current-clue">
-            <p>{currentClue}</p>
-        </div>
-    </div>
-    {#each { length: gameState.puzzle.size } as _, i}
+    {#each { length: gameState.size } as _, i}
         <div class="row">
             <div class="row-number">{i + 1}</div>
 
-            {#each { length: gameState.puzzle.size } as _, j}
+            {#each { length: gameState.size } as _, j}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                {#if gameState.center.row === i && gameState.center.col === j}
+                {#if gameState.center === i && gameState.center === j}
                     <div
                         class="letter center-cell"
-                        class:selected={cursorLocation.row === i && cursorLocation.col === j}
+                        class:selected={cursorLocation[0] === i && cursorLocation[1] === j}
                         on:click={toggleSelection}
                     />
                 {:else}
                     <div
                         class="letter {getCellClass(i, j)}"
-                        class:selected={cursorLocation.row === i && cursorLocation.col === j}
+                        class:selected={cursorLocation[0] === i && cursorLocation[1] === j}
                         class:highlightRow={highlightRow === i}
                         class:highlightBand={highlightBand ===
-                            gameState.puzzle.getBandNumberAt(i, j)}
+                            attributesAt([i, j]).band_group.index}
                         class:dragover={draggingEnd && draggingStart && onPath(i, j)}
                         class:rowWord={highlightRow != -1 &&
                             (!gameState || gameState) &&
@@ -607,19 +517,19 @@
                         class:bandWordEnd={highlightBand != -1 &&
                             (!gameState || gameState) &&
                             isBandWordEnd(i, j)}
-                        class:bandCornerNW={isBandCorner(i, j, 1)}
-                        class:bandSideN={isBandSide(i, j, 1)}
-                        class:bandCornerNE={isBandCorner(i, j, 2)}
-                        class:bandSideE={isBandSide(i, j, 2)}
-                        class:bandCornerSE={isBandCorner(i, j, 3)}
-                        class:bandSideS={isBandSide(i, j, 3)}
-                        class:bandCornerSW={isBandCorner(i, j, 4)}
-                        class:bandSideW={isBandSide(i, j, 4)}
-                        on:click={() => highlight(new GridLocation(i, j), true)}
+                        class:bandCornerNW={isBandCorner(i, j, 'top')}
+                        class:bandSideN={isBandSide(i, j, 'top')}
+                        class:bandCornerNE={isBandCorner(i, j, 'right')}
+                        class:bandSideE={isBandSide(i, j, 'right')}
+                        class:bandCornerSE={isBandCorner(i, j, 'bottom')}
+                        class:bandSideS={isBandSide(i, j, 'bottom')}
+                        class:bandCornerSW={isBandCorner(i, j, 'left')}
+                        class:bandSideW={isBandSide(i, j, 'left')}
+                        on:click={() => highlight([i, j], true)}
                         on:mousedown={(event) => onDragStart(event, i, j)}
                         on:mouseenter={(event) => onDragOver(event, i, j)}
                     >
-                        {#if i === j && i < gameState.center.row}
+                        {#if i === j && i < gameState.center}
                             <div class="band-letter">
                                 {BAND_IDENTIFIERS[i]}
                             </div>
@@ -816,46 +726,6 @@
         outline-offset: -8px;
     }
 
-    .grid-current-clue {
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: flex;
-        box-sizing: border-box;
-
-        grid-column-start: 2;
-        grid-column-end: calc(var(--puzzle-size) + 2);
-        grid-row-start: 1;
-        grid-row-end: 2;
-
-        aspect-ratio: var(--puzzle-size);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        box-sizing: border-box;
-        font-family: var(--font-body);
-        margin-bottom: 0.5em;
-        color: rgba(0, 0, 0, 0.6);
-
-        background: linear-gradient(
-            to bottom,
-            rgba(255, 255, 255, 0.1) 0%,
-            rgba(255, 255, 255, 0.4) 40%,
-            rgba(255, 255, 255, 0.1) 100%
-        );
-        border-radius: 10px;
-        box-shadow: -2px -2px 20px 10px rgba(var(--color-theme-1-rgb), 0.1),
-            2px 2px 20px 10px rgba(var(--color-theme-2-rgb), 0.1);
-        font-size: calc(
-            0.75 * min(50vw / (var(--puzzle-size) * 2), 90vh / (4 * var(--puzzle-size)))
-        );
-    }
-
-    .grid-current-clue p {
-        padding: 1rem;
-    }
-
     .button-bar {
         display: flex;
         justify-content: flex-start;
@@ -875,11 +745,6 @@
         border-radius: 4px;
         border-color: var(--color-bg-2);
         border-width: 1px;
-    }
-
-    .button-bar button.rightmost {
-        margin-left: auto;
-        margin-right: 0;
     }
 
     .button-bar button:hover:enabled {

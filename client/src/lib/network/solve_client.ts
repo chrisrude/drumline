@@ -1,3 +1,5 @@
+import { storedGameState } from '$lib/stores/game_state_store';
+import { userStore } from '$lib/stores/user_id_store';
 import {
     actionToString,
     areActionsEqual,
@@ -5,9 +7,8 @@ import {
     leavePuzzle,
     stringToAction,
     type GameActions,
-    type UserId
 } from 'drumline-lib';
-import { storedGameState } from './game_state_store';
+import { get } from 'svelte/store';
 import type { ReconnectWsClient, WSClientEvent } from './reconnect_ws_client';
 
 export { SolveClient };
@@ -22,16 +23,13 @@ class SolveClient {
 
     readonly _solve_id: string;
 
-    readonly _user_id: UserId;
-
     readonly _ws_client: ReconnectWsClient;
 
-    constructor(solve_id: string, user_id: UserId, ws_client: ReconnectWsClient) {
+    constructor(solve_id: string, ws_client: ReconnectWsClient) {
         console.log('NetworkedGameState constructor');
         console.trace();
 
         this._solve_id = solve_id;
-        this._user_id = user_id;
         this._ws_client = ws_client;
 
         this._applied_actions = [];
@@ -56,7 +54,13 @@ class SolveClient {
         }
         // we expect that we have a game state, as the rest of the
         // app is asking us to update it.
-        storedGameState.update((game_state) => game_state!.apply(action));
+        storedGameState.update((game_state) => {
+            if (null === game_state) {
+                throw new Error('No game state');
+            }
+            game_state.apply(action);
+            return game_state;
+        });
 
         // add to our pending actions.  Do this first
         // in case the server fails to respond, or the
@@ -86,21 +90,17 @@ class SolveClient {
 
             // todo: is this a good way to do this?
             storedGameState.update((game_state) => {
-                if (game_state === null) {
-                    // we must have closed the game and the server
-                    // sent us a message before we could tell it so
-                    console.log('Ignoring action because game is closed');
+                if (null === game_state) {
                     return null;
                 }
-
                 console.log('New action: ', action);
-                game_state = game_state.apply(action);
+                game_state.apply(action);
 
                 // directly reapply all our pending actions...
                 // todo: I think this is always ok to do without "undoing"
                 // anything.  But is that correct?
                 for (const pending_action of this._pending_actions) {
-                    game_state = game_state.apply(pending_action);
+                    game_state.apply(pending_action);
                 }
                 return game_state;
             });
@@ -130,12 +130,12 @@ class SolveClient {
     // returns true if the action was in _pending_actions and was removed
     maybeCompletePendingAction = (action: GameActions): boolean => {
         // was this action from our user_id?
-        if (action.user_id !== this._user_id.public_uuid) {
+        if (action.user_id !== get(userStore).public_uuid) {
             return false;
         }
         // if it was our public one, translate it back to private
         // so we can compare it to the pending actions
-        action.user_id = this._user_id.private_uuid;
+        action.user_id = get(userStore).private_uuid;
         // do we have any pending actions?
         if (this._pending_actions.length === 0) {
             return false;
@@ -154,7 +154,7 @@ class SolveClient {
 
     _sendActionToServer(action: GameActions): boolean {
         // send it to the server using our private UUID
-        action.user_id = this._user_id.private_uuid;
+        action.user_id = get(userStore).private_uuid;
 
         const msg = actionToString(action);
         const probably_sent = this._ws_client.send(msg);

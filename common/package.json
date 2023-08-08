@@ -28,6 +28,7 @@
     "homepage": "https://github.com/chrisrude/drumline#readme",
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.3",
+        "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.1.0",
         "@rollup/plugin-terser": "^0.4.3",
         "@rollup/plugin-typescript": "^11.1.2",
@@ -44,7 +45,6 @@
         "vitest": "^0.32.2"
     },
     "dependencies": {
-        "@types/uuid": "^9.0.2",
         "uuid": "^9.0.0"
     },
     "type": "module"

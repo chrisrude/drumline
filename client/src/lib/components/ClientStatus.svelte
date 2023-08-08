@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { WSClientEventType } from '$lib/ws_client';
+    import type { WSClientEventType } from '$lib/network/reconnect_ws_client';
 
     export let status: WSClientEventType = 'disconnected';
 </script>

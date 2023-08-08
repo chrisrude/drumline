@@ -1,8 +1,9 @@
-import { Puzzle, UserId, loadPuzzleFromJson, savePuzzleToJson } from 'drumline-lib';
+import { Puzzle, loadPuzzleFromJson, savePuzzleToJson } from 'drumline-lib';
 import { RedisClientType, createClient } from 'redis';
-import { puzzleHmacName } from '../crypto';
+import { puzzleHmac } from '../crypto';
 
 import redisJson from '@redis/json';
+import { SECRET_PUZZLE_ID_SALT } from '../secrets';
 
 const RESULT_OK = 'OK';
 
@@ -39,12 +40,10 @@ class PuzzleRedisClient {
     };
 
     // saves the puzzle to redis as a new solve attempt, and returns
-    // the key to use to retrieve the solve attempt later.
-    // This solve attempt is deterministically tied to the puzzle
-    // text and the user_id.
-    savePuzzle = async (puzzle: Puzzle, user_id: UserId): Promise<string> => {
+    // the key to use to retrieve it later.
+    savePuzzle = async (puzzle: Puzzle): Promise<string> => {
         const puzzle_json = savePuzzleToJson(puzzle);
-        return puzzleHmacName(puzzle, user_id.private_uuid).then(async (hmac_key) => {
+        return puzzleHmac(puzzle, SECRET_PUZZLE_ID_SALT).then(async (hmac_key) => {
             return this.client.redisJson
                 .set(this.solvePuzzleKey(hmac_key), '$', puzzle_json)
                 .then((result) => {
@@ -78,9 +77,5 @@ class PuzzleRedisClient {
 
     solvePuzzleKey = (hmac_key: string): string => {
         return `solve:${hmac_key}:puzzle`;
-    };
-
-    solveStepsKey = (hmac_key: string): string => {
-        return `solve:${hmac_key}:steps`;
     };
 }

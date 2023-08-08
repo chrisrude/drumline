@@ -1,53 +1,45 @@
 <script lang="ts">
     import ClueGrid from '$lib/components/ClueGrid.svelte';
     import ClueList from '$lib/components/ClueList.svelte';
-    import type { GameState } from 'drumline-lib';
-    import { createEventDispatcher } from 'svelte';
+    import { storedGameState } from '$lib/stores/game_state_store';
+    import { storedPuzzle } from '$lib/stores/puzzle_store';
+    import { blur } from 'svelte/transition';
 
-    export let gameState: GameState;
-    export let highlightRow = -1;
-    export let highlightBand = -1;
-
-    const dispatch = createEventDispatcher();
+    let highlightRow = -1;
+    let highlightBand = -1;
 </script>
 
-{#if gameState.is_solved}
+{#if $storedGameState && $storedGameState.is_solved}
     <!-- e.g. https://github.com/andreasmcdermott/svelte-canvas-confetti -->
     TODO: CONFETTI
 {/if}
-<div class="puzzle">
-    <div class="puzzle-grid">
-        <ClueGrid
-            bind:highlightRow
-            bind:highlightBand
-            bind:gameState
-            on:deletePuzzle={() => {
-                dispatch('deletePuzzle');
-            }}
-            on:apply={(action) => {
-                dispatch('apply', action.detail);
-            }}
-        />
-    </div>
-    <div class="clue-sets">
-        <div class="clue-set">
-            <ClueList
-                bind:gameState
-                clueTitle="Rows"
-                clueLists={gameState.puzzle.rows}
-                bind:highlightIdx={highlightRow}
-            />
-        </div>
-        <div class="clue-set">
-            <ClueList
-                bind:gameState
-                clueTitle="Bands"
-                clueLists={gameState.puzzle.bands}
-                bind:highlightIdx={highlightBand}
-            />
+{#if $storedGameState && $storedPuzzle}
+    <div transition:blur={{ amount: '1vw' }} class="fly-holder">
+        <div class="puzzle">
+            <div class="puzzle-grid">
+                <ClueGrid bind:highlightRow bind:highlightBand bind:gameState={$storedGameState} />
+            </div>
+            <div class="clue-sets">
+                <div class="clue-set">
+                    <ClueList
+                        clueTitle="Rows"
+                        clueLists={$storedPuzzle.row_clues}
+                        bind:highlightIdx={highlightRow}
+                    />
+                </div>
+                <div class="clue-set">
+                    <ClueList
+                        clueTitle="Bands"
+                        clueLists={$storedPuzzle.band_clues}
+                        bind:highlightIdx={highlightBand}
+                    />
+                </div>
+            </div>
         </div>
     </div>
-</div>
+{:else}
+    <div>WHOOPS NO PUZZLE</div>
+{/if}
 
 <style>
     .puzzle {
@@ -70,5 +62,9 @@
     }
     .clue-set {
         margin-left: 1rem;
+    }
+    .fly-holder {
+        display: flex;
+        flex-direction: column;
     }
 </style>

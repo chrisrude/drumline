@@ -14,6 +14,10 @@ class LoginManager {
 
     login = async (req: Request, res: Response) => {
         console.log(`login`);
+        if (req.session === undefined || req.session === null) {
+            res.status(500).send({ result: 'ERROR', message: 'session not found' });
+            return;
+        }
         const session: CookieSessionInterfaces.CookieSessionObject = req.session;
         if (session.hasOwnProperty('private_uuid')) {
             // our middleware should already have validated private_uuid
@@ -34,6 +38,10 @@ class LoginManager {
 
     logout = async (req: Request, res: Response) => {
         console.log(`logout`);
+        if (req.session === undefined || req.session === null) {
+            res.status(500).send({ result: 'ERROR', message: 'session not found' });
+            return;
+        }
 
         const session: CookieSessionInterfaces.CookieSessionObject = req.session;
         session.private_uuid = undefined;
@@ -57,26 +65,36 @@ class LoginManager {
     validate_private_uuid_cookie = (req: Request, _res: Response, next: NextFunction) => {
         console.log(`validate_private_uuid_cookie: ${req.cookies}`);
 
-        // validate private_uuid, if it exists
-        const session: CookieSessionInterfaces.CookieSessionObject = req.session;
-        if (session.hasOwnProperty('private_uuid')) {
-            const user_id = this.try_create_user_id(session.private_uuid);
-            if (null !== user_id) {
-                session.private_uuid = user_id.private_uuid;
-            } else {
-                // invalid private_uuid, clear it
-                session.private_uuid = undefined;
+        if (req.session !== undefined && req.session !== null) {
+            // validate private_uuid, if it exists
+            const session: CookieSessionInterfaces.CookieSessionObject = req.session;
+            if (session.hasOwnProperty('private_uuid')) {
+                const user_id = this.try_create_user_id(session.private_uuid);
+                if (null !== user_id) {
+                    session.private_uuid = user_id.private_uuid;
+                } else {
+                    // invalid private_uuid, clear it
+                    session.private_uuid = undefined;
+                }
             }
         }
         next();
     };
 
     get_private_uuid_maybe = (req: Request): string | null => {
+        if (req.session === undefined || req.session === null) {
+            return null;
+        }
+
         const session: CookieSessionInterfaces.CookieSessionObject = req.session;
         return session.private_uuid || null;
     };
 
     get_private_uuid_fo_sho = (req: Request): string => {
+        if (req.session === undefined || req.session === null) {
+            throw new Error('session not found');
+        }
+
         const session: CookieSessionInterfaces.CookieSessionObject = req.session;
         const result = session.private_uuid || null;
         if (null === result) {

@@ -1,9 +1,9 @@
 <script lang="ts">
     import { firstEmptyCell, nextEmptyCell } from '$lib/cursor_logic';
-    import { solveClient } from '$lib/stores/game_state_store';
+    import type { NetworkedGameState } from '$lib/network/networked_game_state';
+    import { storedGameState } from '$lib/stores/game_state_store';
     import { canGroupIntoAnswer, canUngroupAnswer, findWordBounds } from '$lib/word_grouping';
     import {
-        GameState,
         clear,
         clearSegment,
         markSegment,
@@ -17,7 +17,7 @@
     } from 'drumline-lib';
     import { BAND_IDENTIFIERS } from 'drumline-lib/lib/clue_parser';
 
-    export let gameState: GameState;
+    export let gameState: NetworkedGameState;
     export let highlightRow: number = -1;
     export let highlightBand: number = -1;
 
@@ -29,7 +29,15 @@
     $: highlightRow !== undefined && gotoRow();
     $: highlightBand !== undefined && gotoBand();
 
-    const apply = (action: GameActions) => solveClient!.apply(action);
+    const apply = (action: GameActions) => {
+        storedGameState.update((gs) => {
+            if (null === gs) {
+                return null;
+            }
+            gs.apply_from_ui(action);
+            return gs;
+        });
+    };
 
     const attributesAtCursor = (): CellAttributes => attributesAt(cursorLocation);
 

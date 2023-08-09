@@ -1,89 +1,78 @@
-export { solveClient, storedGameState };
+export { solveParamsStore, storedGameState };
+export type { SolveParams };
 
 import { browser } from '$app/environment';
-import {
-    ReconnectWsClient,
-    type ConnectionInfo,
-    type WSClientEvent
-} from '$lib/network/reconnect_ws_client';
-import { SolveClient } from '$lib/network/solve_client';
-import { storedPuzzle } from '$lib/stores/puzzle_store';
-import { GameState, set_from_json, to_json } from 'drumline-lib';
-import { writable } from 'svelte/store';
+import { NetworkedGameState } from '$lib/network/networked_game_state';
+import type { SolveClientCallback } from '$lib/network/solve_client';
+import { GameState, set_from_json, to_json, type GameActionType } from 'drumline-lib';
+import { get, writable, type StartStopNotifier } from 'svelte/store';
+import { solveParamsStore, type SolveParams } from './solve_params_store';
 
-// store for current solve id
+const STORAGE_KEY_GAME_STATE_PREFIX = 'drumline-game-state-';
 
-// derived store from puzzle store + solve id
-//   this will be the current game state
+const fn_solve_key = (solveParams: SolveParams): string => STORAGE_KEY_GAME_STATE_PREFIX + solveParams.id;
 
-const STORAGE_KEY_GAME_STATE = 'drumline-game-state';
-const TODO_SOLVE_ID = '123';
-
-// todo: have a map of
-// _solve_id => GameState
-
-// currently known solve state
-//   this will be prepended to the solve ID for the key
-//   to a given solve
-// const STORAGE_KEY_GAME_STATE_PREFIX = 'drumline-game-state-';
-
-const storedGameState = writable<GameState | null>(null);
-
-// todo: set from config
-const CONNECTION_INFO: ConnectionInfo = {
-    use_tls: false,
-    host: 'localhost',
-    port: 8080
-};
-
-let solveClient: SolveClient | null = null;
-
-const ws_client = new ReconnectWsClient(CONNECTION_INFO, (msg: WSClientEvent) => {
-    if (solveClient === null) {
-        throw new Error('No solve client');
-    }
-    solveClient.callback(msg);
-});
-
-const cleanup = () => {
-    console.log('cleaning up');
-    solveClient?.close();
-    solveClient = null;
-};
-
-storedPuzzle.subscribe((puzzle) => {
-    if (!puzzle) {
-        storedGameState.set(null);
+const fn_start_gamestate: StartStopNotifier<NetworkedGameState | null> = (
+    fn_set: (value: NetworkedGameState | null) => void,
+    _fn_update: (fn: (value: NetworkedGameState | null) => NetworkedGameState | null) => void
+): void | (() => void) => {
+    const solveParams = get(solveParamsStore);
+    if (!browser || !solveParams) {
+        fn_set(null);
         return;
     }
-    if (!browser) {
-        return;
-    }
+    const networked_game_state = new NetworkedGameState(
+        solveParams.size,
+        solveParams.id,
+        fn_handle_received_action
+    );
 
-    // close out old connection before starting a new one
-    cleanup();
-
-    const gameState = new GameState(puzzle.size, TODO_SOLVE_ID);
-    solveClient = new SolveClient(TODO_SOLVE_ID, ws_client);
-
-    const storedString = window.localStorage.getItem(STORAGE_KEY_GAME_STATE) ?? null;
+    const key = fn_solve_key(solveParams);
+    const storedString = window.localStorage.getItem(key) ?? null;
     if (storedString && storedString.length > 0) {
-        set_from_json(storedString, gameState);
+        set_from_json(storedString, networked_game_state);
     }
+    fn_set(networked_game_state);
+    networked_game_state.connect();
 
-    storedGameState.set(gameState);
+    // called when the last subscriber unsubscribes
+    return (): void => {
+        // close out old connection before starting a new one
+        console.log("Closing solve client");
+        networked_game_state.close();
+    };
+};
+const storedGameState = writable<NetworkedGameState | null>(null, fn_start_gamestate);
 
-    solveClient.connect();
-});
-
-storedGameState.subscribe((value) => {
-    if (browser) {
-        if (value) {
-            const json = to_json(value);
-            window.localStorage.setItem(STORAGE_KEY_GAME_STATE, json);
-        } else {
-            window.localStorage.removeItem(STORAGE_KEY_GAME_STATE);
-            solveClient?.close();
+const fn_handle_received_action: SolveClientCallback = (action: GameActionType, pending_actions: GameActionType[]) => {
+    storedGameState.update((game_state) => {
+        if (null === game_state) {
+            return null;
         }
+        console.log('Action from server: ', action);
+        game_state.apply(action);
+
+        // directly reapply all our pending actions...
+        // todo: I think this is always ok to do without "undoing"
+        // anything.  But is that correct?
+        for (const pending_action of pending_actions) {
+            game_state.apply(pending_action);
+        }
+        return game_state;
+    });
+};
+
+storedGameState.subscribe((newGameState: GameState | null) => {
+    const solveParams = get(solveParamsStore);
+    if (!solveParams) {
+        return;
     }
+    const solve_key = fn_solve_key(solveParams);
+    if (!newGameState) {
+        // note: don't remove the stored game state, so
+        // that we can re-open it later
+        return;
+    }
+    const json = to_json(newGameState);
+    window.localStorage.setItem(solve_key!, json);
 });

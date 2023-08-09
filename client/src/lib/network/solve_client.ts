@@ -12,10 +12,15 @@ import { get } from 'svelte/store';
 import type { ReconnectWsClient, WSClientEvent } from './reconnect_ws_client';
 
 export { SolveClient };
+export type { SolveClientCallback };
+
+type SolveClientCallback = (action: GameActions, pending_actions: GameActions[]) => void;
 
 class SolveClient {
     // actions which the server has sent to us
     readonly _applied_actions: GameActions[];
+
+    readonly _handleActionCallback: SolveClientCallback;
 
     // actions that we want to the server, but haven't gotten
     // a response for yet.  These are all locally-generated.
@@ -25,15 +30,16 @@ class SolveClient {
 
     readonly _ws_client: ReconnectWsClient;
 
-    constructor(solve_id: string, ws_client: ReconnectWsClient) {
-        console.log('NetworkedGameState constructor');
-        console.trace();
+    constructor(solve_id: string, ws_client: ReconnectWsClient, handleActionCallback: SolveClientCallback) {
 
         this._solve_id = solve_id;
         this._ws_client = ws_client;
 
         this._applied_actions = [];
         this._pending_actions = [];
+
+        this._handleActionCallback = handleActionCallback.bind(this);
+        ws_client.set_callback(this.callback);
     }
 
     connect = () => {
@@ -87,23 +93,7 @@ class SolveClient {
 
             // add to our received actions
             this._applied_actions.push(action);
-
-            // todo: is this a good way to do this?
-            storedGameState.update((game_state) => {
-                if (null === game_state) {
-                    return null;
-                }
-                console.log('New action: ', action);
-                game_state.apply(action);
-
-                // directly reapply all our pending actions...
-                // todo: I think this is always ok to do without "undoing"
-                // anything.  But is that correct?
-                for (const pending_action of this._pending_actions) {
-                    game_state.apply(pending_action);
-                }
-                return game_state;
-            });
+            this._handleActionCallback(action, this._pending_actions);
 
             return;
         }

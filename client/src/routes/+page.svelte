@@ -5,7 +5,8 @@
 
     const routes = {
         '/': PuzzleEntry,
-        '/puzzles/:id': PuzzleView
+        '/puzzles/:id/:size': PuzzleView
+
         // todo: 404?
         // '*': 'NotFound
     };

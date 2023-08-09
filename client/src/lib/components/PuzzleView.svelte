@@ -1,12 +1,18 @@
 <script lang="ts">
     import ClueGrid from '$lib/components/ClueGrid.svelte';
     import ClueList from '$lib/components/ClueList.svelte';
-    import { storedGameState } from '$lib/stores/game_state_store';
+    import type { SolveParams } from '$lib/stores/game_state_store';
+    import { solveParamsStore, storedGameState } from '$lib/stores/game_state_store';
     import { storedPuzzle } from '$lib/stores/puzzle_store';
     import { blur } from 'svelte/transition';
 
     let highlightRow = -1;
     let highlightBand = -1;
+
+    export let params: SolveParams;
+    solveParamsStore.set(params);
+
+    // params
 </script>
 
 {#if $storedGameState && $storedGameState.is_solved}

@@ -25,7 +25,7 @@ function set_clue_lists(
     answer_segments: AnswerSegments[],
     segment_values_list: AnswerSegment[][]
 ) {
-    if (answer_segments.length !== segment_values_list.length) {
+    if (answer_segments.length != segment_values_list.length) {
         throw new Error(
             `set_from_json: clue_lists has ${answer_segments.length} rows, expected ${segment_values_list.length}`
         );
@@ -49,26 +49,25 @@ function set_from_json(json: string, gameState: GameState): void {
     const simple_json = JSON.parse(json);
 
     // verify sizes line up
-    if (simple_json.grid.length !== gameState.size) {
+    if (simple_json.grid.length != gameState.size) {
         throw new Error(
             `set_from_json: grid has ${simple_json.grid.length} rows, expected ${gameState.size}`
         );
     }
-    if (simple_json.grid[0].length !== gameState.size) {
+    if (simple_json.grid[0].length != gameState.size) {
         throw new Error(
             `set_from_json: grid has ${simple_json.grid[0].length} columns, expected ${gameState.size}`
         );
     }
     const row_segments: AnswerSegment[][] = simple_json.row_segments;
-    console.log(`row_segments: ${JSON.stringify(row_segments)}`);
-    if (row_segments.length !== gameState.size) {
+    if (row_segments.length != gameState.size) {
         throw new Error(
             `set_from_json: row_segments has ${row_segments.length} rows, expected ${gameState.size}`
         );
     }
     const band_segments: AnswerSegment[][] = simple_json.band_segments;
     const num_bands = gameState.band_answer_segments.length;
-    if (band_segments.length !== num_bands) {
+    if (band_segments.length != num_bands) {
         throw new Error(
             `set_from_json: band_segments has ${band_segments.length} rows, expected ${num_bands}`
         );

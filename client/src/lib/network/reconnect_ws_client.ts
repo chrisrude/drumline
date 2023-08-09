@@ -61,7 +61,8 @@ type SetTimeoutType = ReturnType<typeof setTimeout>;
 
 // a websocket client that automatically reconnects
 class ReconnectWsClient {
-    readonly callback: WSClientEventCallback;
+    callback: WSClientEventCallback | null;
+    connection_state: WSClientStatus;
     readonly connection_info: ConnectionInfo;
     readonly factor: ExponentialBackoffFactor;
 
@@ -70,8 +71,9 @@ class ReconnectWsClient {
 
     ws: WebSocket | null;
 
-    constructor(connection_info: ConnectionInfo, callback: WSClientEventCallback) {
-        this.callback = callback;
+    constructor(connection_info: ConnectionInfo) {
+        this.callback = null;
+        this.connection_state = 'disconnected';
         this.connection_info = connection_info;
         this.factor = new ExponentialBackoffFactor(0, 10);
         this.close_forever = false;
@@ -79,46 +81,34 @@ class ReconnectWsClient {
         this.ws = null;
     }
 
+    set_callback = (callback: WSClientEventCallback) => {
+        this.callback = callback;
+    };
+
+    _fire_callback = (event: WSClientEvent) => {
+        if (this.callback === null) {
+            return;
+        }
+        this.callback(event);
+    };
+
+    _set_status = (status: WSClientStatus) => {
+        this.connection_state = status;
+        this._fire_callback({
+            type: status
+        });
+    };
+
     make_url = () => {
         const { use_tls, host, port } = this.connection_info;
         const protocol = use_tls ? 'wss' : 'ws';
         return `${protocol}://${host}:${port}/`;
     };
 
-    on_open = () => {
-        console.log('Connected to server: ', this.make_url());
-        this.clear_timeout();
-        this.factor.reset();
-        this.callback({
-            type: 'connected'
-        });
-    };
-
-    on_close = () => {
-        this._close_internal();
-        if (this.close_forever) {
-            this.callback({
-                type: 'disconnected'
-            });
-            return;
-        }
-        this.schedule_reconnect();
-        this.callback({
-            type: 'reconnecting'
-        });
-    };
-
     schedule_reconnect = () => {
         this.clear_timeout();
         const total_timeout_ms = RECONNECT_TIMEOUT_UNIT_MS * this.factor.next();
         this.reconnect_timeout = setTimeout(this.connect, total_timeout_ms);
-    };
-
-    on_message = (message: MessageEvent) => {
-        this.callback({
-            type: 'data',
-            message: message.data
-        });
     };
 
     connect = () => {
@@ -129,9 +119,27 @@ class ReconnectWsClient {
         const url = this.make_url();
         this.ws = new WebSocket(url);
 
-        this.ws.addEventListener('open', this.on_open);
-        this.ws.addEventListener('message', this.on_message);
-        this.ws.addEventListener('close', this.on_close);
+        this.ws.addEventListener('open', () => {
+            console.log('Connected to server: ', this.make_url());
+            this.clear_timeout();
+            this.factor.reset();
+            this._set_status('connected');
+        });
+        this.ws.addEventListener('message', (message: MessageEvent) => {
+            this._fire_callback({
+                type: 'data',
+                message: message.data
+            });
+        });
+        this.ws.addEventListener('close', () => {
+            this._close_internal();
+            if (this.close_forever) {
+                this._set_status('disconnected');
+                return;
+            }
+            this.schedule_reconnect();
+            this._set_status('reconnecting');
+        });
     };
 
     clear_timeout = () => {

@@ -10,7 +10,7 @@
 
 import {
     nextIndexWithWrap,
-    prevIndexWithWrap,
+    nextIndexWithoutWrap,
     type CellGroupLocations,
     type Grid
 } from 'drumline-lib';
@@ -33,7 +33,7 @@ const nextEmptyCell = (
     location_offset: number,
     use_band: boolean
 ): [number, number] => {
-    const fn_next_idx = use_band ? nextIndexWithWrap : prevIndexWithWrap;
+    const fn_next_idx = use_band ? nextIndexWithWrap : nextIndexWithoutWrap;
     return _findEmptyCell(grid, locations, location_offset, fn_next_idx);
 };
 
@@ -53,9 +53,10 @@ const _findEmptyCell = (
             // we found an answer
             return next_cell;
         }
-        // if we didn't move, we're stuck, so just return the last cell
+        // if we didn't move, we're stuck, so just return the
+        // next cell, as if none were filled
         if (next_cell_idx === last_cell_idx) {
-            return locations[last_cell_idx];
+            break;
         }
         // if we wound up at the starting cell, we wrapped around without
         // finding a suitable place to stop, so just return the start cell

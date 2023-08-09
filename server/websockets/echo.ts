@@ -117,8 +117,7 @@ class EchoServer extends WebSocketServer {
         const client_state = this.get_client_state(ws);
 
         if (!this.has_solve_id(joinPuzzle.solve_id)) {
-            console.log('Solve not found: ' + joinPuzzle.solve_id);
-            return;
+            this.solve_actions.set(joinPuzzle.solve_id, []);
         }
 
         client_state.last_update = joinPuzzle.change_count;

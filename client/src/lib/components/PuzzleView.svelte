@@ -19,7 +19,7 @@
     <!-- e.g. https://github.com/andreasmcdermott/svelte-canvas-confetti -->
     TODO: CONFETTI
 {/if}
-{#if $storedGameState && $storedPuzzle}
+{#if $storedGameState}
     <div transition:blur={{ amount: '1vw' }} class="fly-holder">
         <div class="puzzle">
             <div class="puzzle-grid">
@@ -29,14 +29,14 @@
                 <div class="clue-set">
                     <ClueList
                         clueTitle="Rows"
-                        clueLists={$storedPuzzle.row_clues}
+                        clueLists={$storedPuzzle?.row_clues ?? []}
                         bind:highlightIdx={highlightRow}
                     />
                 </div>
                 <div class="clue-set">
                     <ClueList
                         clueTitle="Bands"
-                        clueLists={$storedPuzzle.band_clues}
+                        clueLists={$storedPuzzle?.band_clues ?? []}
                         bind:highlightIdx={highlightBand}
                     />
                 </div>

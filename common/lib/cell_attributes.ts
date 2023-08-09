@@ -200,7 +200,11 @@ const _generateGridAttributes = (size: number): GridAttributes => {
         for (let j = 0; j < size; j++) {
             const band_number = memoizedGetBandNumberFromCoords(size, i, j);
             const band_locations = memoizedLocationsForBand(size, band_number);
-            const band_offset = band_locations.indexOf([i, j]);
+            const band_offset = band_locations.findIndex(([x, y]) => x == i && y == j);
+            if (-1 === band_offset) {
+                throw new Error(`row_offset is -1 for ${i}, ${j}`);
+            }
+
             const [band_side, is_corner] = _getBandSide(size, i, j);
             const band_group: BandGroup = {
                 kind: 'band',
@@ -213,7 +217,10 @@ const _generateGridAttributes = (size: number): GridAttributes => {
             };
 
             const row_locations = memoizedLocationsForRow(size, i);
-            const row_offset = row_locations.indexOf([i, j]);
+            const row_offset = row_locations.findIndex(([x, y]) => x == i && y == j);
+            if (-1 === row_offset && !(i == center && j == center)) {
+                throw new Error(`row_offset is -1 for ${i}, ${j}`);
+            }
             const row_group: RowGroup = {
                 kind: 'row',
                 index: i,

@@ -100,6 +100,10 @@
             ? gridAttributes.locations_for_band
             : gridAttributes.locations_for_row;
         const cellGroup = cursorCellGroup();
+        if (cellGroup.offset === -1) {
+            // if we're at the start, just return the first cell
+            throw new Error('location_offset cannot be -1');
+        }
         return nextEmptyCell(
             gameState.grid,
             locations_list[cellGroup.index],

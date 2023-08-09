@@ -33,8 +33,6 @@ function set_clue_lists(
     // iterate arrays in parallel
     for (let i = 0; i < answer_segments.length; i++) {
         const segment_values: AnswerSegment[] = segment_values_list[i];
-        // log segment_Values
-        console.log(`segment_values: ${JSON.stringify(segment_values)}`);
         const gamestate_segments = answer_segments[i];
         for (const segment of segment_values) {
             gamestate_segments.markSegment({

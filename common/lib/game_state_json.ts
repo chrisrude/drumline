@@ -1,6 +1,6 @@
 export { set_from_json, to_json };
 
-import type { AnswerSegments, GameState } from './game_state';
+import type { AnswerSegment, AnswerSegments, GameState } from './game_state';
 
 function to_json(gameState: GameState): string {
     // store grid and answer_segments, but not puzzle
@@ -9,8 +9,9 @@ function to_json(gameState: GameState): string {
             return cell.text;
         });
     });
-    const row_segments = gameState.row_answer_segments;
-    const band_segments = gameState.band_answer_segments;
+    const fn_segments_only = (answer_segments: AnswerSegments) => answer_segments.segments;
+    const row_segments: AnswerSegment[][] = gameState.row_answer_segments.map(fn_segments_only);
+    const band_segments: AnswerSegment[][] = gameState.band_answer_segments.map(fn_segments_only);
 
     const result = JSON.stringify({
         grid,
@@ -22,7 +23,7 @@ function to_json(gameState: GameState): string {
 
 function set_clue_lists(
     answer_segments: AnswerSegments[],
-    segment_values_list: AnswerSegments[]
+    segment_values_list: AnswerSegment[][]
 ) {
     if (answer_segments.length !== segment_values_list.length) {
         throw new Error(
@@ -31,9 +32,11 @@ function set_clue_lists(
     }
     // iterate arrays in parallel
     for (let i = 0; i < answer_segments.length; i++) {
-        const segment_values: AnswerSegments = segment_values_list[i];
+        const segment_values: AnswerSegment[] = segment_values_list[i];
+        // log segment_Values
+        console.log(`segment_values: ${JSON.stringify(segment_values)}`);
         const gamestate_segments = answer_segments[i];
-        for (const segment of segment_values.segments) {
+        for (const segment of segment_values) {
             gamestate_segments.markSegment({
                 idx_start: segment.idx_start,
                 idx_end: segment.idx_end
@@ -56,13 +59,14 @@ function set_from_json(json: string, gameState: GameState): void {
             `set_from_json: grid has ${simple_json.grid[0].length} columns, expected ${gameState.size}`
         );
     }
-    const row_segments: AnswerSegments[] = simple_json.row_segments;
+    const row_segments: AnswerSegment[][] = simple_json.row_segments;
+    console.log(`row_segments: ${JSON.stringify(row_segments)}`);
     if (row_segments.length !== gameState.size) {
         throw new Error(
             `set_from_json: row_segments has ${row_segments.length} rows, expected ${gameState.size}`
         );
     }
-    const band_segments: AnswerSegments[] = simple_json.band_segments;
+    const band_segments: AnswerSegment[][] = simple_json.band_segments;
     const num_bands = gameState.band_answer_segments.length;
     if (band_segments.length !== num_bands) {
         throw new Error(

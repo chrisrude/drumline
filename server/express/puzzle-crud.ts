@@ -57,7 +57,7 @@ class PuzzleCrudder {
 
         const puzzle: Puzzle | null = this._map_puzzle_id_to_puzzle.get(id) || null;
         if (null === puzzle) {
-            res.status(404).send(`Puzzle ${id} not found`);
+            res.status(404).send(`Puzzle not found`);
             return;
         }
         res.status(200).send({
@@ -82,7 +82,7 @@ class PuzzleCrudder {
         try {
             puzzle = new Puzzle(input_text);
         } catch (err) {
-            res.status(400).send(`Invalid puzzle_input: ${err}`);
+            res.status(400).send('Invalid puzzle_input');
             return;
         }
         const requester_private_uuid = user.private_uuid;
@@ -117,7 +117,7 @@ class PuzzleCrudder {
         // of course at the moment we'll list all puzzles, but we can fix that later.
         const creator_uuid = this._map_puzzle_id_to_creator_uuid.get(id);
         if (creator_uuid !== requester_private_uuid) {
-            res.status(401).send(`Not the creator of puzzle ${id}`);
+            res.status(401).send(`Not the creator of puzzle`);
             return;
         }
 

@@ -1,4 +1,4 @@
-import type { AnswerSegments, CellGroup, GameState, Grid, GridAttributes } from 'drumline-lib';
+import type { AnswerSegments, CellGroup, GameState, Grid, GridAttributes } from '@chrisrude/drumline-lib';
 
 export { canGroupIntoAnswer, canUngroupAnswer, findWordBounds };
 
@@ -39,6 +39,9 @@ const isInAnswer = (
         location,
         use_band
     );
+    if (!answer_segments) {
+        return false;
+    }
     return answer_segments.in_answer_at_offset(cell_group.offset)[0];
 };
 

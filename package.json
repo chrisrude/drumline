@@ -13,9 +13,12 @@
         "url": "https://github.com/chrisrude/drumline/issues"
     },
     "homepage": "https://github.com/chrisrude/drumline#readme",
-    "workspaces": [
-        "drumline-client",
-        "drumline-lib",
-        "drumline-server"
-    ]
+    "engines": {
+        "npm": ">=8.19.2 <10.0.0",
+        "node": ">=18.12.1 <19.0.0"
+    },
+    "scripts": {
+        "postinstall": "cd drumline-client; npm install; cd ../drumline-server; npm install",
+        "start": "cd ./drumline-server && node dist/index.mjs"
+    }
 }

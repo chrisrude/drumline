@@ -11,7 +11,7 @@
     "license": "MIT",
     "repository": "chrisrude/drumline",
     "engines": {
-        "node": ">=18.17.0"
+        "node": ">=18.12.1"
     },
     "scripts": {
         "build": "vite build",
@@ -24,7 +24,8 @@
         "lint": "prettier --plugin-search-dir . --check . && eslint .",
         "format": "prettier --plugin-search-dir . --write .",
         "test:integration": "playwright test",
-        "test:unit": "vitest"
+        "test:unit": "vitest",
+        "postinstall": ""
     },
     "devDependencies": {
         "@playwright/test": "^1.28.1",

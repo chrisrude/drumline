@@ -13,7 +13,8 @@
         "start": "node dist/index.mjs",
         "test": "npm run test:unit",
         "test:unit": "vitest",
-        "watch-start": "node --watch dist/index.mjs"
+        "watch-start": "node --watch dist/index.mjs",
+        "postinstall": ""
     },
     "repository": {
         "type": "git",

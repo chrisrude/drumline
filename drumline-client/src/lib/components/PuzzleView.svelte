@@ -15,9 +15,9 @@
 
     // todo: read config
     const CONNECTION_INFO: ConnectionInfo = {
-        use_tls: false,
-        host: 'localhost',
-        port: 8080
+        use_tls: true,
+        host: 'drumline-server.rudesoftware.net',
+        port: 443
     };
     const base_url = `http${CONNECTION_INFO.use_tls ? 's' : ''}://${CONNECTION_INFO.host}:${
         CONNECTION_INFO.port

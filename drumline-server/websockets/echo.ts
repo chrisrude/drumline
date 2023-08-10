@@ -40,7 +40,7 @@ class EchoServer extends WebSocketServer {
     // todo: sore actions in Redis
 
     constructor() {
-        super({ port: 8081 });
+        super({ noServer: true });
 
         this.connected_clients = new Map();
         this.solve_actions = new Map();

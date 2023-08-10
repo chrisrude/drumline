@@ -6,13 +6,14 @@
     "scripts": {
         "build": "rollup -c",
         "watch": "rollup -c -w",
-        "dev": "npm-run-all --parallel watch start",
+        "dev": "npm-run-all --parallel watch watch-start",
         "clean": "rm -rf ./dist",
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
-        "start": "node --watch dist/index.mjs",
+        "start": "node dist/index.mjs",
         "test": "npm run test:unit",
-        "test:unit": "vitest"
+        "test:unit": "vitest",
+        "watch-start": "node --watch dist/index.mjs"
     },
     "repository": {
         "type": "git",

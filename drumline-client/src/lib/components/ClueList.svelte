@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { ClueList } from '@chrisrude/drumline-lib';
+    import { BAND_IDENTIFIERS } from '@chrisrude/drumline-lib/lib/clue_parser';
 
     export let clueLists: ClueList[];
     export let clueTitle: string;
@@ -55,7 +56,11 @@
                 on:click={() => (highlightIdx = idx)}
             >
                 <div class="clues-group-title">
-                    {clueList.index}
+                    {#if clueTitle == 'Bands'}
+                        {BAND_IDENTIFIERS[clueList.index]}
+                    {:else}
+                        {clueList.index + 1}
+                    {/if}
                 </div>
                 <div class="clues-group-list">
                     {#each clueList.clues as clue}

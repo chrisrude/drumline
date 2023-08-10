@@ -79,7 +79,7 @@
         // empty cell in the band
         cursorLocation = firstEmptyCell(
             gameState.grid,
-            gridAttributes.locations_for_band[cursorCellGroup().index],
+            gridAttributes.locations_for_band[highlightBand],
             true
         );
     };

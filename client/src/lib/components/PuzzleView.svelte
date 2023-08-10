@@ -16,7 +16,7 @@
     // todo: read config
     const CONNECTION_INFO: ConnectionInfo = {
         use_tls: false,
-        host: 'choleric.home.rudesoftware.net',
+        host: 'localhost',
         port: 8080
     };
     const base_url = `http${CONNECTION_INFO.use_tls ? 's' : ''}://${CONNECTION_INFO.host}:${
@@ -24,18 +24,13 @@
     }`;
 
     if (!$storedPuzzle) {
-        console.log('no puzzle in store, trying to load from server');
-
         paramsStore.subscribe((params) => {
-            console.log('params changed');
-            console.log(params);
             if (!params) {
                 console.log('no params');
                 return;
             }
             const puzzle_id = params.id;
             puzzles_read(puzzle_id, base_url).then((puzzle) => {
-                console.log('got puzzle from server');
                 storedPuzzle.set(puzzle);
             });
         });

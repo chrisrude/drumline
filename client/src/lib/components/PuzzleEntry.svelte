@@ -14,7 +14,7 @@
     // todo: read config
     const CONNECTION_INFO: ConnectionInfo = {
         use_tls: false,
-        host: 'choleric.home.rudesoftware.net',
+        host: 'localhost',
         port: 8080
     };
     const base_url = `http${CONNECTION_INFO.use_tls ? 's' : ''}://${CONNECTION_INFO.host}:${
@@ -27,11 +27,7 @@
             storedPuzzle.set(puzzle);
             parseError = '';
 
-            // choleric.home.rudesoftware.net
-            console.log('creating puzzle...');
             puzzles_create(puzzle.original_text, $userStore, base_url).then((puzzle_id: string) => {
-                console.log('puzzle created, navigating...');
-                console.log(puzzle_id);
                 const puzzle_url = `/puzzles/${puzzle.size}/${puzzle_id}`;
                 push(puzzle_url);
             });

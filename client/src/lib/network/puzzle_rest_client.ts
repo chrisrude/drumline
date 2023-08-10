@@ -90,8 +90,6 @@ const puzzles_read = async (id: string, base_url?: string): Promise<Puzzle> => {
         throw new Error(`read: ${response.status} ${response.statusText}`);
     }
     const puzzle_json = (await response.json()).puzzle;
-    console.log('puzzle_json');
-    console.log(puzzle_json);
     const puzzle = new Puzzle(puzzle_json.original_text);
     return puzzle;
 };

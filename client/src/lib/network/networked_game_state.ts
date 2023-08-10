@@ -6,7 +6,7 @@ export { NetworkedGameState };
 // todo: set from config
 const CONNECTION_INFO: ConnectionInfo = {
     use_tls: false,
-    host: 'choleric.home.rudesoftware.net',
+    host: 'localhost',
     port: 8081
 };
 

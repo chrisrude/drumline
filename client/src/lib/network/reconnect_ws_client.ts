@@ -112,16 +112,13 @@ class ReconnectWsClient {
     };
 
     connect = () => {
-        console.log('Connecting to server');
         if (this.ws !== null) {
             return;
         }
         const url = this.make_url();
-        console.log('Connecting to server: ', url);
         this.ws = new WebSocket(url);
 
         this.ws.addEventListener('open', () => {
-            console.log('Connected to server: ', this.make_url());
             this.clear_timeout();
             this.factor.reset();
             this._set_status('connected');
@@ -152,7 +149,6 @@ class ReconnectWsClient {
     };
 
     close = () => {
-        console.log('Closing connection');
         this.close_forever = true;
         this._close_internal();
     };
@@ -165,7 +161,6 @@ class ReconnectWsClient {
         const ws = this.ws;
         this.ws = null;
         ws.close();
-        console.log('Connection closed');
     };
 
     send = (message: string): boolean => {

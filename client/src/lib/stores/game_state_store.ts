@@ -18,7 +18,7 @@ const STORAGE_KEY_GAME_STATE_PREFIX = 'drumline-game-state-';
 const fn_solve_key = (id: string): string => STORAGE_KEY_GAME_STATE_PREFIX + id;
 
 const convert_params = (params: Record<string, string> | undefined): SolveParams | null => {
-    if (params === undefined || params.size === undefined || params.id === undefined) {
+    if (!params || !params.size || !params.id) {
         return null;
     }
     const size = parseInt(params.size);

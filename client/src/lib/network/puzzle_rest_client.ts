@@ -1,48 +1,18 @@
-import { Puzzle } from 'drumline-lib';
+import { Puzzle, UserId } from 'drumline-lib';
 
 export {
     puzzles_create,
     puzzles_delete,
     puzzles_list,
-    puzzles_login,
-    puzzles_logout,
     puzzles_read
 };
 export type { PuzzleListResponse };
 
-const HEADERS = {
-    'Content-Type': 'application/json'
+const HEADERS: HeadersInit = {
+    "Content-Type": "application/json",
 };
 
 // login and logout
-
-// POST /login
-// body is json, {private_uuid: string}
-// response: 200 - ok
-//   json: {result: 'OK'}
-// response: 400 - bad input
-const puzzles_login = async (private_uuid: string, base_url?: string): Promise<void> => {
-    const url = (base_url ?? '') + '/login';
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: HEADERS,
-        body: JSON.stringify({ private_uuid })
-    });
-    if (!response.ok) {
-        throw new Error(`login: ${response.status} ${response.statusText}`);
-    }
-};
-
-// POST /logout
-// response: 200 - ok
-//   json: {result: 'OK}
-const puzzles_logout = async (base_url?: string): Promise<void> => {
-    const url = (base_url ?? '') + '/logout';
-    const response = await fetch(url, { method: 'POST', headers: HEADERS });
-    if (!response.ok) {
-        throw new Error(`logout: ${response.status} ${response.statusText}`);
-    }
-};
 
 //////
 
@@ -50,8 +20,7 @@ const puzzles_logout = async (base_url?: string): Promise<void> => {
 // 200 - ok
 // res.send({
 //     result: 'OK',
-//     puzzle_ids,
-//     my_puzzle_ids
+//     puzzle_ids
 // });
 type PuzzleListResponse = {
     result: 'OK';
@@ -60,7 +29,10 @@ type PuzzleListResponse = {
 };
 const puzzles_list = async (base_url?: string): Promise<PuzzleListResponse> => {
     const url = (base_url ?? '') + '/puzzles';
-    const response = await fetch(url, { method: 'GET', headers: HEADERS });
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: HEADERS,
+    });
     if (!response.ok) {
         throw new Error(`list: ${response.status} ${response.statusText}`);
     }
@@ -68,6 +40,10 @@ const puzzles_list = async (base_url?: string): Promise<PuzzleListResponse> => {
 };
 
 // puzzle crud
+// input:
+//   input_text: string
+//   private_uuid: string
+//
 // app.post('/puzzles', this.create_puzzle);
 // 201 - ok with body & location header
 // 400 - bad input
@@ -78,12 +54,18 @@ const puzzles_list = async (base_url?: string): Promise<PuzzleListResponse> => {
 //     result: 'OK',
 //     puzzle_id: puzzle_id
 // });
-const puzzles_create = async (input_text: string, base_url?: string): Promise<string> => {
+const puzzles_create = async (
+    input_text: string,
+    user_id: UserId,
+    base_url?: string): Promise<string> => {
     const url = (base_url ?? '') + '/puzzles';
     const response = await fetch(url, {
         method: 'POST',
         headers: HEADERS,
-        body: JSON.stringify({ input_text })
+        body: JSON.stringify({
+            input_text,
+            private_uuid: user_id.private_uuid
+        })
     });
     if (!response.ok) {
         throw new Error(`create: ${response.status} ${response.statusText}`);
@@ -100,12 +82,17 @@ const puzzles_create = async (input_text: string, base_url?: string): Promise<st
 // });
 const puzzles_read = async (id: string, base_url?: string): Promise<Puzzle> => {
     const url = (base_url ?? '') + `/puzzles/${id}`;
-    const response = await fetch(url, { method: 'GET', headers: HEADERS });
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: HEADERS
+    });
     if (!response.ok) {
         throw new Error(`read: ${response.status} ${response.statusText}`);
     }
     const puzzle_json = (await response.json()).puzzle;
-    const puzzle = new Puzzle(puzzle_json.input_text);
+    console.log('puzzle_json');
+    console.log(puzzle_json);
+    const puzzle = new Puzzle(puzzle_json.original_text);
     return puzzle;
 };
 
@@ -116,9 +103,19 @@ const puzzles_read = async (id: string, base_url?: string): Promise<Puzzle> => {
 // res.send({
 //     result: 'OK'
 // });
-const puzzles_delete = async (id: string, base_url?: string): Promise<void> => {
+const puzzles_delete = async (
+    id: string,
+    user_id: UserId,
+    base_url?: string
+): Promise<void> => {
     const url = (base_url ?? '') + `/puzzles/${id}`;
-    const response = await fetch(url, { method: 'DELETE', headers: HEADERS });
+    const response = await fetch(url, {
+        method: 'DELETE',
+        headers: HEADERS,
+        body: JSON.stringify({
+            private_uuid: user_id.private_uuid
+        })
+    });
     if (!response.ok) {
         throw new Error(`delete: ${response.status} ${response.statusText}`);
     }

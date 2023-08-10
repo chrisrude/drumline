@@ -1,14 +1,45 @@
 <script lang="ts">
     import ClueGrid from '$lib/components/ClueGrid.svelte';
     import ClueList from '$lib/components/ClueList.svelte';
+    import { puzzles_read } from '$lib/network/puzzle_rest_client';
+    import type { ConnectionInfo } from '$lib/network/reconnect_ws_client';
     import { storedGameState } from '$lib/stores/game_state_store';
     import { storedPuzzle } from '$lib/stores/puzzle_store';
+    import { params as paramsStore } from 'svelte-spa-router';
     import { blur } from 'svelte/transition';
 
     let highlightRow = -1;
     let highlightBand = -1;
 
-    export let params = null;
+    export const params = null;
+
+    // todo: read config
+    const CONNECTION_INFO: ConnectionInfo = {
+        use_tls: false,
+        host: 'choleric.home.rudesoftware.net',
+        port: 8080
+    };
+    const base_url = `http${CONNECTION_INFO.use_tls ? 's' : ''}://${CONNECTION_INFO.host}:${
+        CONNECTION_INFO.port
+    }`;
+
+    if (!$storedPuzzle) {
+        console.log('no puzzle in store, trying to load from server');
+
+        paramsStore.subscribe((params) => {
+            console.log('params changed');
+            console.log(params);
+            if (!params) {
+                console.log('no params');
+                return;
+            }
+            const puzzle_id = params.id;
+            puzzles_read(puzzle_id, base_url).then((puzzle) => {
+                console.log('got puzzle from server');
+                storedPuzzle.set(puzzle);
+            });
+        });
+    }
 </script>
 
 {#if $storedGameState && $storedGameState.is_solved}

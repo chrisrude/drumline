@@ -9,7 +9,7 @@ import {
 } from 'drumline-lib';
 import { AddressInfo } from 'net';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
-import { RawData, ServerOptions, WebSocket, WebSocketServer } from 'ws';
+import { RawData, WebSocket, WebSocketServer } from 'ws';
 export { EchoServer };
 
 enum ClientStatus {
@@ -39,8 +39,8 @@ class EchoServer extends WebSocketServer {
 
     // todo: sore actions in Redis
 
-    constructor(options: ServerOptions) {
-        super(options);
+    constructor() {
+        super({ port: 8081 });
 
         this.connected_clients = new Map();
         this.solve_actions = new Map();

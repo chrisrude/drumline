@@ -117,6 +117,7 @@ class ReconnectWsClient {
             return;
         }
         const url = this.make_url();
+        console.log('Connecting to server: ', url);
         this.ws = new WebSocket(url);
 
         this.ws.addEventListener('open', () => {

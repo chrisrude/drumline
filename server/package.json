@@ -27,6 +27,7 @@
     "dependencies": {
         "base-emoji": "^2.0.1",
         "cookie-session": "^2.0.0",
+        "cors": "^2.8.5",
         "drumline-lib": "file:../common",
         "express": "^4.18.2",
         "redis": "4.6.7",
@@ -37,6 +38,7 @@
         "@rollup/plugin-node-resolve": "^15.1.0",
         "@rollup/plugin-terser": "^0.4.3",
         "@types/cookie-session": "^2.0.44",
+        "@types/cors": "^2.8.13",
         "@types/express": "^4.17.17",
         "@types/node": "^20.4.5",
         "@types/websocket": "^1.0.5",

@@ -1,29 +1,23 @@
-import { Puzzle } from 'drumline-lib';
+import { Puzzle, UserId } from 'drumline-lib';
 import { Express, Request, Response, json } from 'express';
+import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { puzzleHmac } from '../crypto';
 import { SECRET_PUZZLE_ID_SALT } from '../secrets';
-import { LoginManager } from './login-manager';
 
 export { PuzzleCrudder };
-
-// TODO: will we have a proxy in prod?
-// app.set('trust proxy', 1) // trust first proxy
 
 class PuzzleCrudder {
     // todo: use redis to store solve puzzles
 
     readonly _app: Express;
-    readonly _login_manager: LoginManager;
     readonly _map_puzzle_id_to_creator_uuid: Map<string, string>;
     readonly _map_puzzle_id_to_puzzle: Map<string, Puzzle>;
 
-    constructor(app: Express, login_manager: LoginManager) {
+    constructor(app: Express) {
         this._app = app;
-        this._login_manager = login_manager;
         this._map_puzzle_id_to_creator_uuid = new Map<string, string>();
         this._map_puzzle_id_to_puzzle = new Map<string, Puzzle>();
 
-        // json middleware will parse json bodies
         app.use(json());
 
         app.post('/puzzles', this.create_puzzle);
@@ -32,25 +26,26 @@ class PuzzleCrudder {
         app.delete('/puzzles/:id', this.delete_puzzle);
     }
 
+    try_create_user = (uuid: string): UserId | null => {
+        // make sure uuid is valid and a v5 uuid
+        if (!uuid || !uuidValidate(uuid) || uuidVersion(uuid) !== 4) {
+            return null;
+        }
+        try {
+            // create a UserId if we can
+            return new UserId(uuid);
+        } catch {
+            return null;
+        }
+    };
+
     list_puzzles = async (req: Request, res: Response) => {
         console.log(`list_puzzles`);
-        const private_uuid = this._login_manager.get_private_uuid_maybe(req);
-
-        // you can list puzzles when logged out, I think this is ok
 
         const puzzle_ids = Array.from(this._map_puzzle_id_to_creator_uuid.keys());
-        const my_puzzle_ids = puzzle_ids.filter((puzzle_id) => {
-            return (
-                null !== private_uuid &&
-                private_uuid === this._map_puzzle_id_to_creator_uuid.get(puzzle_id)
-            );
-        });
-
-        // todo: should we send other puzzle_ids?
         res.status(200).send({
             result: 'OK',
             puzzle_ids,
-            my_puzzle_ids
         });
     };
 
@@ -73,15 +68,16 @@ class PuzzleCrudder {
 
     create_puzzle = async (req: Request, res: Response) => {
         console.log(`create_puzzle`);
-
-        // need to be logged in to create a puzzle
-        if (!this._login_manager.is_logged_in(req)) {
-            res.status(401).send(`Not logged in`);
-            return;
-        }
+        console.log(`input_text: ${req.body.input_text}`);
+        console.log(`user: ${req.body.private_uuid}`);
 
         const input_text = req.body.input_text;
-
+        const user = this.try_create_user(req.body.private_uuid);
+        console.log(`body: ${JSON.stringify(req.body)}`);
+        if (null === user) {
+            res.status(400).send(`Invalid private_uuid`).end();
+            return;
+        }
         let puzzle: Puzzle;
         try {
             puzzle = new Puzzle(input_text);
@@ -89,8 +85,7 @@ class PuzzleCrudder {
             res.status(400).send(`Invalid puzzle_input: ${err}`);
             return;
         }
-
-        const requester_private_uuid = this._login_manager.get_private_uuid_fo_sho(req);
+        const requester_private_uuid = user.private_uuid;
 
         // make ID for puzzle, userId
         const puzzle_id = await puzzleHmac(puzzle, SECRET_PUZZLE_ID_SALT);
@@ -107,12 +102,13 @@ class PuzzleCrudder {
         console.log(`delete_puzzle`);
 
         // need to be logged in to delete a puzzle
-        if (!this._login_manager.is_logged_in(req)) {
-            res.status(401).send(`Not logged in`);
+        const user = this.try_create_user(req.body.private_uuid);
+        if (!user) {
+            res.status(401).send(`No user ID`);
             return;
         }
 
-        const requester_private_uuid = this._login_manager.get_private_uuid_fo_sho(req);
+        const requester_private_uuid = user.private_uuid;
         const id = req.params.id;
 
         // are we the creator of this puzzle?

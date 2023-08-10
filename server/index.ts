@@ -1,16 +1,10 @@
 import process from 'node:process';
 
-import cookieSession from 'cookie-session';
+import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import { SECRET_COOKIE_SALT } from './secrets';
-import { EchoServer } from './websockets/';
-
-function onSocketError(err: Error) {
-    console.error(err);
-}
-
-const app = express();
+import { PuzzleCrudder } from './express';
+import { EchoServer } from './websockets';
 
 // todo: connect to redis
 // const redis_client = new PuzzleRedisClient(
@@ -20,24 +14,20 @@ const app = express();
 // );
 // await redis_client.connect();
 
-app.use(
-    cookieSession({
-        name: 'drumline-session',
-        secret: SECRET_COOKIE_SALT
-    })
-);
+const app = express();
+app.use(cors());
 
+const puzzle_crudder = new PuzzleCrudder(app);
 const http_server = http.createServer(app);
-const ws_server = new EchoServer({ port: 8080 });
-
-http_server.on('upgrade', function upgrade(request, socket, head) {
-    socket.on('error', onSocketError);
-    ws_server.handleUpgrade(request, socket, head, function done(ws) {
-        ws_server.emit('connection', ws, request);
-    });
-});
+const ws_server = new EchoServer();
 
 process.on('exit', async () => {
     ws_server.close();
+    http_server.close();
     // await redis_client.disconnect();
+    console.log(puzzle_crudder._map_puzzle_id_to_puzzle.size);
+});
+
+http_server.listen(8080, function () {
+    console.log('Listening on http://localhost:8080');
 });

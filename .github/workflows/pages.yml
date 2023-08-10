@@ -37,6 +37,8 @@ jobs:
               working-directory: ./
             - run: npm run build
               working-directory: ./
+            - run: npm ci
+              working-directory: ./drumline-client
             - run: npm run build
               working-directory: ./drumline-client
             - name: Upload artifact

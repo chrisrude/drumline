@@ -27,7 +27,7 @@ const convert_params = (params: Record<string, string> | undefined): SolveParams
     }
     return {
         id: params.id,
-        size: size,
+        size: size
     };
 };
 
@@ -49,7 +49,12 @@ const init_game_state = (solveParams: SolveParams | null): NetworkedGameState | 
         // nothing to do
         return null;
     }
-    if (solveParams && lastGameState && solveParams.id === lastGameState.solve_id && solveParams.size === lastGameState.size) {
+    if (
+        solveParams &&
+        lastGameState &&
+        solveParams.id === lastGameState.solve_id &&
+        solveParams.size === lastGameState.size
+    ) {
         // nothing to do
         return lastGameState;
     }
@@ -86,7 +91,10 @@ params.subscribe((newParams) => {
     lastGameState!.connect();
 });
 
-const fn_handle_received_action: SolveClientCallback = (action: GameActionType, pending_actions: GameActionType[]) => {
+const fn_handle_received_action: SolveClientCallback = (
+    action: GameActionType,
+    pending_actions: GameActionType[]
+) => {
     storedGameState.update((game_state) => {
         if (null === game_state) {
             return null;

@@ -1,15 +1,10 @@
 import { Puzzle, UserId } from 'drumline-lib';
 
-export {
-    puzzles_create,
-    puzzles_delete,
-    puzzles_list,
-    puzzles_read
-};
+export { puzzles_create, puzzles_delete, puzzles_list, puzzles_read };
 export type { PuzzleListResponse };
 
 const HEADERS: HeadersInit = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json'
 };
 
 // login and logout
@@ -31,7 +26,7 @@ const puzzles_list = async (base_url?: string): Promise<PuzzleListResponse> => {
     const url = (base_url ?? '') + '/puzzles';
     const response = await fetch(url, {
         method: 'GET',
-        headers: HEADERS,
+        headers: HEADERS
     });
     if (!response.ok) {
         throw new Error(`list: ${response.status} ${response.statusText}`);
@@ -57,7 +52,8 @@ const puzzles_list = async (base_url?: string): Promise<PuzzleListResponse> => {
 const puzzles_create = async (
     input_text: string,
     user_id: UserId,
-    base_url?: string): Promise<string> => {
+    base_url?: string
+): Promise<string> => {
     const url = (base_url ?? '') + '/puzzles';
     const response = await fetch(url, {
         method: 'POST',
@@ -101,11 +97,7 @@ const puzzles_read = async (id: string, base_url?: string): Promise<Puzzle> => {
 // res.send({
 //     result: 'OK'
 // });
-const puzzles_delete = async (
-    id: string,
-    user_id: UserId,
-    base_url?: string
-): Promise<void> => {
+const puzzles_delete = async (id: string, user_id: UserId, base_url?: string): Promise<void> => {
     const url = (base_url ?? '') + `/puzzles/${id}`;
     const response = await fetch(url, {
         method: 'DELETE',

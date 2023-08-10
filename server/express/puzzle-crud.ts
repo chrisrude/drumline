@@ -45,7 +45,7 @@ class PuzzleCrudder {
         const puzzle_ids = Array.from(this._map_puzzle_id_to_creator_uuid.keys());
         res.status(200).send({
             result: 'OK',
-            puzzle_ids,
+            puzzle_ids
         });
     };
 

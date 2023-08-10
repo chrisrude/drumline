@@ -30,8 +30,11 @@ class SolveClient {
 
     readonly _ws_client: ReconnectWsClient;
 
-    constructor(solve_id: string, ws_client: ReconnectWsClient, handleActionCallback: SolveClientCallback) {
-
+    constructor(
+        solve_id: string,
+        ws_client: ReconnectWsClient,
+        handleActionCallback: SolveClientCallback
+    ) {
         this._solve_id = solve_id;
         this._ws_client = ws_client;
 

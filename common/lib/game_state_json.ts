@@ -21,10 +21,7 @@ function to_json(gameState: GameState): string {
     return result;
 }
 
-function set_clue_lists(
-    answer_segments: AnswerSegments[],
-    segment_values_list: AnswerSegment[][]
-) {
+function set_clue_lists(answer_segments: AnswerSegments[], segment_values_list: AnswerSegment[][]) {
     if (answer_segments.length != segment_values_list.length) {
         throw new Error(
             `set_from_json: clue_lists has ${answer_segments.length} rows, expected ${segment_values_list.length}`

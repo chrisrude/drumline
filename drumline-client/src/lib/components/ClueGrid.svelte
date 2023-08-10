@@ -203,6 +203,7 @@
                     break;
                 }
 
+                const original_location: [number, number] = [...cursorLocation];
                 // check to see if we're in an empty square, if so
                 // move to the previous square
                 if (!gameState.cell(cursorLocation).is_filled()) {
@@ -212,6 +213,8 @@
                     // again, check to see if this new square is in a word
                     // if so clear the word and do nothing else
                     if (clearAnswerAtLocation()) {
+                        // whoops, stay on original square
+                        newLocation = original_location;
                         break;
                     }
                 }

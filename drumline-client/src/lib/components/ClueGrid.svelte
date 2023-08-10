@@ -56,7 +56,7 @@
         highlightBand = -1;
         // if we're not in the highlighted row, go to the first
         // empty cell in the row.
-        if (attributesAtCursor().row_group.index === highlightRow) {
+        if (!isNone(cursorLocation) && attributesAtCursor().row_group.index === highlightRow) {
             return;
         }
         cursorLocation = firstEmptyCell(
@@ -72,7 +72,7 @@
         }
         highlightRow = -1;
         // if the cursor happens to be in the band already, leave it there
-        if (attributesAtCursor().band_group.index === highlightBand) {
+        if (!isNone(cursorLocation) && attributesAtCursor().band_group.index === highlightBand) {
             return;
         }
         // if we're not in the band, move cursor to the first

@@ -5,9 +5,9 @@ export { NetworkedGameState };
 
 // todo: set from config
 const CONNECTION_INFO: ConnectionInfo = {
-    use_tls: false,
-    host: 'localhost',
-    port: 8081
+    use_tls: true,
+    host: 'drumline-server.rudesoftware.net',
+    port: 443
 };
 
 class NetworkedGameState extends GameState {

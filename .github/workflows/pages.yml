@@ -34,11 +34,9 @@ jobs:
                 cache-dependency-path: './package-lock.json'
                 cache: 'npm'
             - run: npm ci
-              working-directory: ./drumline-lib
+              working-directory: ./
             - run: npm run build
-              working-directory: ./drumline-lib
-            - run: npm ci
-              working-directory: ./drumline-client
+              working-directory: ./
             - run: npm run build
               working-directory: ./drumline-client
             - name: Upload artifact

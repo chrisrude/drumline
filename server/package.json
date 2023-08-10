@@ -24,6 +24,10 @@
         "url": "https://github.com/chrisrude/drumline/issues"
     },
     "homepage": "https://github.com/chrisrude/drumline#readme",
+    "engines": {
+        "npm": ">=8.19.2 <10.0.0",
+        "node": ">=18.12.1 <19.0.0"
+    },
     "dependencies": {
         "base-emoji": "^2.0.1",
         "cookie-session": "^2.0.0",
@@ -35,8 +39,10 @@
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.3",
+        "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.1.0",
         "@rollup/plugin-terser": "^0.4.3",
+        "@rollup/plugin-typescript": "^11.1.2",
         "@types/cookie-session": "^2.0.44",
         "@types/cors": "^2.8.13",
         "@types/express": "^4.17.17",

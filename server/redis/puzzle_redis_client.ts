@@ -1,4 +1,4 @@
-import { Puzzle, loadPuzzleFromJson, savePuzzleToJson } from 'drumline-lib';
+import { Puzzle, loadPuzzleFromJson, savePuzzleToJson } from '@chrisrude/drumline-lib';
 import { RedisClientType, createClient } from 'redis';
 import { puzzleHmac } from '../crypto';
 

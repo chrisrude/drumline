@@ -30,12 +30,12 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                 node-version-file: '.nvmrc'
-                cache-dependency-path: './common/package-lock.json'
+                cache-dependency-path: './drumline-lib/package-lock.json'
                 cache: 'npm'
             - run: npm ci
-              working-directory: ./common
+              working-directory: ./drumline-lib
             - run: npm run build
-              working-directory: ./common
+              working-directory: ./drumline-lib
             - uses: actions/setup-node@v3
               with:
                 node-version-file: '.nvmrc'

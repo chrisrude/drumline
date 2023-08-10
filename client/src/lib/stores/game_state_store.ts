@@ -4,7 +4,7 @@ export type { SolveParams };
 import { browser } from '$app/environment';
 import { NetworkedGameState } from '$lib/network/networked_game_state';
 import type { SolveClientCallback } from '$lib/network/solve_client';
-import { GameState, set_from_json, to_json, type GameActionType } from 'drumline-lib';
+import { GameState, set_from_json, to_json, type GameActionType } from '@chrisrude/drumline-lib';
 import { params } from 'svelte-spa-router';
 import { get, writable } from 'svelte/store';
 

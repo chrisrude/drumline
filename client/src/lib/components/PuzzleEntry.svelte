@@ -3,7 +3,7 @@
     import type { ConnectionInfo } from '$lib/network/reconnect_ws_client';
     import { storedPuzzle } from '$lib/stores/puzzle_store';
     import { userStore } from '$lib/stores/user_id_store';
-    import { Puzzle } from 'drumline-lib';
+    import { Puzzle } from '@chrisrude/drumline-lib';
     import { push } from 'svelte-spa-router';
     import { get } from 'svelte/store';
 

@@ -1,4 +1,4 @@
-import { Puzzle, UserId } from 'drumline-lib';
+import { Puzzle, UserId } from '@chrisrude/drumline-lib';
 
 export { puzzles_create, puzzles_delete, puzzles_list, puzzles_read };
 export type { PuzzleListResponse };

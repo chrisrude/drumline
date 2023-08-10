@@ -6,7 +6,7 @@ import {
     actionToString,
     areActionsEqual,
     stringToAction
-} from 'drumline-lib';
+} from '@chrisrude/drumline-lib';
 import { AddressInfo } from 'net';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { RawData, WebSocket, WebSocketServer } from 'ws';

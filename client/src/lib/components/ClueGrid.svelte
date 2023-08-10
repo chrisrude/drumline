@@ -14,8 +14,8 @@
         type CellAttributes,
         type GameActions,
         type RowGroup
-    } from 'drumline-lib';
-    import { BAND_IDENTIFIERS } from 'drumline-lib/lib/clue_parser';
+    } from '@chrisrude/drumline-lib';
+    import { BAND_IDENTIFIERS } from '@chrisrude/drumline-lib/lib/clue_parser';
 
     export let gameState: NetworkedGameState;
     export let highlightRow: number = -1;

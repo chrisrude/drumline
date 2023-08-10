@@ -13,7 +13,7 @@ import {
     nextIndexWithoutWrap,
     type CellGroupLocations,
     type Grid
-} from 'drumline-lib';
+} from '@chrisrude/drumline-lib';
 
 export { firstEmptyCell, isEmpty, nextEmptyCell };
 

@@ -1,7 +1,7 @@
 export { storedPuzzle };
 
 import { browser } from '$app/environment';
-import { Puzzle, loadPuzzleFromJson } from 'drumline-lib';
+import { Puzzle, loadPuzzleFromJson } from '@chrisrude/drumline-lib';
 
 import { writable } from 'svelte/store';
 

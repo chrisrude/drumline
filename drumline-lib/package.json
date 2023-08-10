@@ -1,5 +1,5 @@
 {
-    "name": "drumline-lib",
+    "name": "@chrisrude/drumline-lib",
     "version": "0.0.3",
     "description": "Common modules for drumline, shared between server and client",
     "main": "dist/index.mjs",

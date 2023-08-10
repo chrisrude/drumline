@@ -1,5 +1,5 @@
 {
-    "name": "drumline-server",
+    "name": "@chrisrude/drumline-server",
     "version": "0.0.3",
     "description": "Service to coordinate co-solving across multiple drumline crossword clients.",
     "main": "index.ts",
@@ -32,7 +32,7 @@
         "base-emoji": "^2.0.1",
         "cookie-session": "^2.0.0",
         "cors": "^2.8.5",
-        "drumline-lib": "file:../common",
+        "@chrisrude/drumline-lib": "file:../drumline-lib",
         "express": "^4.18.2",
         "redis": "4.6.7",
         "ws": "^8.13.0"

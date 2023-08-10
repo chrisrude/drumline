@@ -1,4 +1,4 @@
-import { Puzzle, UserId } from 'drumline-lib';
+import { Puzzle, UserId } from '@chrisrude/drumline-lib';
 import { Express, Request, Response, json } from 'express';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { puzzleHmac } from '../crypto';

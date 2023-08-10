@@ -1,4 +1,4 @@
-import { GameState, type GameActions } from 'drumline-lib';
+import { GameState, type GameActions } from '@chrisrude/drumline-lib';
 import { ReconnectWsClient, type ConnectionInfo } from './reconnect_ws_client';
 import { SolveClient, type SolveClientCallback } from './solve_client';
 export { NetworkedGameState };

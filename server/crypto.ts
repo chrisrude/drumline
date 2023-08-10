@@ -1,5 +1,5 @@
+import { Puzzle, UserId } from '@chrisrude/drumline-lib';
 import { toUtf8 } from 'base-emoji';
-import { Puzzle, UserId } from 'drumline-lib';
 import { subtle } from 'node:crypto';
 
 export { puzzleHmac, solveHmac };

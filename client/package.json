@@ -48,7 +48,7 @@
     "type": "module",
     "dependencies": {
         "@fontsource/fira-mono": "^4.5.10",
-        "drumline-lib": "file:../common",
+        "@chrisrude/drumline-lib": "file:../drumline-lib",
         "svelte-spa-router": "^3.3.0"
     }
 }

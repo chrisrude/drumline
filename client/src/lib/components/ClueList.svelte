@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ClueList } from 'drumline-lib';
+    import type { ClueList } from '@chrisrude/drumline-lib';
 
     export let clueLists: ClueList[];
     export let clueTitle: string;

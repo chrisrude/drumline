@@ -1,4 +1,4 @@
-import { UserId } from 'drumline-lib';
+import { UserId } from '@chrisrude/drumline-lib';
 import { readable } from 'svelte/store';
 
 export { userStore };

@@ -18,7 +18,9 @@
         "node": ">=18.12.1 <19.0.0"
     },
     "scripts": {
-        "postinstall": "cd drumline-client; npm install; cd ../drumline-server; npm install",
+        "postinstall": "cd drumline-lib; npm install; cd ../drumline-server; npm install",
+        "build": "cd drumline-lib; npm run build; cd ../drumline-server; npm run build",
+        "clean": "cd drumline-lib; npm run clean; cd ../drumline-server; npm run clean",
         "start": "cd ./drumline-server && node dist/index.mjs"
     }
 }

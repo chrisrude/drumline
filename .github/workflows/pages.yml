@@ -30,6 +30,15 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                 node-version-file: '.nvmrc'
+                cache-dependency-path: './common/package-lock.json'
+                cache: 'npm'
+            - run: npm ci
+              working-directory: ./common
+            - run: npm run build
+              working-directory: ./common
+            - uses: actions/setup-node@v3
+              with:
+                node-version-file: '.nvmrc'
                 cache-dependency-path: './client/package-lock.json'
                 cache: 'npm'
             - run: npm ci

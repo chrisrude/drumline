@@ -1,6 +1,6 @@
 import process from 'node:process';
 
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import express from 'express';
 import http from 'http';
 import { PuzzleCrudder } from './express';
@@ -16,8 +16,16 @@ import { EchoServer } from './websockets';
 
 const PORT = process.env.PORT ?? 8080;
 
+const cors_options: CorsOptions = {
+    origin: [
+        'https://drumline.rudesoftware.net',
+        'http://localhost:5173',
+        'http://localhost:4173',
+    ],
+}
+
 const app = express();
-app.use(cors());
+app.use(cors(cors_options));
 const puzzle_crudder = new PuzzleCrudder(app);
 
 const http_server = http.createServer(app);

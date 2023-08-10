@@ -135,8 +135,10 @@ const findWordBounds = (
         idxStart = idxStartNext;
     }
 
-    // look forwards for the same thing
-    let idxEnd = cell_group.offset;
+    // look forwards for the same thing, but start at the
+    // square before the cursor, in case the cursor square
+    // is empty
+    let idxEnd = Math.max(cell_group.offset - 1, 0);
     while (idxEnd < locations.length - 1) {
         const idxEndNext = idxEnd + 1;
         if (!fn_is_suitable_for_word(idxEndNext)) {

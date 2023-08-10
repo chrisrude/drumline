@@ -38,6 +38,11 @@
         {clueTitle}
     </div>
     <div class="clues-groups" bind:this={clueGroup}>
+        {#if clueLists.length === 0}
+            <div class="clues-groups-group">
+                <div class="clues-group-title">Loading...</div>
+            </div>
+        {/if}
         {#each clueLists as clueList, idx}
             <!-- TODO: fix -->
             <!-- TODO: fix headings, marking clues as done -->

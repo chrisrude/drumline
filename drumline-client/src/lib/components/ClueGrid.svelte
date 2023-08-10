@@ -59,11 +59,11 @@
         if (!isNone(cursorLocation) && attributesAtCursor().row_group.index === highlightRow) {
             return;
         }
-        cursorLocation = firstEmptyCell(
-            gameState.grid,
-            gridAttributes.locations_for_row[highlightRow],
-            false
-        );
+        const locations = gridAttributes.locations_for_row[highlightRow];
+        if (!locations) {
+            return;
+        }
+        cursorLocation = firstEmptyCell(gameState.grid, locations, false);
     };
 
     const gotoBand = () => {
@@ -75,13 +75,13 @@
         if (!isNone(cursorLocation) && attributesAtCursor().band_group.index === highlightBand) {
             return;
         }
+        const locations = gridAttributes.locations_for_band[highlightBand];
+        if (!locations) {
+            return;
+        }
         // if we're not in the band, move cursor to the first
         // empty cell in the band
-        cursorLocation = firstEmptyCell(
-            gameState.grid,
-            gridAttributes.locations_for_band[highlightBand],
-            true
-        );
+        cursorLocation = firstEmptyCell(gameState.grid, locations, true);
     };
 
     const getCellClass = (i: number, j: number) =>
@@ -259,12 +259,12 @@
     };
 
     const toggleSelection = (): void => {
-        const groupIdx = cursorCellGroup().index;
+        const cellInfo = attributesAtCursor();
         if (highlightRow !== -1) {
-            highlightBand = groupIdx;
+            highlightBand = cellInfo.band_group.index;
             highlightRow = -1;
         } else {
-            highlightRow = groupIdx;
+            highlightRow = cellInfo.row_group.index;
             highlightBand = -1;
         }
     };

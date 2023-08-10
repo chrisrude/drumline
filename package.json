@@ -14,8 +14,8 @@
     },
     "homepage": "https://github.com/chrisrude/drumline#readme",
     "workspaces": [
-        "client",
-        "common",
-        "server"
+        "drumline-client",
+        "drumline-lib",
+        "drumline-server"
     ]
 }

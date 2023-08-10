@@ -30,25 +30,20 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                 node-version-file: '.nvmrc'
-                cache-dependency-path: './drumline-lib/package-lock.json'
+                cache-dependency-path: './package-lock.json'
                 cache: 'npm'
             - run: npm ci
               working-directory: ./drumline-lib
             - run: npm run build
               working-directory: ./drumline-lib
-            - uses: actions/setup-node@v3
-              with:
-                node-version-file: '.nvmrc'
-                cache-dependency-path: './client/package-lock.json'
-                cache: 'npm'
             - run: npm ci
-              working-directory: ./client
+              working-directory: ./drumline-client
             - run: npm run build
-              working-directory: ./client
+              working-directory: ./drumline-client
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v1
               with:
-                  path: ./client/build
+                  path: ./drumline-client/build
 
     deploy:
         runs-on: ubuntu-latest

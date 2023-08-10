@@ -1,9 +1,9 @@
 .DS_Store
 node_modules
-client/build
-client/.svelte-kit
-common/dist
-server/dist
+drumline-client/build
+drumline-client/.svelte-kit
+drumline-lib/dist
+drumline-server/dist
 /package
 .env
 .env.*

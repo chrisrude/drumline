@@ -60,10 +60,18 @@
     const isNone = ([i, j]: [number, number]): boolean =>
         i === LOCATION_NONE[0] || j === LOCATION_NONE[1];
 
+    const cancelDrag = () => {
+        if (isDragging) {
+            answerSelect.clearDragging();
+            isDragging = false;
+        }
+    };
+
     const gotoRow = () => {
         if (-1 == highlightRow) {
             return;
         }
+        cancelDrag();
         highlightBand = -1;
         // if we're not in the highlighted row, go to the first
         // empty cell in the row.
@@ -81,6 +89,7 @@
         if (-1 == highlightBand) {
             return;
         }
+        cancelDrag();
         highlightRow = -1;
         // if the cursor happens to be in the band already, leave it there
         if (!isNone(cursorLocation) && attributesAtCursor().band_group.index === highlightBand) {
@@ -153,6 +162,31 @@
         return true;
     };
 
+    const onShiftDown = (start: [number, number], next: [number, number]) => {
+        const attrStart = attributesAt(start);
+        if (
+            currentGroup(attributesAt(next)).index != currentGroup(attrStart).index ||
+            attrStart.is_center
+        ) {
+            // don't start a drag across groups
+            return;
+        }
+        if (!isDragging) {
+            answerSelect.startDrag(start[0], start[1]);
+            isDragging = true;
+        }
+        answerSelect.dragOver(next[0], next[1]);
+        isDragging = false;
+        isDragging = true;
+    };
+
+    const onKeyUp = (event: KeyboardEvent): void => {
+        if (event.key === 'Shift') {
+            handleDragEnd();
+            event.preventDefault();
+        }
+    };
+
     const onKeyDown = (event: KeyboardEvent): void => {
         // In the switch-case we're updating our boolean flags whenever the
         // desired bound keys are pressed.
@@ -171,30 +205,42 @@
                 if (newLocation[0] < gameState.size - 1) {
                     newLocation[0] += 1;
                 }
+                if (event.shiftKey) {
+                    onShiftDown(cursorLocation, newLocation);
+                }
                 break;
             case 'ArrowUp':
                 if (newLocation[0] > 0) {
                     newLocation[0] -= 1;
+                }
+                if (event.shiftKey) {
+                    onShiftDown(cursorLocation, newLocation);
                 }
                 break;
             case 'ArrowLeft':
                 if (newLocation[1] > 0) {
                     newLocation[1] -= 1;
                 }
+                if (event.shiftKey) {
+                    onShiftDown(cursorLocation, newLocation);
+                }
                 break;
             case 'ArrowRight':
                 if (newLocation[1] < gameState.size - 1) {
                     newLocation[1] += 1;
                 }
+                if (event.shiftKey) {
+                    onShiftDown(cursorLocation, newLocation);
+                }
                 break;
             case 'Tab':
                 newLocation = event.shiftKey ? prevCell() : nextCell();
+                if (event.shiftKey) {
+                    onShiftDown(cursorLocation, newLocation);
+                }
                 break;
             case 'Escape':
-                if (answerSelect.mouseDragging) {
-                    answerSelect.clearDragging();
-                    break;
-                }
+                cancelDrag();
                 // nothing else special to do
                 return;
             case ' ':
@@ -259,6 +305,7 @@
     };
 
     const toggleSelection = (): void => {
+        cancelDrag();
         const cellInfo = attributesAtCursor();
         if (highlightRow !== -1) {
             highlightBand = cellInfo.band_group.index;
@@ -277,12 +324,23 @@
             }
             return;
         }
+        const newAttr = attributesAt(newLocation);
         // if the last highlight was a row, keep that
         // otherwise, highlight the band
         if (highlightRow !== -1) {
+            // do this instead of newLocation[0] to avoid dragging
+            // through the center cell.  We still want to move the
+            // cursor to the center cell, though.
+            if (highlightRow !== newAttr.row_group.index || newAttr.is_center) {
+                cancelDrag();
+            }
             highlightRow = newLocation[0];
         } else {
-            highlightBand = attributesAt(newLocation).band_group.index;
+            const newBand = newAttr.band_group.index;
+            if (highlightBand !== newBand) {
+                cancelDrag();
+            }
+            highlightBand = newBand;
         }
         cursorLocation = newLocation;
     };
@@ -316,7 +374,7 @@
         event.preventDefault();
     };
 
-    const onDragEnd = (event: MouseEvent) => {
+    const handleDragEnd = () => {
         if (!isDragging) {
             return;
         }
@@ -333,7 +391,10 @@
 
         const action = markSegment(clueStart, clueStart.offset, clueEnd.offset);
         apply(action);
+    };
 
+    const onDragEnd = (event: MouseEvent) => {
+        handleDragEnd();
         event.preventDefault();
     };
 
@@ -370,7 +431,11 @@
     };
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:mouseup={(isDragging || !isDragging) && onDragEnd} />
+<svelte:window
+    on:keydown={onKeyDown}
+    on:keyup={onKeyUp}
+    on:mouseup={(isDragging || !isDragging) && onDragEnd}
+/>
 
 <!-- todo: fix this -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -410,15 +475,14 @@
             <div class="row-number">{i + 1}</div>
 
             {#each { length: gameState.size } as _, j}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
                 {#if gameState.center === i && gameState.center === j}
                     <div
                         class="letter center-cell"
                         class:selected={cursorLocation[0] === i && cursorLocation[1] === j}
-                        on:click={toggleSelection}
                     />
                 {:else}
+                    <!-- this is ok because the keyboard events are handled higher up -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         class="letter {getCellClass(i, j)}"
                         class:selected={cursorLocation[0] === i && cursorLocation[1] === j}
@@ -453,10 +517,8 @@
                         class:bandCornerSW={isBandCorner(i, j, 'left')}
                         class:bandSideW={isBandSide(i, j, 'left')}
                         on:click={() => highlight([i, j], true)}
-                        on:mousedown={(event) =>
-                            (isDragging || !isDragging) && onDragStart(event, i, j)}
-                        on:mouseenter={(event) =>
-                            (isDragging || !isDragging) && onDragOver(event, i, j)}
+                        on:mousedown={(event) => onDragStart(event, i, j)}
+                        on:mouseenter={(event) => onDragOver(event, i, j)}
                     >
                         {#if i === j && i < gameState.center}
                             <div class="band-letter">

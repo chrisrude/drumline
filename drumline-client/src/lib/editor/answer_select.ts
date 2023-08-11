@@ -122,7 +122,6 @@ class AnswerSelect {
 
             const minIdx = Math.min(bandStartIdx, bandEndIdx);
             const maxIdx = Math.max(bandStartIdx, bandEndIdx);
-            console.log({ minIdx, maxIdx, cellIdx });
             if (cellIdx >= minIdx && cellIdx <= maxIdx) {
                 return true;
             }
@@ -136,7 +135,6 @@ class AnswerSelect {
         const minCol = Math.min(this.draggingStart[1], this.draggingEnd[1]);
         const maxCol = Math.max(this.draggingStart[1], this.draggingEnd[1]);
         if (j >= minCol && j <= maxCol) {
-            console.log({ minCol, maxCol, j });
             return true;
         }
         return false;

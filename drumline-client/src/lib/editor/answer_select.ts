@@ -1,4 +1,4 @@
-import type { BandGroup, CellAttributes, GridAttributes, RowGroup } from "@chrisrude/drumline-lib";
+import type { BandGroup, CellAttributes, GridAttributes, RowGroup } from '@chrisrude/drumline-lib';
 
 export { AnswerSelect };
 
@@ -18,10 +18,7 @@ class AnswerSelect {
     draggingEnd: [number, number];
     mouseDragging: boolean;
 
-    constructor(
-        gridAttributes: GridAttributes,
-        fn_is_using_band: () => boolean,
-    ) {
+    constructor(gridAttributes: GridAttributes, fn_is_using_band: () => boolean) {
         this.gridAttributes = gridAttributes;
         this.fn_is_using_band = fn_is_using_band;
 
@@ -36,7 +33,8 @@ class AnswerSelect {
         this.fn_is_using_band() ? attr.band_group : attr.row_group;
 
     _start_equals_end = (): boolean =>
-        this.draggingStart[0] == this.draggingEnd[0] && this.draggingStart[1] == this.draggingEnd[1];
+        this.draggingStart[0] == this.draggingEnd[0] &&
+        this.draggingStart[1] == this.draggingEnd[1];
 
     clearDragging = (): void => {
         this.draggingStart = [...LOCATION_NONE];

@@ -31,7 +31,6 @@ class ClientState {
     }
 }
 
-
 class EchoServer extends WebSocketServer {
     readonly connected_clients: Map<WebSocket, ClientState> = new Map();
     readonly solve_actions: Map<string, GameActions[]>;

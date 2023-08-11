@@ -1,4 +1,10 @@
-import type { AnswerSegments, CellGroup, GameState, Grid, GridAttributes } from '@chrisrude/drumline-lib';
+import type {
+    AnswerSegments,
+    CellGroup,
+    GameState,
+    Grid,
+    GridAttributes
+} from '@chrisrude/drumline-lib';
 
 export { canGroupIntoAnswer, canUngroupAnswer, findWordBounds };
 

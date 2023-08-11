@@ -17,12 +17,8 @@ import { EchoServer } from './websockets';
 const PORT = process.env.PORT ?? 8080;
 
 const cors_options: CorsOptions = {
-    origin: [
-        'https://drumline.rudesoftware.net',
-        'http://localhost:5173',
-        'http://localhost:4173',
-    ],
-}
+    origin: ['https://drumline.rudesoftware.net', 'http://localhost:5173', 'http://localhost:4173']
+};
 
 const app = express();
 app.use(cors(cors_options));

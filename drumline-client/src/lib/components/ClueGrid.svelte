@@ -315,7 +315,7 @@
     ): [[number, number], [number, number]] => {
         const startInfo = currentGroup(attributesAt(start));
         const endInfo = currentGroup(attributesAt(end));
-        if (startInfo.index > endInfo.index) {
+        if (startInfo.offset > endInfo.offset) {
             return [end, start];
         }
         return [start, end];
@@ -370,15 +370,16 @@
             const cellInfoCurrent = attributesAt([i, j]);
             if (cellInfoCurrent.band_group.index !== getDraggingBand()) {
                 // do nothing
-                return;
+                return false;
             }
             // is the cell on or between the start and end of the drag?
-            const bandStartIdx = cellInfoStart.band_group.index;
-            const bandEndIdx = cellInfoEnd.band_group.index;
-            const cellIdx = cellInfoCurrent.band_group.index;
+            const bandStartIdx = cellInfoStart.band_group.offset;
+            const bandEndIdx = cellInfoEnd.band_group.offset;
+            const cellIdx = cellInfoCurrent.band_group.offset;
 
             const minIdx = Math.min(bandStartIdx, bandEndIdx);
             const maxIdx = Math.max(bandStartIdx, bandEndIdx);
+            console.log({ minIdx, maxIdx, cellIdx });
             if (cellIdx >= minIdx && cellIdx <= maxIdx) {
                 return true;
             }

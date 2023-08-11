@@ -1,8 +1,12 @@
 <script lang="ts">
-    import { firstEmptyCell, nextEmptyCell } from '$lib/cursor_logic';
+    import { firstEmptyCell, nextEmptyCell } from '$lib/editor/cursor_logic';
+    import {
+        canGroupIntoAnswer,
+        canUngroupAnswer,
+        findWordBounds
+    } from '$lib/editor/word_grouping';
     import type { NetworkedGameState } from '$lib/network/networked_game_state';
     import { storedGameState } from '$lib/stores/game_state_store';
-    import { canGroupIntoAnswer, canUngroupAnswer, findWordBounds } from '$lib/word_grouping';
     import {
         clear,
         clearSegment,
@@ -228,15 +232,6 @@
                 apply(action);
                 break;
             default:
-                // todo: change typing behavior:
-                //  - if the word is totally filled, typing will
-                //    overwrite letters, moving the cursor as if
-                //    the next space is blank.  If at the last space,
-                //    stay there.
-                //  - if the word is partially filled, look for an empty
-                //    square following the cursor... but if there is no
-                //    space following the cursor, find the first space
-                //    available in the word
                 if (event.key.length === 1) {
                     const action = set(
                         {
@@ -351,6 +346,7 @@
         event.preventDefault();
     };
 
+    // TODO: ipad dragging
     export const onPath = (i: number, j: number) => {
         if (!mouseDragging) {
             return false;

@@ -31,7 +31,6 @@ class ClientState {
     }
 }
 
-// todo: refactor to use LoginManager
 
 class EchoServer extends WebSocketServer {
     readonly connected_clients: Map<WebSocket, ClientState> = new Map();

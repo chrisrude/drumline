@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { firstEmptyCell, nextEmptyCell } from '$lib/editor/cursor_logic';
+    import { AnswerSelect } from '$lib/editor/answer_select';
+    import { firstEmptyCell, nextEmptyCell } from '$lib/editor/cursor';
     import {
         canGroupIntoAnswer,
         canUngroupAnswer,
@@ -29,6 +30,12 @@
     let cursorLocation: [number, number] = [...LOCATION_NONE];
 
     const gridAttributes = memoizedGenerateGridAttributes(gameState.size);
+
+    const isUsingBand = () => highlightBand !== -1;
+
+    const answerSelect = new AnswerSelect(gridAttributes, isUsingBand);
+    // use this as a prop as to trigger a re-render
+    let isDragging: boolean = false;
 
     $: highlightRow !== undefined && gotoRow();
     $: highlightBand !== undefined && gotoBand();
@@ -90,8 +97,6 @@
 
     const getCellClass = (i: number, j: number) =>
         gridAttributes.cells[i][j].band_group.index % 2 === 0 ? 'even-band' : 'odd-band';
-
-    const isUsingBand = () => highlightBand !== -1;
 
     const cursorCellGroup = (): RowGroup | BandGroup => currentGroup(attributesAtCursor());
 
@@ -186,8 +191,8 @@
                 newLocation = event.shiftKey ? prevCell() : nextCell();
                 break;
             case 'Escape':
-                if (mouseDragging) {
-                    clearDragging();
+                if (answerSelect.mouseDragging) {
+                    answerSelect.clearDragging();
                     break;
                 }
                 // nothing else special to do
@@ -282,144 +287,54 @@
         cursorLocation = newLocation;
     };
 
-    const clearDragging = (): void => {
-        draggingStart = [...LOCATION_NONE];
-        draggingEnd = [...LOCATION_NONE];
-        mouseDragging = false;
+    const onPath = (i: number, j: number) => {
+        return answerSelect.onPath(i, j);
     };
 
-    export let draggingStart: [number, number] = [...LOCATION_NONE];
-    export let draggingEnd: [number, number] = [...LOCATION_NONE];
-    export let mouseDragging = false;
-
     const onDragStart = (event: MouseEvent, i: number, j: number) => {
-        if (mouseDragging) {
+        if (isDragging) {
             return;
         }
         if (highlightRow === -1 && highlightBand === -1) {
             return;
         }
-        mouseDragging = true;
-        draggingEnd = draggingStart = [i, j];
+        answerSelect.startDrag(i, j);
+        isDragging = true;
         event.preventDefault();
     };
 
-    const orderByPath = (
-        start: [number, number],
-        end: [number, number]
-    ): [[number, number], [number, number]] => {
-        const startInfo = currentGroup(attributesAt(start));
-        const endInfo = currentGroup(attributesAt(end));
-        if (startInfo.offset > endInfo.offset) {
-            return [end, start];
-        }
-        return [start, end];
-    };
-
-    const getDraggingBand = (): number => {
-        if (!isUsingBand()) {
-            return -1;
-        }
-        if (isNone(draggingStart)) {
-            return -1;
-        }
-        return attributesAt(draggingStart).band_group.index;
-    };
-
-    export const onDragOver = (event: MouseEvent, i: number, j: number) => {
-        if (!mouseDragging) {
+    const onDragOver = (event: MouseEvent, i: number, j: number) => {
+        if (!isDragging) {
             return;
         }
-        if (isUsingBand()) {
-            const band = attributesAt([i, j]).band_group.index;
-            if (band !== getDraggingBand()) {
-                // do nothing
-                return;
-            }
-        } else {
-            if (i !== draggingStart[0]) {
-                // do nothing
-                return;
-            }
-        }
-        draggingEnd = [i, j];
+        answerSelect.dragOver(i, j);
+
+        // assignment to trigger render
+        isDragging = false;
+        isDragging = true;
+
         event.preventDefault();
-    };
-
-    // TODO: ipad dragging
-    export const onPath = (i: number, j: number) => {
-        if (!mouseDragging) {
-            return false;
-        }
-        // if we don't have an end, we're not on the path
-        if (isNone(draggingEnd)) {
-            return false;
-        }
-        // if we haven't dragged anywhere, we're not on the path
-        if (draggingStart === draggingEnd) {
-            return false;
-        }
-
-        if (isUsingBand()) {
-            const cellInfoStart = attributesAt(draggingStart);
-            const cellInfoEnd = attributesAt(draggingEnd);
-            const cellInfoCurrent = attributesAt([i, j]);
-            if (cellInfoCurrent.band_group.index !== getDraggingBand()) {
-                // do nothing
-                return false;
-            }
-            // is the cell on or between the start and end of the drag?
-            const bandStartIdx = cellInfoStart.band_group.offset;
-            const bandEndIdx = cellInfoEnd.band_group.offset;
-            const cellIdx = cellInfoCurrent.band_group.offset;
-
-            const minIdx = Math.min(bandStartIdx, bandEndIdx);
-            const maxIdx = Math.max(bandStartIdx, bandEndIdx);
-            console.log({ minIdx, maxIdx, cellIdx });
-            if (cellIdx >= minIdx && cellIdx <= maxIdx) {
-                return true;
-            }
-            return false;
-        }
-        // row path
-        if (i !== draggingStart[0]) {
-            return false;
-        }
-
-        const minCol = Math.min(draggingStart[1], draggingEnd[1]);
-        const maxCol = Math.max(draggingStart[1], draggingEnd[1]);
-        if (j >= minCol && j <= maxCol) {
-            return true;
-        }
-        return false;
     };
 
     const onDragEnd = (event: MouseEvent) => {
-        if (!mouseDragging) {
+        if (!isDragging) {
             return;
         }
-        mouseDragging = false;
-        // sort the start and end
+        isDragging = false;
 
-        // if we don't have an end, we're not on the path
-        if (isNone(draggingEnd)) {
-            return false;
+        const result = answerSelect.endDrag();
+        if (result === null) {
+            // there was no selection after all
+            return;
         }
-
-        // if we haven't dragged anywhere, we're not on the path
-        if (draggingStart === draggingEnd) {
-            return false;
-        }
-
-        [draggingStart, draggingEnd] = orderByPath(draggingStart, draggingEnd);
-
+        const [draggingStart, draggingEnd] = result;
         const clueStart = currentGroup(attributesAt(draggingStart));
         const clueEnd = currentGroup(attributesAt(draggingEnd));
 
         const action = markSegment(clueStart, clueStart.offset, clueEnd.offset);
         apply(action);
+
         event.preventDefault();
-        clearDragging();
     };
 
     const row_word_attrs = (i: number, j: number): [boolean, boolean, boolean] => {
@@ -455,7 +370,7 @@
     };
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:mouseup={onDragEnd} />
+<svelte:window on:keydown={onKeyDown} on:mouseup={(isDragging || !isDragging) && onDragEnd} />
 
 <!-- todo: fix this -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -510,7 +425,7 @@
                         class:highlightRow={highlightRow === i}
                         class:highlightBand={highlightBand ===
                             attributesAt([i, j]).band_group.index}
-                        class:dragover={draggingEnd && draggingStart && onPath(i, j)}
+                        class:dragover={(isDragging || !isDragging) && onPath(i, j)}
                         class:rowWord={highlightRow != -1 &&
                             (!gameState || gameState) &&
                             isInRowWord(i, j)}
@@ -538,8 +453,10 @@
                         class:bandCornerSW={isBandCorner(i, j, 'left')}
                         class:bandSideW={isBandSide(i, j, 'left')}
                         on:click={() => highlight([i, j], true)}
-                        on:mousedown={(event) => onDragStart(event, i, j)}
-                        on:mouseenter={(event) => onDragOver(event, i, j)}
+                        on:mousedown={(event) =>
+                            (isDragging || !isDragging) && onDragStart(event, i, j)}
+                        on:mouseenter={(event) =>
+                            (isDragging || !isDragging) && onDragOver(event, i, j)}
                     >
                         {#if i === j && i < gameState.center}
                             <div class="band-letter">

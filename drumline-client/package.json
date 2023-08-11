@@ -48,8 +48,9 @@
     },
     "type": "module",
     "dependencies": {
-        "@fontsource/fira-mono": "^4.5.10",
         "@chrisrude/drumline-lib": "file:../drumline-lib",
+        "@fontsource/fira-mono": "^4.5.10",
+        "svelte-canvas-confetti": "^0.6.0",
         "svelte-spa-router": "^3.3.0"
     }
 }

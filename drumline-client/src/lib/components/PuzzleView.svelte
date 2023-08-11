@@ -5,6 +5,7 @@
     import type { ConnectionInfo } from '$lib/network/reconnect_ws_client';
     import { storedGameState } from '$lib/stores/game_state_store';
     import { storedPuzzle } from '$lib/stores/puzzle_store';
+    import { Confetti } from 'svelte-canvas-confetti';
     import { params as paramsStore } from 'svelte-spa-router';
     import { blur } from 'svelte/transition';
 
@@ -38,8 +39,7 @@
 </script>
 
 {#if $storedGameState && $storedGameState.is_solved}
-    <!-- e.g. https://github.com/andreasmcdermott/svelte-canvas-confetti -->
-    TODO: CONFETTI
+    <Confetti />
 {/if}
 {#if $storedGameState}
     <div transition:blur={{ amount: '1vw' }} class="fly-holder">

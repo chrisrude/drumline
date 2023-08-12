@@ -437,8 +437,6 @@
     on:mouseup={(isDragging || !isDragging) && onDragEnd}
 />
 
-<!-- todo: fix this -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="grid"
     style="--puzzle-size: {gameState.size}"
@@ -483,6 +481,7 @@
                 {:else}
                     <!-- this is ok because the keyboard events are handled higher up -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
                         class="letter {getCellClass(i, j)}"
                         class:selected={cursorLocation[0] === i && cursorLocation[1] === j}

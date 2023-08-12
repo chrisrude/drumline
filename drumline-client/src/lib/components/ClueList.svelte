@@ -45,7 +45,6 @@
             </div>
         {/if}
         {#each clueLists as clueList, idx}
-            <!-- TODO: fix -->
             <!-- TODO: fix headings, marking clues as done -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -4,6 +4,7 @@ import cors, { CorsOptions } from 'cors';
 import express from 'express';
 import http from 'http';
 import { PuzzleCrudder } from './express';
+import { CORS_ALLOW_URL, PORT } from './secrets';
 import { EchoServer } from './websockets';
 
 // todo: connect to redis
@@ -14,10 +15,8 @@ import { EchoServer } from './websockets';
 // );
 // await redis_client.connect();
 
-const PORT = process.env.PORT ?? 8080;
-
 const cors_options: CorsOptions = {
-    origin: ['https://drumline.rudesoftware.net', 'http://localhost:5173', 'http://localhost:4173']
+    origin: [CORS_ALLOW_URL, 'http://localhost:5173', 'http://localhost:4173']
 };
 
 const app = express();

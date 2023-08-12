@@ -6,9 +6,6 @@
     const routes = {
         '/': PuzzleEntry,
         '/puzzles/:size/:id': PuzzleView
-
-        // todo: 404?
-        // '*': 'NotFound
     };
 </script>
 

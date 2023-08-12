@@ -1,3 +1,5 @@
+import { WS_BASE_URL } from "$lib/stores/settings_store";
+
 export { ReconnectWsClient };
 export type {
     ConnectionInfo,
@@ -63,7 +65,6 @@ type SetTimeoutType = ReturnType<typeof setTimeout>;
 class ReconnectWsClient {
     callback: WSClientEventCallback | null;
     connection_state: WSClientStatus;
-    readonly connection_info: ConnectionInfo;
     readonly factor: ExponentialBackoffFactor;
 
     close_forever: boolean;
@@ -71,10 +72,9 @@ class ReconnectWsClient {
 
     ws: WebSocket | null;
 
-    constructor(connection_info: ConnectionInfo) {
+    constructor() {
         this.callback = null;
         this.connection_state = 'disconnected';
-        this.connection_info = connection_info;
         this.factor = new ExponentialBackoffFactor(0, 10);
         this.close_forever = false;
         this.reconnect_timeout = null;
@@ -99,12 +99,6 @@ class ReconnectWsClient {
         });
     };
 
-    make_url = () => {
-        const { use_tls, host, port } = this.connection_info;
-        const protocol = use_tls ? 'wss' : 'ws';
-        return `${protocol}://${host}:${port}/`;
-    };
-
     schedule_reconnect = () => {
         this.clear_timeout();
         const total_timeout_ms = RECONNECT_TIMEOUT_UNIT_MS * this.factor.next();
@@ -115,8 +109,7 @@ class ReconnectWsClient {
         if (this.ws !== null) {
             return;
         }
-        const url = this.make_url();
-        this.ws = new WebSocket(url);
+        this.ws = new WebSocket(WS_BASE_URL);
 
         this.ws.addEventListener('open', () => {
             this.clear_timeout();

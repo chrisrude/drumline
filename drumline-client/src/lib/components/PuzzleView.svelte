@@ -2,9 +2,9 @@
     import ClueGrid from '$lib/components/ClueGrid.svelte';
     import ClueList from '$lib/components/ClueList.svelte';
     import { puzzles_read } from '$lib/network/puzzle_rest_client';
-    import type { ConnectionInfo } from '$lib/network/reconnect_ws_client';
     import { storedGameState } from '$lib/stores/game_state_store';
     import { storedPuzzle } from '$lib/stores/puzzle_store';
+    import { HTTP_BASE_URL } from '$lib/stores/settings_store';
     import { Confetti } from 'svelte-canvas-confetti';
     import { params as paramsStore } from 'svelte-spa-router';
     import { blur } from 'svelte/transition';
@@ -14,16 +14,6 @@
 
     export const params = null;
 
-    // todo: read config
-    const CONNECTION_INFO: ConnectionInfo = {
-        use_tls: true,
-        host: 'drumline-server.rudesoftware.net',
-        port: 443
-    };
-    const base_url = `http${CONNECTION_INFO.use_tls ? 's' : ''}://${CONNECTION_INFO.host}:${
-        CONNECTION_INFO.port
-    }`;
-
     if (!$storedPuzzle) {
         paramsStore.subscribe((params) => {
             if (!params) {
@@ -31,7 +21,7 @@
                 return;
             }
             const puzzle_id = params.id;
-            puzzles_read(puzzle_id, base_url).then((puzzle) => {
+            puzzles_read(puzzle_id, HTTP_BASE_URL).then((puzzle) => {
                 storedPuzzle.set(puzzle);
             });
         });

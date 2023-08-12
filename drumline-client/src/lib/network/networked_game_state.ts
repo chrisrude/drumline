@@ -1,14 +1,7 @@
 import { GameState, type GameActions } from '@chrisrude/drumline-lib';
-import { ReconnectWsClient, type ConnectionInfo } from './reconnect_ws_client';
+import { ReconnectWsClient } from './reconnect_ws_client';
 import { SolveClient, type SolveClientCallback } from './solve_client';
 export { NetworkedGameState };
-
-// todo: set from config
-const CONNECTION_INFO: ConnectionInfo = {
-    use_tls: true,
-    host: 'drumline-server.rudesoftware.net',
-    port: 443
-};
 
 class NetworkedGameState extends GameState {
     readonly solve_client: SolveClient;
@@ -16,7 +9,7 @@ class NetworkedGameState extends GameState {
 
     constructor(size: number, solve_id: string, fn_handle_received_action: SolveClientCallback) {
         super(size, solve_id);
-        this.ws_client = new ReconnectWsClient(CONNECTION_INFO);
+        this.ws_client = new ReconnectWsClient();
         this.solve_client = new SolveClient(solve_id, this.ws_client, fn_handle_received_action);
     }
     connect = () => {

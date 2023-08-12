@@ -1,7 +1,7 @@
 <script lang="ts">
     import { puzzles_create } from '$lib/network/puzzle_rest_client';
-    import type { ConnectionInfo } from '$lib/network/reconnect_ws_client';
     import { storedPuzzle } from '$lib/stores/puzzle_store';
+    import { HTTP_BASE_URL } from '$lib/stores/settings_store';
     import { userStore } from '$lib/stores/user_id_store';
     import { Puzzle } from '@chrisrude/drumline-lib';
     import { push } from 'svelte-spa-router';
@@ -11,26 +11,18 @@
     let inputText = get(storedPuzzle)?.original_text ?? '';
     let parseError = '';
 
-    // todo: read config
-    const CONNECTION_INFO: ConnectionInfo = {
-        use_tls: true,
-        host: 'drumline-server.rudesoftware.net',
-        port: 443
-    };
-    const base_url = `http${CONNECTION_INFO.use_tls ? 's' : ''}://${CONNECTION_INFO.host}:${
-        CONNECTION_INFO.port
-    }`;
-
     const parse_puzzle = () => {
         try {
             const puzzle = new Puzzle(inputText);
             storedPuzzle.set(puzzle);
             parseError = '';
 
-            puzzles_create(puzzle.original_text, $userStore, base_url).then((puzzle_id: string) => {
-                const puzzle_url = `/puzzles/${puzzle.size}/${puzzle_id}`;
-                push(puzzle_url);
-            });
+            puzzles_create(puzzle.original_text, $userStore, HTTP_BASE_URL).then(
+                (puzzle_id: string) => {
+                    const puzzle_url = `/puzzles/${puzzle.size}/${puzzle_id}`;
+                    push(puzzle_url);
+                }
+            );
         } catch (error) {
             if (error instanceof Error) {
                 parseError = error.message;

@@ -50,7 +50,6 @@ class SolveClient {
     };
 
     close(): void {
-        // todo: do we need to send this?
         const leave_action = leavePuzzle();
         this._sendActionToServer(leave_action);
 
@@ -111,7 +110,6 @@ class SolveClient {
         const join_message = joinPuzzle(this._solve_id);
         this._sendActionToServer(join_message);
 
-        // todo: send confirmed actions too?
         for (const action of this._pending_actions) {
             const probably_sent = this._sendActionToServer(action);
             if (!probably_sent) {

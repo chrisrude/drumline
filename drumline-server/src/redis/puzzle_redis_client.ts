@@ -13,6 +13,7 @@ class PuzzleRedisClient {
         username: string | undefined,
         password: string | undefined
     ) {
+        console.log(`using redis url: `, url);
         this._client = createClient({
             url,
             username,
@@ -21,6 +22,7 @@ class PuzzleRedisClient {
     }
 
     connect = async (): Promise<void> => {
+        console.log(`connecting to redis...`);
         return this._client.connect();
     };
 

@@ -5,13 +5,11 @@ import express from 'express';
 import http from 'http';
 import { PuzzleCrudder } from './express';
 import { PuzzleRedisClient } from './redis';
-import { CORS_ALLOW_URL, PORT, SECRET_REDIS_PASSWORD, SECRET_REDIS_URL, SECRET_REDIS_USERNAME } from './secrets';
+import { CORS_ALLOW_URL, PORT, SECRET_REDIS_URL } from './secrets';
 import { EchoServer } from './websockets';
 
 const redis_client = new PuzzleRedisClient(
     SECRET_REDIS_URL,
-    SECRET_REDIS_USERNAME,
-    SECRET_REDIS_PASSWORD,
 );
 await redis_client.connect();
 

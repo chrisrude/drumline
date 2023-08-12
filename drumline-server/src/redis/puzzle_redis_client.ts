@@ -10,14 +10,10 @@ class PuzzleRedisClient {
 
     constructor(
         url: string | undefined,
-        username: string | undefined,
-        password: string | undefined
     ) {
         console.log(`using redis url: `, url);
         this._client = createClient({
             url,
-            username,
-            password
         });
     }
 

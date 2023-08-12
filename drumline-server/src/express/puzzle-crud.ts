@@ -2,21 +2,18 @@ import { Puzzle, UserId } from '@chrisrude/drumline-lib';
 import { Express, Request, Response, json } from 'express';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { puzzleHmac } from '../crypto';
+import { PuzzleRedisClient } from '../redis';
 import { SECRET_PUZZLE_ID_SALT } from '../secrets';
 
 export { PuzzleCrudder };
 
 class PuzzleCrudder {
-    // todo: use redis to store solve puzzles
-
     readonly _app: Express;
-    readonly _map_puzzle_id_to_creator_uuid: Map<string, string>;
-    readonly _map_puzzle_id_to_puzzle: Map<string, Puzzle>;
+    readonly _redis_client: PuzzleRedisClient;
 
-    constructor(app: Express) {
+    constructor(app: Express, redis_client: PuzzleRedisClient) {
         this._app = app;
-        this._map_puzzle_id_to_creator_uuid = new Map<string, string>();
-        this._map_puzzle_id_to_puzzle = new Map<string, Puzzle>();
+        this._redis_client = redis_client;
 
         app.use(json());
 
@@ -42,27 +39,26 @@ class PuzzleCrudder {
     list_puzzles = async (req: Request, res: Response) => {
         console.log(`list_puzzles`);
 
-        const puzzle_ids = Array.from(this._map_puzzle_id_to_creator_uuid.keys());
+        const puzzle_ids = await this._redis_client.listPuzzles();
         res.status(200).send({
             result: 'OK',
             puzzle_ids
         });
     };
 
-    read_puzzle = (req: Request, res: Response) => {
+    read_puzzle = async (req: Request, res: Response) => {
         const id = req.params.id;
         console.log(`read_puzzle: ${id}`);
 
-        // you can read puzzles when logged out, I think this is ok
-
-        const puzzle: Puzzle | null = this._map_puzzle_id_to_puzzle.get(id) || null;
-        if (null === puzzle) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const result = await this._redis_client.loadPuzzle(id);
+        if (null === result) {
             res.status(404).send(`Puzzle not found`);
             return;
         }
         res.status(200).send({
             result: 'OK',
-            puzzle: puzzle
+            puzzle: result[0]
         });
     };
 
@@ -89,8 +85,8 @@ class PuzzleCrudder {
 
         // make ID for puzzle, userId
         const puzzle_id = await puzzleHmac(puzzle, SECRET_PUZZLE_ID_SALT);
-        this._map_puzzle_id_to_creator_uuid.set(puzzle_id, requester_private_uuid);
-        this._map_puzzle_id_to_puzzle.set(puzzle_id, puzzle);
+
+        this._redis_client.savePuzzle(puzzle, puzzle_id, requester_private_uuid);
 
         res.status(201).location(`/puzzles/${puzzle_id}`).send({
             result: 'OK',
@@ -111,21 +107,15 @@ class PuzzleCrudder {
         const requester_private_uuid = user.private_uuid;
         const id = req.params.id;
 
-        // are we the creator of this puzzle?
-        // we intentionally check this rather than checking if the puzzle exists
-        // so that we don't leak the existence of a puzzle.
-        // of course at the moment we'll list all puzzles, but we can fix that later.
-        const creator_uuid = this._map_puzzle_id_to_creator_uuid.get(id);
-        if (creator_uuid !== requester_private_uuid) {
-            res.status(401).send(`Not the creator of puzzle`);
+        // delete the puzzle. This will throw if the creator
+        // is not the same as the requester.
+        const deleted = await this._redis_client.deletePuzzle(id, requester_private_uuid);
+        if (!deleted) {
+            res.status(404).send(`Puzzle not found`);
             return;
         }
 
-        // delete the puzzle
-        this._map_puzzle_id_to_creator_uuid.delete(id);
-        this._map_puzzle_id_to_puzzle.delete(id);
-
-        res.status(200).send({
+        res.status(204).send({
             result: 'OK'
         });
     };

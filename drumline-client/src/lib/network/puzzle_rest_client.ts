@@ -20,7 +20,6 @@ const HEADERS: HeadersInit = {
 type PuzzleListResponse = {
     result: 'OK';
     puzzle_ids: string[];
-    my_puzzle_ids: string[];
 };
 const puzzles_list = async (base_url?: string): Promise<PuzzleListResponse> => {
     const url = (base_url ?? '') + '/puzzles';

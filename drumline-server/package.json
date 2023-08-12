@@ -2,10 +2,9 @@
     "name": "@chrisrude/drumline-server",
     "version": "0.0.3",
     "description": "Service to coordinate co-solving across multiple drumline crossword clients.",
-    "main": "index.ts",
+    "main": "src/index.ts",
     "scripts": {
         "build": "rollup -c",
-        "watch": "rollup -c -w",
         "dev": "npm-run-all --parallel watch watch-start",
         "clean": "rm -rf ./dist",
         "format": "prettier --write .",
@@ -13,8 +12,8 @@
         "start": "node dist/index.mjs",
         "test": "npm run test:unit",
         "test:unit": "vitest",
-        "watch-start": "node --watch dist/index.mjs",
-        "postinstall": ""
+        "watch": "rollup -c -w",
+        "watch-start": "node --watch dist/index.mjs"
     },
     "repository": {
         "type": "git",

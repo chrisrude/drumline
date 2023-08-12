@@ -39,10 +39,11 @@ class PuzzleCrudder {
     list_puzzles = async (req: Request, res: Response) => {
         console.log(`list_puzzles`);
 
-        const puzzle_ids = await this._redis_client.listPuzzles();
+        // TODO: fix?
+        // const puzzle_ids = await this._redis_client.listPuzzles();
         res.status(200).send({
             result: 'OK',
-            puzzle_ids
+            puzzle_ids: [],
         });
     };
 

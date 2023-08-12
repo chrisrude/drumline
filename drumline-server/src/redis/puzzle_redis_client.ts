@@ -1,19 +1,24 @@
 import { Puzzle, loadPuzzleFromJson } from '@chrisrude/drumline-lib';
-import { RedisClientType, createClient } from 'redis';
+import { RedisClusterType, createCluster } from 'redis';
 
 const RESULT_OK = 'OK';
 
 export { PuzzleRedisClient };
 
 class PuzzleRedisClient {
-    private readonly _client: RedisClientType;
+    private readonly _client: RedisClusterType;
 
     constructor(
         url: string | undefined,
     ) {
         console.log(`using redis url: `, url);
-        this._client = createClient({
-            url,
+        this._client = createCluster({
+            rootNodes: [{ url, },],
+            defaults: {
+                socket: {
+                    connectTimeout: 50000,
+                },
+            },
         });
     }
 
@@ -61,19 +66,19 @@ class PuzzleRedisClient {
         return [puzzle, puzzle_author];
     };
 
-    listPuzzles = async (): Promise<string[]> => {
-        return (await this._client.keys('puzzle:*:input_text')).map((key) => {
-            const match = key.match(/^puzzle:(.+):input_text$/);
-            if (null === match) {
-                console.error(`key ${key} did not match regex`);
-                // filter these out later
-                return '';
-            }
-            return match[1];
-        }).filter((key) => {
-            return key.length > 0;
-        });
-    };
+    // listPuzzles = async (): Promise<string[]> => {
+    //     return (await this._client.keys('puzzle:*:input_text')).map((key) => {
+    //         const match = key.match(/^puzzle:(.+):input_text$/);
+    //         if (null === match) {
+    //             console.error(`key ${key} did not match regex`);
+    //             // filter these out later
+    //             return '';
+    //         }
+    //         return match[1];
+    //     }).filter((key) => {
+    //         return key.length > 0;
+    //     });
+    // };
 
     // returns true if delete key existed and was deleted,
     // false if it did not exist

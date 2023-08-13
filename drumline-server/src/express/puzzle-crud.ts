@@ -44,7 +44,12 @@ class PuzzleCrudder {
     list_puzzles = async (req: Request, res: Response) => {
         console.log(`list_puzzles`);
 
-        const puzzle_ids = await this._redis_client.listPuzzles();
+        const user = this._try_create_user(req.body.private_uuid);
+        if (!user) {
+            res.status(401).send(`No user ID`);
+            return;
+        }
+        const puzzle_ids = await this._redis_client.listMyPuzzles(user.private_uuid);
         res.status(200).send({
             result: 'OK',
             puzzle_ids
@@ -56,14 +61,14 @@ class PuzzleCrudder {
         console.log(`read_puzzle: ${id}`);
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result = await this._redis_client.loadPuzzle(id);
-        if (null === result) {
+        const puzzle = await this._redis_client.loadPuzzle(id);
+        if (null === puzzle) {
             res.status(404).send(`Puzzle not found`);
             return;
         }
         res.status(200).send({
             result: 'OK',
-            puzzle: result[0]
+            puzzle: puzzle
         });
     };
 

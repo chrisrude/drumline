@@ -21,11 +21,17 @@ type PuzzleListResponse = {
     result: 'OK';
     puzzle_ids: string[];
 };
-const puzzles_list = async (base_url?: string): Promise<PuzzleListResponse> => {
+const puzzles_list = async (
+    user_id: UserId,
+    base_url?: string
+): Promise<PuzzleListResponse> => {
     const url = (base_url ?? '') + '/puzzles';
     const response = await fetch(url, {
         method: 'GET',
-        headers: HEADERS
+        headers: HEADERS,
+        body: JSON.stringify({
+            private_uuid: user_id.private_uuid
+        })
     });
     if (!response.ok) {
         throw new Error(`list: ${response.status} ${response.statusText}`);

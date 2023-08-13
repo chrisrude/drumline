@@ -1,11 +1,7 @@
 import { Puzzle, loadPuzzleFromJson } from '@chrisrude/drumline-lib';
-import redisSearch from '@redis/search';
-import { RedisClientType, SchemaFieldTypes, createClient } from 'redis';
+import { RedisClientType, createClient } from 'redis';
 
 const RESULT_OK = 'OK';
-
-const AUTHOR_INDEX = 'idx:author';
-const SIZE_INDEX = 'idx:size';
 
 const PUZZLE_KEY_PREFIX = "puzzle";
 const PUZZLE_INPUT_SUBKEY = 'input';
@@ -24,18 +20,9 @@ type PuzzleListInfo = {
     your_puzzle: boolean,
 };
 
-type PuzzleSearchResult = {
-    PUZZLE_INPUT_SUBKEY: string,
-    PUZZLE_AUTHOR_SUBKEY: string,
-    PUZZLE_SIZE_SUBKEY: number,
-}
-
-const modules = {
-    redisSearch
-};
 
 class PuzzleRedisClient {
-    private readonly _client: RedisClientType<typeof modules>;
+    private readonly _client: RedisClientType;
 
     constructor(
         url: string | undefined,
@@ -46,64 +33,16 @@ class PuzzleRedisClient {
             socket: {
                 connectTimeout: 50000,
             },
-            modules,
         });
-    }
-
-    _create_index = async (): Promise<void> => {
-        const modules = await this._client.moduleList();
-        console.log(`modules: `, modules);
-        const index_names = await this._client.redisSearch._list();
-        if (index_names.includes(AUTHOR_INDEX)) {
-            console.log(`index ${AUTHOR_INDEX} already exists`);
-        } else {
-            console.log(`creating index ${AUTHOR_INDEX}`);
-            const result1 = await this._client.redisSearch.create(
-                AUTHOR_INDEX,
-                {
-                    PUZZLE_AUTHOR_SUBKEY: {
-                        type: SchemaFieldTypes.TAG,
-                    }
-                },
-                {
-                    ON: 'HASH',
-                    PREFIX: PUZZLE_KEY_PREFIX
-                }
-            );
-            if (result1 !== RESULT_OK) {
-                throw new Error(`create index returned ${result1}`);
-            }
-        }
-        if (index_names.includes(SIZE_INDEX)) {
-            console.log(`index ${SIZE_INDEX} already exists`);
-        } else {
-            console.log(`creating index ${SIZE_INDEX}`);
-            const result = await this._client.redisSearch.create(
-                SIZE_INDEX,
-                {
-                    PUZZLE_SIZE_SUBKEY: {
-                        type: SchemaFieldTypes.NUMERIC,
-                        SORTABLE: true,
-                    }
-                },
-                {
-                    ON: 'HASH',
-                    PREFIX: PUZZLE_KEY_PREFIX
-                });
-            if (result !== RESULT_OK) {
-                throw new Error(`create index returned ${result}`);
-            }
-        };
     }
 
     connect = async (): Promise<void> => {
         console.log(`connecting to redis...`);
-        const result = this._client.connect();
-        this._create_index();
-        return result;
+        await this._client.connect();
+        console.log(`connected!`);
     };
 
-    disconnect = async (): Promise<void> => {
+    disconnect = (): Promise<void> => {
         return this._client.disconnect();
     };
 
@@ -148,46 +87,33 @@ class PuzzleRedisClient {
         return puzzle;
     };
 
-    listMyPuzzles = async (author_uuid: string): Promise<PuzzleListInfo[]> => {
-        const results = await this._client.redisSearch.search(
-            AUTHOR_INDEX,
-            `@${PUZZLE_AUTHOR_SUBKEY}:{${author_uuid}}`,
-        )
-        if (!results) {
-            throw new Error(`search for author ${author_uuid} returned null`);
+    _get_puzzle_metadata = async (puzzle_id: string): Promise<[string, number]> => {
+        const results = await this._client.hmGet(
+            this._puzzleKey(puzzle_id),
+            [PUZZLE_AUTHOR_SUBKEY, PUZZLE_SIZE_SUBKEY]
+        );
+        if (!results || results.length !== 2 || !results[0] || !results[1]) {
+            throw new Error(`results of multi set for puzzle is ${results} `);
         }
+        return [results[0], parseInt(results[1])];
+    }
 
-        // results should look like:
-        // {
-        //   total: 2,
-        //   documents: [
-        //     {
-        //       id: 'noderedis:animals:4',
-        //       value: {
-        //         name: 'Fido',
-        //         species: 'dog',
-        //         age: '7'
-        //       }
-        //     },
-        //     {
-        //       id: 'noderedis:animals:3',
-        //       value: {
-        //         name: 'Rover',
-        //         species: 'dog',
-        //         age: '9'
-        //       }
-        //     }
-        //   ]
-        // }
-        return results.documents.map((result) => {
-            const puzzle_id = this._puzzleIdFromKey(result.id);
-            const search_result = result.value as PuzzleSearchResult;
-            return {
+    listPuzzles = async (author_uuid: string): Promise<PuzzleListInfo[]> => {
+        const puzzle_keys = await this._client.keys(`${PUZZLE_KEY_PREFIX}:*`);
+        if (!puzzle_keys) {
+            throw new Error(`keys returned null`);
+        }
+        const results = Array<PuzzleListInfo>();
+        for (const puzzle_key of puzzle_keys) {
+            const puzzle_id = this._puzzleIdFromKey(puzzle_key);
+            const [puzzle_author, puzzle_size] = await this._get_puzzle_metadata(puzzle_id);
+            results.push({
                 puzzle_id,
-                size: search_result.PUZZLE_SIZE_SUBKEY,
-                your_puzzle: (search_result.PUZZLE_AUTHOR_SUBKEY === author_uuid),
-            };
-        });
+                size: puzzle_size,
+                your_puzzle: (puzzle_author === author_uuid),
+            } as PuzzleListInfo);
+        }
+        return results;
     }
 
     // returns true if delete key existed and was deleted,

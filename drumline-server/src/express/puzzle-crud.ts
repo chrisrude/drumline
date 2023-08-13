@@ -11,11 +11,16 @@ class PuzzleCrudder {
     readonly _app: Express;
     readonly _redis_client: PuzzleRedisClient;
 
+    load_completed: boolean;
+
     constructor(app: Express, redis_client: PuzzleRedisClient) {
         this._app = app;
         this._redis_client = redis_client;
+        this.load_completed = false;
 
         app.use(json());
+
+        app.get('/health', this.health_check);
 
         app.post('/puzzles', this.create_puzzle);
         app.get('/puzzles', this.list_puzzles);
@@ -23,7 +28,7 @@ class PuzzleCrudder {
         app.delete('/puzzles/:id', this.delete_puzzle);
     }
 
-    try_create_user = (uuid: string): UserId | null => {
+    _try_create_user = (uuid: string): UserId | null => {
         // make sure uuid is valid and a v5 uuid
         if (!uuid || !uuidValidate(uuid) || uuidVersion(uuid) !== 4) {
             return null;
@@ -68,7 +73,7 @@ class PuzzleCrudder {
         console.log(`user: ${req.body.private_uuid}`);
 
         const input_text = req.body.input_text;
-        const user = this.try_create_user(req.body.private_uuid);
+        const user = this._try_create_user(req.body.private_uuid);
         console.log(`body: ${JSON.stringify(req.body)}`);
         if (null === user) {
             res.status(400).send(`Invalid private_uuid`).end();
@@ -98,7 +103,7 @@ class PuzzleCrudder {
         console.log(`delete_puzzle`);
 
         // need to be logged in to delete a puzzle
-        const user = this.try_create_user(req.body.private_uuid);
+        const user = this._try_create_user(req.body.private_uuid);
         if (!user) {
             res.status(401).send(`No user ID`);
             return;
@@ -119,4 +124,17 @@ class PuzzleCrudder {
             result: 'OK'
         });
     };
+
+    health_check = async (_req: Request, res: Response) => {
+        console.log(`health_check`);
+        if (!this.load_completed) {
+            res.status(418).send({
+                result: 'I\'m a teapot'
+            });
+
+        }
+        res.status(200).send({
+            result: 'OK'
+        });
+    }
 }

@@ -20,7 +20,7 @@ const cors_options: CorsOptions = {
 const app = express();
 app.use(cors(cors_options));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _puzzle_crudder = new PuzzleCrudder(app, redis_client);
+const puzzle_crudder = new PuzzleCrudder(app, redis_client);
 
 const http_server = http.createServer(app);
 const ws_server = new EchoServer();
@@ -42,3 +42,9 @@ process.on('exit', async () => {
     console.log('disconnecting from redis...')
     await redis_client.disconnect();
 });
+
+// this will cause our health check endpoint to return 200,
+// indicating that we're ready to serve requests from this
+// deployment.  The deployer will then shut down any other
+// deployments that are still running.
+puzzle_crudder.load_completed = true;

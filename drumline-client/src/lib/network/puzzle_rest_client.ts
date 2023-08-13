@@ -7,7 +7,11 @@ const HEADERS: HeadersInit = {
     'Content-Type': 'application/json'
 };
 
-// login and logout
+type PuzzleListInfo = {
+    puzzle_id: string,
+    size: number,
+    your_puzzle: boolean,
+};
 
 //////
 
@@ -15,11 +19,11 @@ const HEADERS: HeadersInit = {
 // 200 - ok
 // res.send({
 //     result: 'OK',
-//     puzzle_ids
+//     puzzle_list: [PuzzleListInfo]
 // });
 type PuzzleListResponse = {
     result: 'OK';
-    puzzle_ids: string[];
+    puzzle_ids: PuzzleListInfo[];
 };
 const puzzles_list = async (
     user_id: UserId,

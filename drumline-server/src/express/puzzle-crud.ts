@@ -49,10 +49,10 @@ class PuzzleCrudder {
             res.status(401).send(`No user ID`);
             return;
         }
-        const puzzle_ids = await this._redis_client.listMyPuzzles(user.private_uuid);
+        const puzzle_list = await this._redis_client.listMyPuzzles(user.private_uuid);
         res.status(200).send({
             result: 'OK',
-            puzzle_ids
+            puzzle_list
         });
     };
 

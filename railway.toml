@@ -1,7 +1,16 @@
 [build]
 builder = "NIXPACKS"
+watchPatterns = [
+    "package.*",
+    "*.*",
+    "railway.toml",
+    "drumline-lib/**",
+    "drumline-server/**",
+]
+
 
 [deploy]
 numReplicas = 1
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 10
+restartPolicyMaxRetries = 5
+healthcheckPath = "/health"

@@ -5,28 +5,40 @@
     import { userStore } from '$lib/stores/user_id_store';
     import { Puzzle } from '@chrisrude/drumline-lib';
     import { push } from 'svelte-spa-router';
+    import { get } from 'svelte/store';
 
     let validInput = false;
     let inputText = getPuzzleInput() ?? '';
+    let internalError = '';
     let parseError = '';
 
-    const parse_puzzle = () => {
+    const _inner_parse_puzzle = async (inputText: string): Promise<string> => {
         savePuzzleInput(inputText);
-        try {
-            const puzzle = new Puzzle(inputText);
-            parseError = '';
+        const puzzle = new Puzzle(inputText);
+        const puzzle_id = await puzzles_create(puzzle.original_text, get(userStore), HTTP_BASE_URL);
+        return `/puzzles/${puzzle.size}/${puzzle_id}`;
+    };
 
-            puzzles_create(puzzle.original_text, $userStore, HTTP_BASE_URL).then(
-                (puzzle_id: string) => {
-                    const puzzle_url = `/puzzles/${puzzle.size}/${puzzle_id}`;
-                    push(puzzle_url);
+    const parse_puzzle = async (event: Event) => {
+        parseError = '';
+        internalError = '';
+
+        const button = event.target as HTMLButtonElement;
+        button.disabled = true;
+        _inner_parse_puzzle(inputText)
+            .then((url) => push(url))
+            .finally(() => {
+                button.disabled = false;
+            })
+            .catch((error) => {
+                if (error.name === 'PuzzleValidationError') {
+                    parseError = error.message;
+                } else if (error instanceof Error) {
+                    internalError = error.message;
+                } else {
+                    internalError = 'Unknown error';
                 }
-            );
-        } catch (error) {
-            if (error instanceof Error) {
-                parseError = error.message;
-            }
-        }
+            });
     };
 
     $: {
@@ -36,8 +48,10 @@
                 parseError = '';
                 validInput = true;
             } catch (error) {
-                if (error instanceof Error) {
+                if (error instanceof Error && error.name === 'PuzzleValidationError') {
                     parseError = error.message;
+                } else {
+                    internalError = 'Unknown error';
                 }
                 validInput = false;
             }
@@ -91,6 +105,16 @@ very long.
                 <div class="puzzle-entry-errors">
                     <h3>Could not read puzzle</h3>
                     <p>{parseError}</p>
+                </div>
+            {/if}
+            {#if internalError}
+                <div class="puzzle-entry-errors">
+                    <h3>Could not create puzzle</h3>
+                    <p>{internalError}</p>
+                    <a href="https://github.com/chrisrude/drumline/issues/new"
+                        >We don't log activity for your own privacy, so we don't know this error
+                        occurred. But we might be able to fix it if you report the bug here.</a
+                    >
                 </div>
             {/if}
         </div>

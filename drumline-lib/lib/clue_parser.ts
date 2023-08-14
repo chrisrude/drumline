@@ -1,5 +1,5 @@
 import type { Clue } from './puzzle';
-export { parse_clues };
+export { parse_clues, PuzzleValidationError };
 
 // shouldn't be more than 26, or we'll run out of letters
 const MAX_LENGTH = 26;
@@ -14,6 +14,13 @@ export const CLUE_IDENTIFIERS = BAND_IDENTIFIERS.map((letter) => letter.toLowerC
 
 const ROWS_HEADER = 'ROWS';
 const BANDS_HEADER = 'BANDS';
+
+class PuzzleValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "PuzzleValidationError";
+    }
+}
 
 // split a string into two parts, at the first occurrence of the separator
 // if the separator isn't found, the second part is an empty string
@@ -118,15 +125,15 @@ function parse_clues(input_text: string): [Clue[][], Clue[][]] {
     const [rowClues, bandClues] = read_into_rowClues_and_bandClues(lines);
 
     if (rowClues.length === 0) {
-        throw new Error('No rowClues found');
+        throw new PuzzleValidationError('No rowClues found');
     }
     if (bandClues.length === 0) {
-        throw new Error('No bandClues found');
+        throw new PuzzleValidationError('No bandClues found');
     }
     const expected_row_count = bandClues.length * 2 + 1;
     // rowClues and bandClues should be the same length
     if (rowClues.length !== expected_row_count) {
-        throw new Error(
+        throw new PuzzleValidationError(
             `Expected ${expected_row_count} row(s), because we had ${bandClues.length} band(s) but found ${rowClues.length} row(s) instead`
         );
     }
@@ -134,12 +141,12 @@ function parse_clues(input_text: string): [Clue[][], Clue[][]] {
     // if there are any blank rowClues or bandClues, raise an error
     for (let i = 0; i < rowClues.length; i++) {
         if (rowClues[i].length === 0) {
-            throw new Error(`Row ${i + 1} contains no clues`);
+            throw new PuzzleValidationError(`Row ${i + 1} contains no clues`);
         }
     }
     for (let i = 0; i < bandClues.length; i++) {
         if (bandClues[i].length === 0) {
-            throw new Error(`Band ${i + 1} contains no clues`);
+            throw new PuzzleValidationError(`Band ${i + 1} contains no clues`);
         }
     }
 

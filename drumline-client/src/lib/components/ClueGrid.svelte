@@ -315,7 +315,7 @@
     };
 
     const highlight = (newLocation: [number, number], from_click: boolean = false) => {
-        if (cursorLocation == newLocation) {
+        if (cursorLocation[0] == newLocation[0] && cursorLocation[1] == newLocation[1]) {
             // do nothing
             if (from_click) {
                 toggleSelection();
@@ -534,7 +534,6 @@
         max-width: var(--width);
         display: flex;
         flex-direction: column;
-        user-select: none;
     }
 
     .grid .row {

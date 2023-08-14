@@ -10,7 +10,6 @@
 </script>
 
 <div class="puzzle-list">
-    <h1>Existing Puzzles</h1>
     <div class="puzzle-list-recent">
         <h2>Recently Played</h2>
         {#if get(storedRecentPuzzleList).length === 0}
@@ -25,7 +24,7 @@
         {/each}
     </div>
     <div class="puzzle-list-all">
-        <h2>All Puzzles</h2>
+        <h2>Your Puzzles</h2>
         {#await puzzles_list(user, HTTP_BASE_URL)}
             <p>Loading...</p>
         {:then puzzleList}
@@ -41,9 +40,3 @@
         {/await}
     </div>
 </div>
-
-<style>
-    .puzzle-list h2 {
-        font-size: 1.5em;
-    }
-</style>

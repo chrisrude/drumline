@@ -3,7 +3,7 @@ import { Express, Request, Response, json } from 'express';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { puzzleHmac } from '../crypto';
 import { PuzzleRedisClient } from '../redis';
-import { SECRET_PUZZLE_ID_SALT } from '../secrets';
+import { ADMIN_USER_UUIDS, SECRET_PUZZLE_ID_SALT } from '../secrets';
 
 export { PuzzleCrudder };
 
@@ -50,7 +50,10 @@ class PuzzleCrudder {
             res.status(401).send(`No user ID`);
             return;
         }
-        const puzzle_list = await this._redis_client.listPuzzles(user.private_uuid);
+        const uuid = user.private_uuid;
+        const puzzle_list = ADMIN_USER_UUIDS.has(uuid) ?
+            await this._redis_client.listAllPuzzles(uuid) :
+            await this._redis_client.listPuzzles(uuid);
         res.status(200).send({
             result: 'OK',
             puzzle_list

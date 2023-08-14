@@ -63,7 +63,6 @@
 </script>
 
 <div class="puzzle-entry">
-    <h1>Solve Marching Band Crossword Puzzles</h1>
     <div class="puzzle-entry-cols">
         <div class="puzzle-entry-col-1">
             <div class="puzzle-entry-instructions">
@@ -72,7 +71,7 @@
 
             <div class="puzzle-entry-input">
                 <textarea bind:value={inputText} rows="20" />
-                <button on:click={parse_puzzle} disabled={!validInput}
+                <button class="big-button" on:click={parse_puzzle} disabled={!validInput}
                     >🥁🥁🥁 let's play 🥁🥁🥁</button
                 >
             </div>
@@ -169,15 +168,6 @@ very long.
         margin-bottom: 1rem;
         font-family: var(--font-mono);
         font-size: 1.2rem;
-    }
-    .puzzle-entry-input button {
-        font-size: 1.5rem;
-        padding: 1em;
-        border-radius: 3em;
-    }
-    .puzzle-entry-input button:hover:enabled {
-        background-color: var(--color-theme-1);
-        color: var(--color-bg-0);
     }
     .puzzle-entry-errors {
         margin-top: 1rem;

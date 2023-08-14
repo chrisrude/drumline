@@ -1,5 +1,6 @@
 import { Puzzle, PuzzleListInfo } from '@chrisrude/drumline-lib';
 import { RedisClientType, createClient } from 'redis';
+import { ADMIN_USER_UUIDS } from '../secrets';
 
 const RESULT_OK = 'OK';
 
@@ -91,7 +92,7 @@ class PuzzleRedisClient {
         return [results[0], parseInt(results[1])];
     }
 
-    listPuzzles = async (author_uuid: string): Promise<PuzzleListInfo[]> => {
+    _listAllPuzzlesInternal = async (author_uuid: string): Promise<PuzzleListInfo[]> => {
         const puzzle_keys = await this._client.keys(`${PUZZLE_KEY_PREFIX}:*`);
         if (!puzzle_keys) {
             throw new Error(`keys returned null`);
@@ -107,6 +108,21 @@ class PuzzleRedisClient {
             } as PuzzleListInfo);
         }
         return results;
+    }
+
+    listAllPuzzles = async (author_uuid: string): Promise<PuzzleListInfo[]> => {
+        // check if author_uuid is in the list of ADMIN_USER_UUIDS
+        // and if so, return all puzzles
+        if (ADMIN_USER_UUIDS.has(author_uuid)) {
+            return await this._listAllPuzzlesInternal(author_uuid);
+        }
+        return [];
+    }
+
+    listPuzzles = async (author_uuid: string): Promise<PuzzleListInfo[]> => {
+        return this._listAllPuzzlesInternal(author_uuid).then((results) => {
+            return results.filter((puzzle) => puzzle.your_puzzle);
+        });
     }
 
     // returns true if delete key existed and was deleted,

@@ -112,6 +112,7 @@
         display: flex;
         flex-direction: column;
         width: 100%;
+        user-select: text;
     }
 
     .clues-groups-group {

@@ -9,3 +9,5 @@ export const CORS_ALLOW_URL = process.env.CORS_ALLOW_URL ?? 'https://drumline.ru
 export const SECRET_REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
 export const SECRET_REDIS_USERNAME = process.env.REDISUSER ?? undefined;
 export const SECRET_REDIS_PASSWORD = process.env.REDISPASSWORD ?? undefined;
+
+export const ADMIN_USER_UUIDS = new Set((process.env.ADMIN_USER_UUIDS ?? '').split(/[\s,]+/));

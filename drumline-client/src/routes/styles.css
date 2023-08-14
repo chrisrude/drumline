@@ -27,6 +27,7 @@
     font-family: var(--font-body);
     color: var(--color-text);
     overflow-y: hidden;
+    user-select: none;
 }
 
 body {
@@ -35,11 +36,9 @@ body {
     background-attachment: fixed;
     background-color: var(--color-bg-1);
     background-size: 100vw 100vh;
-    background-image: radial-gradient(
-            50% 50% at 25% 50%,
+    background-image: radial-gradient(50% 50% at 25% 50%,
             rgba(100, 142, 210, 0.75) 0%,
-            rgba(255, 255, 255, 0) 100%
-        ),
+            rgba(255, 255, 255, 0) 100%),
         linear-gradient(180deg, var(--color-bg-0) 0%, var(--color-bg-1) 15%, var(--color-bg-2) 50%);
     /* more color ideas https://colorpalettes.io/80s-synthwave-color-palette/ */
     overflow-y: hidden;
@@ -71,7 +70,8 @@ h1 {
 }
 
 h2 {
-    font-size: 1rem;
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
 }
 
 pre {
@@ -120,4 +120,15 @@ button:focus:not(:focus-visible) {
     position: absolute;
     width: 1px;
     white-space: nowrap;
+}
+
+button.big-button {
+    font-size: 1.5rem;
+    padding: 1em;
+    border-radius: 3em;
+}
+
+button.big-button:hover:enabled {
+    background-color: var(--color-theme-1);
+    color: var(--color-bg-0);
 }

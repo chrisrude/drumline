@@ -43,7 +43,6 @@ const to_emojis = (buffer: Uint8Array): string => {
     let result = '';
     for (const val of nBitsOfArray(buffer, BIT_DEPTH)) {
         const char = GOOD_EMOJI[val];
-        console.log('to_emojis', val, char);
         result += char;
     }
     return result;

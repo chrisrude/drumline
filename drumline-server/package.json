@@ -31,7 +31,6 @@
     },
     "dependencies": {
         "@chrisrude/drumline-lib": "^0.0.3",
-        "base-emoji": "^2.0.1",
         "cors": "^2.8.5",
         "express": "^4.18.2",
         "redis": "^4.6.7",

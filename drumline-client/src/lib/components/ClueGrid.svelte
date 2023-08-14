@@ -183,7 +183,6 @@
     const onKeyUp = (event: KeyboardEvent): void => {
         if (event.key === 'Shift') {
             handleDragEnd();
-            event.preventDefault();
         }
     };
 
@@ -301,7 +300,6 @@
                 }
         }
         highlight(newLocation);
-        event.preventDefault();
     };
 
     const toggleSelection = (): void => {
@@ -370,8 +368,6 @@
         // assignment to trigger render
         isDragging = false;
         isDragging = true;
-
-        event.preventDefault();
     };
 
     const handleDragEnd = () => {
@@ -391,11 +387,6 @@
 
         const action = markSegment(clueStart, clueStart.offset, clueEnd.offset);
         apply(action);
-    };
-
-    const onDragEnd = (event: MouseEvent) => {
-        handleDragEnd();
-        event.preventDefault();
     };
 
     const row_word_attrs = (i: number, j: number): [boolean, boolean, boolean] => {
@@ -434,7 +425,7 @@
 <svelte:window
     on:keydown={onKeyDown}
     on:keyup={onKeyUp}
-    on:mouseup={(isDragging || !isDragging) && onDragEnd}
+    on:mouseup={(isDragging || !isDragging) && handleDragEnd}
 />
 
 <div
@@ -543,6 +534,7 @@
         max-width: var(--width);
         display: flex;
         flex-direction: column;
+        user-select: none;
     }
 
     .grid .row {
@@ -711,9 +703,10 @@
         box-shadow: var(--shadow-right), var(--shadow-top);
     }
 
-    .selected {
-        outline: solid 4px var(--color-theme-1);
-        outline-offset: -8px;
+    .grid .odd-band.selected,
+    .grid .even-band.selected {
+        background-color: rgba(199, 36, 177, 0.7);
+        color: white;
     }
 
     .button-bar {

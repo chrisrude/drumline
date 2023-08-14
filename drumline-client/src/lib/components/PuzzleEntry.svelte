@@ -1,20 +1,19 @@
 <script lang="ts">
     import { puzzles_create } from '$lib/network/puzzle_rest_client';
-    import { storedPuzzle } from '$lib/stores/puzzle_store';
+    import { getPuzzleInput, savePuzzleInput } from '$lib/stores/game_state_store';
     import { HTTP_BASE_URL } from '$lib/stores/settings_store';
     import { userStore } from '$lib/stores/user_id_store';
     import { Puzzle } from '@chrisrude/drumline-lib';
     import { push } from 'svelte-spa-router';
-    import { get } from 'svelte/store';
 
     let validInput = false;
-    let inputText = get(storedPuzzle)?.original_text ?? '';
+    let inputText = getPuzzleInput() ?? '';
     let parseError = '';
 
     const parse_puzzle = () => {
+        savePuzzleInput(inputText);
         try {
             const puzzle = new Puzzle(inputText);
-            storedPuzzle.set(puzzle);
             parseError = '';
 
             puzzles_create(puzzle.original_text, $userStore, HTTP_BASE_URL).then(

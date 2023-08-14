@@ -1,4 +1,4 @@
-export { storedGameState };
+export { convert_params, getPuzzleInput, savePuzzleInput, storedGameState };
 export type { SolveParams };
 
 import { browser } from '$app/environment';
@@ -122,3 +122,9 @@ storedGameState.subscribe((newGameState: GameState | null) => {
     const json = to_json(newGameState);
     window.localStorage.setItem(solve_key, json);
 });
+
+const savePuzzleInput = (input_text: string) =>
+    window.localStorage.setItem('drumline-puzzle-input', input_text);
+
+const getPuzzleInput = (): string | null =>
+    window.localStorage.getItem('drumline-puzzle-input');

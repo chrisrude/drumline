@@ -23,7 +23,8 @@ class PuzzleCrudder {
         app.get('/health', this.health_check);
 
         app.post('/puzzles', this.create_puzzle);
-        app.get('/puzzles', this.list_puzzles);
+        // todo: this should be private, not good to put in a url
+        app.get('/puzzles/list/:user_uuid', this.list_puzzles);
         app.get('/puzzles/:id', this.read_puzzle);
         app.delete('/puzzles/:id', this.delete_puzzle);
     }
@@ -43,8 +44,8 @@ class PuzzleCrudder {
 
     list_puzzles = async (req: Request, res: Response) => {
         console.log(`list_puzzles`);
-
-        const user = this._try_create_user(req.body.private_uuid);
+        const user_uuid = req.params.user_uuid;
+        const user = this._try_create_user(user_uuid);
         if (!user) {
             res.status(401).send(`No user ID`);
             return;
@@ -68,7 +69,7 @@ class PuzzleCrudder {
         }
         res.status(200).send({
             result: 'OK',
-            puzzle: puzzle
+            puzzle
         });
     };
 

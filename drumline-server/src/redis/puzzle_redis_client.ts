@@ -1,4 +1,4 @@
-import { Puzzle, loadPuzzleFromJson } from '@chrisrude/drumline-lib';
+import { Puzzle, PuzzleListInfo } from '@chrisrude/drumline-lib';
 import { RedisClientType, createClient } from 'redis';
 
 const RESULT_OK = 'OK';
@@ -11,14 +11,6 @@ const PUZZLE_CREATED_AT_SUBKEY = 'created_at';
 
 
 export { PuzzleRedisClient };
-export type { PuzzleListInfo };
-
-// todo: move to lib?
-type PuzzleListInfo = {
-    puzzle_id: string,
-    size: number,
-    your_puzzle: boolean,
-};
 
 
 class PuzzleRedisClient {
@@ -80,7 +72,8 @@ class PuzzleRedisClient {
             // puzzle not found
             return null;
         }
-        const puzzle = loadPuzzleFromJson(results);
+        console.log(`puzzle found: ${results}`);
+        const puzzle = new Puzzle(results);
         if (null === puzzle) {
             throw new Error(`stored puzzle could not be parsed`);
         }

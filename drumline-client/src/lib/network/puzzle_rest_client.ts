@@ -1,4 +1,4 @@
-import { Puzzle, UserId } from '@chrisrude/drumline-lib';
+import { Puzzle, UserId, type PuzzleListInfo } from '@chrisrude/drumline-lib';
 
 export { puzzles_create, puzzles_delete, puzzles_list, puzzles_read };
 export type { PuzzleListResponse };
@@ -7,11 +7,6 @@ const HEADERS: HeadersInit = {
     'Content-Type': 'application/json'
 };
 
-type PuzzleListInfo = {
-    puzzle_id: string,
-    size: number,
-    your_puzzle: boolean,
-};
 
 //////
 
@@ -23,24 +18,22 @@ type PuzzleListInfo = {
 // });
 type PuzzleListResponse = {
     result: 'OK';
-    puzzle_ids: PuzzleListInfo[];
+    puzzle_list: PuzzleListInfo[];
 };
 const puzzles_list = async (
     user_id: UserId,
     base_url?: string
-): Promise<PuzzleListResponse> => {
-    const url = (base_url ?? '') + '/puzzles';
+): Promise<PuzzleListInfo[]> => {
+    const url = (base_url ?? '') + `/puzzles/list/${user_id.private_uuid}`;
     const response = await fetch(url, {
         method: 'GET',
         headers: HEADERS,
-        body: JSON.stringify({
-            private_uuid: user_id.private_uuid
-        })
     });
     if (!response.ok) {
         throw new Error(`list: ${response.status} ${response.statusText}`);
     }
-    return (await response.json()) as PuzzleListResponse;
+    const json = await response.json() as PuzzleListResponse;
+    return json.puzzle_list;
 };
 
 // puzzle crud

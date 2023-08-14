@@ -2,9 +2,10 @@
     import ClueGrid from '$lib/components/ClueGrid.svelte';
     import ClueList from '$lib/components/ClueList.svelte';
     import { puzzles_read } from '$lib/network/puzzle_rest_client';
-    import { storedGameState } from '$lib/stores/game_state_store';
-    import { storedPuzzle } from '$lib/stores/puzzle_store';
+    import { convert_params, storedGameState } from '$lib/stores/game_state_store';
+    import { getCachedPuzzle, setCachedPuzzle } from '$lib/stores/puzzle_store';
     import { HTTP_BASE_URL } from '$lib/stores/settings_store';
+    import type { Puzzle } from '@chrisrude/drumline-lib';
     import { Confetti } from 'svelte-canvas-confetti';
     import { params as paramsStore } from 'svelte-spa-router';
     import { blur } from 'svelte/transition';
@@ -12,20 +13,24 @@
     let highlightRow = -1;
     let highlightBand = -1;
 
-    export const params = null;
+    let puzzle: Puzzle | null = null;
 
-    if (!$storedPuzzle) {
-        paramsStore.subscribe((params) => {
-            if (!params) {
-                console.log('no params');
-                return;
-            }
-            const puzzle_id = params.id;
-            puzzles_read(puzzle_id, HTTP_BASE_URL).then((puzzle) => {
-                storedPuzzle.set(puzzle);
-            });
+    paramsStore.subscribe((params) => {
+        const solve_params = convert_params(params);
+        if (!solve_params) {
+            return;
+        }
+        // is there a cached puzzle?
+        const storedPuzzle = getCachedPuzzle(solve_params.id);
+        if (storedPuzzle) {
+            puzzle = storedPuzzle;
+            return;
+        }
+        puzzles_read(solve_params.id, HTTP_BASE_URL).then((loaded_puzzle) => {
+            puzzle = loaded_puzzle;
+            setCachedPuzzle(loaded_puzzle, solve_params.id);
         });
-    }
+    });
 </script>
 
 {#if $storedGameState && $storedGameState.is_solved}
@@ -41,14 +46,14 @@
                 <div class="clue-set">
                     <ClueList
                         clueTitle="Rows"
-                        clueLists={$storedPuzzle?.row_clues ?? []}
+                        clueLists={puzzle?.row_clues ?? []}
                         bind:highlightIdx={highlightRow}
                     />
                 </div>
                 <div class="clue-set">
                     <ClueList
                         clueTitle="Bands"
-                        clueLists={$storedPuzzle?.band_clues ?? []}
+                        clueLists={puzzle?.band_clues ?? []}
                         bind:highlightIdx={highlightBand}
                     />
                 </div>

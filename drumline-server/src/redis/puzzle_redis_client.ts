@@ -1,5 +1,5 @@
 import { Puzzle, PuzzleListInfo } from '@chrisrude/drumline-lib';
-import { RedisClientType, createClient } from 'redis';
+import { RedisClientType } from 'redis';
 import { ADMIN_USER_UUIDS } from '../secrets';
 
 const RESULT_OK = 'OK';
@@ -17,16 +17,8 @@ export { PuzzleRedisClient };
 class PuzzleRedisClient {
     private readonly _client: RedisClientType;
 
-    constructor(
-        url: string | undefined,
-    ) {
-        console.log(`using redis url: `, url);
-        this._client = createClient({
-            url,
-            socket: {
-                connectTimeout: 50000,
-            },
-        });
+    constructor(client: RedisClientType) {
+        this._client = client
     }
 
     connect = async (): Promise<void> => {

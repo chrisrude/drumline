@@ -99,7 +99,6 @@ const fn_handle_received_action: SolveClientCallback = (
         if (null === game_state) {
             return null;
         }
-        console.log('Action from server: ', action);
         game_state.apply(action);
 
         // directly reapply all our pending actions...

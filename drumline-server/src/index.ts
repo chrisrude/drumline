@@ -3,14 +3,22 @@ import process from 'node:process';
 import cors, { CorsOptions } from 'cors';
 import express from 'express';
 import http from 'http';
+import { RedisClientType, createClient } from 'redis';
 import { PuzzleCrudder } from './express';
 import { PuzzleRedisClient } from './redis';
 import { CORS_ALLOW_URL, PORT, SECRET_REDIS_URL } from './secrets';
 import { EchoServer } from './websockets';
 
-const redis_client = new PuzzleRedisClient(
-    SECRET_REDIS_URL,
-);
+console.log(`using redis url: `, SECRET_REDIS_URL);
+const client: RedisClientType = createClient({
+    url: SECRET_REDIS_URL,
+    socket: {
+        connectTimeout: 50000,
+    },
+});
+
+
+const redis_client = new PuzzleRedisClient(client);
 await redis_client.connect();
 
 const cors_options: CorsOptions = {
@@ -23,7 +31,7 @@ app.use(cors(cors_options));
 const puzzle_crudder = new PuzzleCrudder(app, redis_client);
 
 const http_server = http.createServer(app);
-const ws_server = new EchoServer();
+const ws_server = new EchoServer(client);
 
 http_server.on('upgrade', function upgrade(request, socket, head) {
     ws_server.handleUpgrade(request, socket, head, function done(ws) {

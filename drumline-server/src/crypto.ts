@@ -10,7 +10,9 @@ const SECRET_HASH_ALGORITHM = 'SHA-512';
 const puzzleHmac = async (puzzle: Puzzle, salt: string): Promise<string> => {
     const ec = new TextEncoder();
     const data = ec.encode(puzzle.original_text + salt);
-    return await subtle.digest(SECRET_HASH_ALGORITHM, data).then((hash) => to_emojis(new Uint8Array(hash)));
+    return await subtle
+        .digest(SECRET_HASH_ALGORITHM, data)
+        .then((hash) => to_emojis(new Uint8Array(hash)));
 };
 
 const solveHmac = async (puzzle: Puzzle, creator: UserId, salt: string): Promise<string> => {
@@ -22,5 +24,7 @@ const solveHmac = async (puzzle: Puzzle, creator: UserId, salt: string): Promise
     combined_data.set(puzzle_data);
     combined_data.set(creator_data, puzzle_data.length);
 
-    return await subtle.digest(SECRET_HASH_ALGORITHM, combined_data).then((hash) => to_emojis(new Uint8Array(hash)));
+    return await subtle
+        .digest(SECRET_HASH_ALGORITHM, combined_data)
+        .then((hash) => to_emojis(new Uint8Array(hash)));
 };

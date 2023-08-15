@@ -41,7 +41,10 @@ const cleanup_game_state = () => {
     lastGameState = null;
 };
 
-const init_game_state = (solveParams: SolveParams | null, user_id: UserId): NetworkedGameState | null => {
+const init_game_state = (
+    solveParams: SolveParams | null,
+    user_id: UserId
+): NetworkedGameState | null => {
     if (!browser) {
         return null;
     }
@@ -62,10 +65,7 @@ const init_game_state = (solveParams: SolveParams | null, user_id: UserId): Netw
     if (!solveParams) {
         return null;
     }
-    const networked_game_state = new NetworkedGameState(
-        solveParams.size,
-        solveParams.id,
-        user_id);
+    const networked_game_state = new NetworkedGameState(solveParams.size, solveParams.id, user_id);
 
     const key = fn_solve_key(solveParams.id);
     const storedString = window.localStorage.getItem(key) ?? null;
@@ -78,7 +78,8 @@ const init_game_state = (solveParams: SolveParams | null, user_id: UserId): Netw
 };
 
 const storedGameState = writable<NetworkedGameState | null>(
-    init_game_state(convert_params(get(params)), get(userStore)));
+    init_game_state(convert_params(get(params)), get(userStore))
+);
 
 params.subscribe((newParams) => {
     const newSolveParams = convert_params(newParams);
@@ -104,5 +105,4 @@ storedGameState.subscribe((newGameState: NetworkedGameState | null) => {
 const savePuzzleInput = (input_text: string) =>
     window.localStorage.setItem('drumline-puzzle-input', input_text);
 
-const getPuzzleInput = (): string | null =>
-    window.localStorage.getItem('drumline-puzzle-input');
+const getPuzzleInput = (): string | null => window.localStorage.getItem('drumline-puzzle-input');

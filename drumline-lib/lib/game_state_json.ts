@@ -47,7 +47,6 @@ function set_clue_lists(answer_segments: AnswerSegments[], segment_values_list: 
 }
 
 function set_from_json_struct(simple_json: SimpleJsonGameState, gameState: GameState): void {
-
     // verify sizes line up
     if (simple_json.grid.length != gameState.size) {
         throw new Error(

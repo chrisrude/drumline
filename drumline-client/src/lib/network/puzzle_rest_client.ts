@@ -7,7 +7,6 @@ const HEADERS: HeadersInit = {
     'Content-Type': 'application/json'
 };
 
-
 //////
 
 // app.get('/puzzles', this.list_puzzles);
@@ -20,19 +19,16 @@ type PuzzleListResponse = {
     result: 'OK';
     puzzle_list: PuzzleListInfo[];
 };
-const puzzles_list = async (
-    user_id: UserId,
-    base_url?: string
-): Promise<PuzzleListInfo[]> => {
+const puzzles_list = async (user_id: UserId, base_url?: string): Promise<PuzzleListInfo[]> => {
     const url = (base_url ?? '') + `/puzzles/list/${user_id.private_uuid}`;
     const response = await fetch(url, {
         method: 'GET',
-        headers: HEADERS,
+        headers: HEADERS
     });
     if (!response.ok) {
         throw new Error(`list: ${response.status} ${response.statusText}`);
     }
-    const json = await response.json() as PuzzleListResponse;
+    const json = (await response.json()) as PuzzleListResponse;
     return json.puzzle_list;
 };
 

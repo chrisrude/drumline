@@ -1,4 +1,4 @@
-import { WS_BASE_URL } from "$lib/stores/settings_store";
+import { WS_BASE_URL } from '$lib/stores/settings_store';
 
 export { ReconnectWsClient };
 export type {

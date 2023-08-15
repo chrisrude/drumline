@@ -148,7 +148,8 @@ class GameState implements GameStateType {
             this.row_answer_segments[i].segments = other_game_state.row_answer_segments[i].segments;
         }
         for (let i = 0; i < this.band_answer_segments.length; i++) {
-            this.band_answer_segments[i].segments = other_game_state.band_answer_segments[i].segments;
+            this.band_answer_segments[i].segments =
+                other_game_state.band_answer_segments[i].segments;
         }
     };
 
@@ -212,15 +213,12 @@ class GameState implements GameStateType {
     };
 
     applyCursorAction = (cursor_action: CursorActionType): void => {
-        this.cursors.set(
-            cursor_action.user_id,
-            [cursor_action.row, cursor_action.col]
-        );
-    }
+        this.cursors.set(cursor_action.user_id, [cursor_action.row, cursor_action.col]);
+    };
 
     applyRemoveCursorAction = (cursor_action: CursorActionType): void => {
         this.cursors.delete(cursor_action.user_id);
-    }
+    };
 
     getAnswerSegments = (kind: ClueListKind, index: number): AnswerSegments => {
         const is_row = 'row' === kind;

@@ -91,7 +91,7 @@ class EchoServer extends WebSocketServer {
         for (const client of other_clients) {
             client.send(actionString, { binary: false });
         }
-    }
+    };
 
     on_join_puzzle = (ws: WebSocket, joinPuzzle: JoinPuzzleActionType) => {
         const client_state = this._client_state.get_client_state(ws);
@@ -139,7 +139,7 @@ class EchoServer extends WebSocketServer {
                 ws.send(cursor, { binary: false });
             }
         });
-    }
+    };
 
     on_leave_puzzle = (ws: WebSocket, _leavePuzzle: LeavePuzzleActionType) => {
         const [solve_id, public_uuid] = this._client_state.remove_from_solve(ws);
@@ -150,7 +150,6 @@ class EchoServer extends WebSocketServer {
     };
 
     on_puzzle_action_message = async (ws: WebSocket, action: GameActions) => {
-
         const client_state = this._client_state.get_client_state(ws);
 
         const solve_id = client_state.solve_id;

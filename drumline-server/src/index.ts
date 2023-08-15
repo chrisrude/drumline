@@ -13,10 +13,9 @@ console.log(`using redis url: `, SECRET_REDIS_URL);
 const client: RedisClientType = createClient({
     url: SECRET_REDIS_URL,
     socket: {
-        connectTimeout: 50000,
-    },
+        connectTimeout: 50000
+    }
 });
-
 
 const redis_client = new PuzzleRedisClient(client);
 await redis_client.connect();
@@ -44,10 +43,10 @@ http_server.listen(PORT, function () {
 });
 
 process.on('exit', async () => {
-    console.log('exiting...')
+    console.log('exiting...');
     ws_server.close();
     http_server.close();
-    console.log('disconnecting from redis...')
+    console.log('disconnecting from redis...');
     await redis_client.disconnect();
 });
 

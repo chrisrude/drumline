@@ -18,7 +18,7 @@ const BANDS_HEADER = 'BANDS';
 class PuzzleValidationError extends Error {
     constructor(message: string) {
         super(message);
-        this.name = "PuzzleValidationError";
+        this.name = 'PuzzleValidationError';
     }
 }
 

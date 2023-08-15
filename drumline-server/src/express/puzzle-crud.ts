@@ -51,9 +51,9 @@ class PuzzleCrudder {
             return;
         }
         const uuid = user.private_uuid;
-        const puzzle_list = ADMIN_USER_UUIDS.has(uuid) ?
-            await this._redis_client.listAllPuzzles(uuid) :
-            await this._redis_client.listPuzzles(uuid);
+        const puzzle_list = ADMIN_USER_UUIDS.has(uuid)
+            ? await this._redis_client.listAllPuzzles(uuid)
+            : await this._redis_client.listPuzzles(uuid);
         res.status(200).send({
             result: 'OK',
             puzzle_list
@@ -138,12 +138,11 @@ class PuzzleCrudder {
         console.log(`health_check`);
         if (!this.load_completed) {
             res.status(418).send({
-                result: 'I\'m a teapot'
+                result: "I'm a teapot"
             });
-
         }
         res.status(200).send({
             result: 'OK'
         });
-    }
+    };
 }

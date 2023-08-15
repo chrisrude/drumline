@@ -1,5 +1,17 @@
 import { storedGameState } from '$lib/stores/game_state_store';
-import { GameState, UserId, actionToString, areActionsEqual, joinPuzzle, leavePuzzle, set_from_json_struct, stringToAction, to_json_struct, type GameActions, type SimpleJsonGameState } from '@chrisrude/drumline-lib';
+import {
+    GameState,
+    UserId,
+    actionToString,
+    areActionsEqual,
+    joinPuzzle,
+    leavePuzzle,
+    set_from_json_struct,
+    stringToAction,
+    to_json_struct,
+    type GameActions,
+    type SimpleJsonGameState
+} from '@chrisrude/drumline-lib';
 import { get } from 'svelte/store';
 import { ReconnectWsClient, type WSClientEvent } from './reconnect_ws_client';
 
@@ -7,15 +19,14 @@ export { NetworkedGameState };
 export type { StoredGameState };
 
 type StoredGameState = {
-    game_state_json: SimpleJsonGameState,
-    pending_actions: GameActions[],
-    server_update_count: number,
-}
+    game_state_json: SimpleJsonGameState;
+    pending_actions: GameActions[];
+    server_update_count: number;
+};
 
 // todo: this class is poorly defined and probably shouldn't exist,
 // but it's good enough for now.  It should be folded into SolveClient.
 class NetworkedGameState extends GameState {
-
     // actions that we want to the server, but haven't gotten
     // a response for yet.  These are all locally-generated.
     _pending_actions: GameActions[];
@@ -34,12 +45,7 @@ class NetworkedGameState extends GameState {
     // our connection to the server
     readonly _ws_client: ReconnectWsClient;
 
-
-    constructor(
-        size: number,
-        solve_id: string,
-        user_id: UserId,
-    ) {
+    constructor(size: number, solve_id: string, user_id: UserId) {
         super(size, solve_id);
         this._pending_actions = [];
         this._server_game_state = new GameState(size, solve_id);
@@ -66,15 +72,12 @@ class NetworkedGameState extends GameState {
         return {
             game_state_json: to_json_struct(this._server_game_state),
             pending_actions: this._pending_actions,
-            server_update_count: this._server_update_count,
+            server_update_count: this._server_update_count
         };
     };
 
     update_from_json(storedGameState: StoredGameState) {
-        set_from_json_struct(
-            storedGameState.game_state_json,
-            this._server_game_state,
-        )
+        set_from_json_struct(storedGameState.game_state_json, this._server_game_state);
         this._pending_actions = [...storedGameState.pending_actions];
         this._server_update_count = storedGameState.server_update_count;
 
@@ -144,8 +147,13 @@ class NetworkedGameState extends GameState {
         // cursor updates will have a change_count of -1 and are
         // not counted as server updates
         if (action.change_count !== -1) {
-            if ((this._server_update_count + 1) !== action.change_count) {
-                throw new Error('Server update count mismatch: ' + this._server_update_count + ' ' + action.change_count);
+            if (this._server_update_count + 1 !== action.change_count) {
+                throw new Error(
+                    'Server update count mismatch: ' +
+                        this._server_update_count +
+                        ' ' +
+                        action.change_count
+                );
             }
             this._server_update_count += 1;
         }
@@ -179,7 +187,7 @@ class NetworkedGameState extends GameState {
             this.apply(pending_action);
         }
         storedGameState.set(this);
-    }
+    };
 
     // returns true if the action was in _pending_actions and was removed
     _maybeCompletePendingAction = (action: GameActions): boolean => {

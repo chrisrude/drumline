@@ -11,7 +11,9 @@ const RECENT_PUZZLE_LIST = 'drumline-recent-puzzle-list';
 const puzzle_store_key = (puzzle_id: string): string => PUZZLE_STORE_PREFIX + puzzle_id;
 
 const getCachedPuzzle = (puzzle_id: string): Puzzle | null => {
-    const storedString = browser ? window.localStorage.getItem(puzzle_store_key(puzzle_id)) ?? null : null;
+    const storedString = browser
+        ? window.localStorage.getItem(puzzle_store_key(puzzle_id)) ?? null
+        : null;
     if (!storedString) {
         return null;
     }
@@ -21,8 +23,7 @@ const getCachedPuzzle = (puzzle_id: string): Puzzle | null => {
 const setCachedPuzzle = (puzzle: Puzzle, puzzle_id: string) => {
     window.localStorage.setItem(puzzle_store_key(puzzle_id), JSON.stringify(puzzle.original_text));
     addRecentPuzzle(puzzle, puzzle_id);
-}
-
+};
 
 const initStoredPuzzleList: StartStopNotifier<PuzzleListInfo[]> = (
     set: (value: PuzzleListInfo[]) => void
@@ -44,7 +45,7 @@ const addRecentPuzzle = (puzzle: Puzzle, puzzle_id: string) => {
             const newEntry: PuzzleListInfo = {
                 puzzle_id,
                 size: puzzle.size,
-                your_puzzle: false, // todo: is this important?
+                your_puzzle: false // todo: is this important?
             };
             list.unshift(newEntry);
         }

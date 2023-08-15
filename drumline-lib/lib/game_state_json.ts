@@ -1,8 +1,15 @@
-export { set_from_json, to_json };
+export { set_from_json_struct, to_json_struct };
+export type { SimpleJsonGameState };
 
 import type { AnswerSegment, AnswerSegments, GameState } from './game_state';
 
-function to_json(gameState: GameState): string {
+type SimpleJsonGameState = {
+    grid: string[][];
+    row_segments: AnswerSegment[][];
+    band_segments: AnswerSegment[][];
+};
+
+function to_json_struct(gameState: GameState): SimpleJsonGameState {
     // store grid and answer_segments, but not puzzle
     const grid = gameState.grid.map((row) => {
         return row.map((cell) => {
@@ -13,12 +20,11 @@ function to_json(gameState: GameState): string {
     const row_segments: AnswerSegment[][] = gameState.row_answer_segments.map(fn_segments_only);
     const band_segments: AnswerSegment[][] = gameState.band_answer_segments.map(fn_segments_only);
 
-    const result = JSON.stringify({
+    return {
         grid,
         row_segments,
         band_segments
-    });
-    return result;
+    };
 }
 
 function set_clue_lists(answer_segments: AnswerSegments[], segment_values_list: AnswerSegment[][]) {
@@ -40,8 +46,7 @@ function set_clue_lists(answer_segments: AnswerSegments[], segment_values_list: 
     }
 }
 
-function set_from_json(json: string, gameState: GameState): void {
-    const simple_json = JSON.parse(json);
+function set_from_json_struct(simple_json: SimpleJsonGameState, gameState: GameState): void {
 
     // verify sizes line up
     if (simple_json.grid.length != gameState.size) {

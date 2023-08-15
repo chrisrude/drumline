@@ -2,11 +2,11 @@ export { convert_params, getPuzzleInput, savePuzzleInput, storedGameState };
 export type { SolveParams };
 
 import { browser } from '$app/environment';
-import { NetworkedGameState } from '$lib/network/networked_game_state';
-import type { SolveClientCallback } from '$lib/network/solve_client';
-import { GameState, set_from_json, to_json, type GameActionType } from '@chrisrude/drumline-lib';
+import { NetworkedGameState, type StoredGameState } from '$lib/network/networked_game_state';
+import type { UserId } from '@chrisrude/drumline-lib';
 import { params } from 'svelte-spa-router';
 import { get, writable } from 'svelte/store';
+import { userStore } from './user_id_store';
 
 type SolveParams = {
     id: string;
@@ -41,7 +41,7 @@ const cleanup_game_state = () => {
     lastGameState = null;
 };
 
-const init_game_state = (solveParams: SolveParams | null): NetworkedGameState | null => {
+const init_game_state = (solveParams: SolveParams | null, user_id: UserId): NetworkedGameState | null => {
     if (!browser) {
         return null;
     }
@@ -65,21 +65,20 @@ const init_game_state = (solveParams: SolveParams | null): NetworkedGameState | 
     const networked_game_state = new NetworkedGameState(
         solveParams.size,
         solveParams.id,
-        fn_handle_received_action
-    );
+        user_id);
 
     const key = fn_solve_key(solveParams.id);
     const storedString = window.localStorage.getItem(key) ?? null;
     if (storedString && storedString.length > 0) {
-        set_from_json(storedString, networked_game_state);
+        const storedJson: StoredGameState = JSON.parse(storedString);
+        networked_game_state.update_from_json(storedJson);
     }
     lastGameState = networked_game_state;
     return networked_game_state;
 };
 
 const storedGameState = writable<NetworkedGameState | null>(
-    init_game_state(convert_params(get(params)))
-);
+    init_game_state(convert_params(get(params)), get(userStore)));
 
 params.subscribe((newParams) => {
     const newSolveParams = convert_params(newParams);
@@ -87,38 +86,18 @@ params.subscribe((newParams) => {
         storedGameState.set(null);
         return;
     }
-    storedGameState.set(init_game_state(newSolveParams));
+    storedGameState.set(init_game_state(newSolveParams, get(userStore)));
     lastGameState!.connect();
 });
 
-const fn_handle_received_action: SolveClientCallback = (
-    action: GameActionType,
-    pending_actions: GameActionType[]
-) => {
-    storedGameState.update((game_state) => {
-        if (null === game_state) {
-            return null;
-        }
-        game_state.apply(action);
-
-        // directly reapply all our pending actions...
-        // todo: I think this is always ok to do without "undoing"
-        // anything.  But is that correct?
-        for (const pending_action of pending_actions) {
-            game_state.apply(pending_action);
-        }
-        return game_state;
-    });
-};
-
-storedGameState.subscribe((newGameState: GameState | null) => {
+storedGameState.subscribe((newGameState: NetworkedGameState | null) => {
     if (!newGameState) {
         // note: don't remove the stored game state, so
         // that we can re-open it later
         return;
     }
     const solve_key = fn_solve_key(newGameState.solve_id);
-    const json = to_json(newGameState);
+    const json = JSON.stringify(newGameState.to_json());
     window.localStorage.setItem(solve_key, json);
 });
 

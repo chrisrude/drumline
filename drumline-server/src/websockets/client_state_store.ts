@@ -75,7 +75,7 @@ class ClientStateStore {
         this.clients_by_solve.add(ws, solve_id);
     }
 
-    remove_from_solve = (ws: WebSocket): void => {
+    remove_from_solve = (ws: WebSocket): [string | null, string | null] => {
         const client_state = this.client_states.get(ws);
         if (!client_state) {
             throw new Error('Client does not exist');
@@ -83,16 +83,20 @@ class ClientStateStore {
         if (client_state.solve_id) {
             this.clients_by_solve.remove(ws, client_state.solve_id);
         }
+        const old_solve_id = client_state.solve_id;
+        const old_public_uuid = client_state.user_id?.public_uuid ?? null;
         client_state.solve_id = null;
+        return [old_solve_id, old_public_uuid];
     }
 
-    remove_client = (ws: WebSocket): void => {
+    remove_client = (ws: WebSocket): [string | null, string | null] => {
         const current_state = this.client_states.get(ws);
         if (!current_state) {
             throw new Error('Client does not exist');
         }
-        this.remove_from_solve(ws);
+        const result = this.remove_from_solve(ws);
         this.client_states.delete(ws);
+        return result;
     }
 
     get_client_state = (ws: WebSocket): ClientState => {
@@ -108,12 +112,17 @@ class ClientStateStore {
     }
 
     update_cursor = (ws: WebSocket, cursor: CursorActionType): void => {
-        console.log('update_cursor', cursor);
+        const client_state = this.get_client_state(ws);
+        if (!client_state.user_id) {
+            throw new Error('Client does not have a user id');
+        }
+        cursor.user_id = client_state.user_id.public_uuid;
         const str = actionToString(cursor);
         this.get_client_state(ws).last_cursor_update = str;
     }
 
-    get_cursor = (ws: WebSocket): string | null => {
-        return this.get_client_state(ws).last_cursor_update;
+    get_cursor = (ws: WebSocket): [string | null, string | null] => {
+        const client_state = this.get_client_state(ws);
+        return [client_state.user_id?.private_uuid ?? null, client_state.last_cursor_update];
     }
 }

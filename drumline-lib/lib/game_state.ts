@@ -130,6 +130,28 @@ class GameState implements GameStateType {
         this.solve_id = solve_id;
     }
 
+    copy_from = (other_game_state: GameState): void => {
+        if (this.center !== other_game_state.center) {
+            throw new Error('copy_from: centers do not match');
+        }
+        this.is_solved = other_game_state.is_solved;
+        this.cursors.clear();
+        for (const [user_id, cursor] of other_game_state.cursors) {
+            this.cursors.set(user_id, cursor);
+        }
+        for (let row = 0; row < this.size; row++) {
+            for (let col = 0; col < this.size; col++) {
+                this.grid[row][col].text = other_game_state.grid[row][col].text;
+            }
+        }
+        for (let i = 0; i < this.size; i++) {
+            this.row_answer_segments[i].segments = other_game_state.row_answer_segments[i].segments;
+        }
+        for (let i = 0; i < this.band_answer_segments.length; i++) {
+            this.band_answer_segments[i].segments = other_game_state.band_answer_segments[i].segments;
+        }
+    };
+
     apply = (action: GameActionType): void => {
         switch (action.action) {
             case 'clearSegment':
@@ -145,6 +167,10 @@ class GameState implements GameStateType {
             case 'cursor':
                 const cursor_action = action as CursorActionType;
                 this.applyCursorAction(cursor_action);
+                break;
+            case 'removeCursor':
+                const remove_cursor_action = action as CursorActionType;
+                this.applyRemoveCursorAction(remove_cursor_action);
                 break;
         }
     };
@@ -190,6 +216,10 @@ class GameState implements GameStateType {
             cursor_action.user_id,
             [cursor_action.row, cursor_action.col]
         );
+    }
+
+    applyRemoveCursorAction = (cursor_action: CursorActionType): void => {
+        this.cursors.delete(cursor_action.user_id);
     }
 
     getAnswerSegments = (kind: ClueListKind, index: number): AnswerSegments => {

@@ -4,11 +4,9 @@ export {
     areActionsEqual,
     clear,
     clearSegment,
-    cursor,
-    joinPuzzle,
+    cursor, joinPuzzle,
     leavePuzzle,
-    markSegment,
-    set,
+    markSegment, removeCursor, set,
     stringToAction
 };
 export type {
@@ -22,6 +20,7 @@ export type {
     JoinPuzzleActionType,
     LeavePuzzleActionType,
     MarkSegmentActionType,
+    RemoveCursorActionType,
     SetActionType,
     SolveIdActionType
 };
@@ -35,6 +34,7 @@ type GameActions =
     | SetActionType
     | ClearActionType
     | CursorActionType
+    | RemoveCursorActionType
     | MarkSegmentActionType
     | ClearSegmentActionType;
 
@@ -44,6 +44,7 @@ const GAME_ACTIONS = [
     'set',
     'clear',
     'cursor',
+    'removeCursor',
     'markSegment',
     'clearSegment'
 ] as const;
@@ -96,7 +97,11 @@ type ClearActionType = GridActionType & {
 
 type CursorActionType = GridActionType & {
     action: 'cursor';
-}
+};
+
+type RemoveCursorActionType = GameActionType & {
+    action: 'removeCursor';
+};
 
 // clue list actions
 type MarkSegmentActionType = ClueListActionType & {
@@ -141,6 +146,14 @@ function cursor(at: GridLocationType): CursorActionType {
     };
 }
 
+function removeCursor(): RemoveCursorActionType {
+    return {
+        action: 'removeCursor',
+        user_id: '',
+        change_count: -1
+    };
+}
+
 function markSegment(
     clue_list: ClueListIdentifier,
     idx_cell_start: number,
@@ -168,11 +181,11 @@ function clearSegment(clue_list: ClueListIdentifier, idx_cell: number): ClearSeg
     };
 }
 
-function joinPuzzle(solve_id: string): JoinPuzzleActionType {
+function joinPuzzle(solve_id: string, known_action_count: number): JoinPuzzleActionType {
     return {
         action: 'joinPuzzle',
         user_id: '',
-        change_count: -1,
+        change_count: known_action_count,
         solve_id
     };
 }
@@ -217,6 +230,7 @@ function stringToAction(str: string): GameActions {
             strProperties.push('solve_id');
             break;
         case 'leavePuzzle':
+        case 'removeCursor':
             break;
         default:
             throw new Error('Invalid action: ' + str);
@@ -303,6 +317,7 @@ function areActionsEqual(a: GameActions, b: GameActions): boolean {
             }
             break;
         case 'leavePuzzle':
+        case 'removeCursor':
             break;
     }
 

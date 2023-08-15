@@ -30,7 +30,13 @@ class SolveRedisClient {
         end_offset: number = -1,
     ): Promise<string[]> => {
         const list_key = this._action_list_key(solve_id);
-        return await this._client.lRange(list_key, start_offset, end_offset)
+        return (await this._client.lRange(
+            list_key, start_offset, end_offset
+        )).map((str_action: string, idx: number) => {
+            const action = JSON.parse(str_action);
+            action.change_count = idx + start_offset;
+            return JSON.stringify(action);
+        });
     };
 
     // takes an action and appends it to the list of actions for the given solve

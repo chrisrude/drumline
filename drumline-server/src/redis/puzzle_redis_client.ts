@@ -65,7 +65,6 @@ class PuzzleRedisClient {
             // puzzle not found
             return null;
         }
-        console.log(`puzzle found: ${results}`);
         const puzzle = new Puzzle(results);
         if (null === puzzle) {
             throw new Error(`stored puzzle could not be parsed`);

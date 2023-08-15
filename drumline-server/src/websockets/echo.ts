@@ -5,6 +5,7 @@ import {
     LeavePuzzleActionType,
     UserId,
     actionToString,
+    removeCursor,
     stringToAction
 } from '@chrisrude/drumline-lib';
 import { AddressInfo } from 'net';
@@ -74,8 +75,23 @@ class EchoServer extends WebSocketServer {
 
     on_disconnect = (ws: WebSocket) => {
         console.log('Disconnected: %d clients', this._client_state.num_clients() - 1);
-        this._client_state.remove_client(ws);
+        const [maybe_solve_id, maybe_public_uuid] = this._client_state.remove_client(ws);
+        if (!maybe_public_uuid || !maybe_solve_id) {
+            return;
+        }
+        this.send_remove_cursor(maybe_public_uuid, maybe_solve_id);
     };
+
+    send_remove_cursor = (public_uuid: string, solve_id: string) => {
+        // send the other clients are removeCursor message
+        const remove_cursor_action = removeCursor();
+        remove_cursor_action.user_id = public_uuid;
+        const actionString = actionToString(remove_cursor_action);
+        const other_clients = this._client_state.get_clients_for_solve(solve_id);
+        for (const client of other_clients) {
+            client.send(actionString, { binary: false });
+        }
+    }
 
     on_join_puzzle = (ws: WebSocket, joinPuzzle: JoinPuzzleActionType) => {
         const client_state = this._client_state.get_client_state(ws);
@@ -107,18 +123,30 @@ class EchoServer extends WebSocketServer {
             ws.send(strData, { binary: false });
         }
 
+        if (!client_state.user_id) {
+            console.error('Client does not have a user_id');
+            return;
+        }
+
         // finally, send all cursor locations to the client
         const other_clients = this._client_state.get_clients_for_solve(solve_id);
         other_clients.forEach((client: WebSocket) => {
-            const cursor = this._client_state.get_cursor(client);
-            if (cursor && client != ws) {
+            const [other_private_uuid, cursor] = this._client_state.get_cursor(client);
+            if (other_private_uuid == client_state.user_id?.private_uuid) {
+                return;
+            }
+            if (cursor) {
                 ws.send(cursor, { binary: false });
             }
         });
     }
 
     on_leave_puzzle = (ws: WebSocket, _leavePuzzle: LeavePuzzleActionType) => {
-        this._client_state.remove_from_solve(ws);
+        const [solve_id, public_uuid] = this._client_state.remove_from_solve(ws);
+        if (!solve_id || !public_uuid) {
+            return;
+        }
+        this.send_remove_cursor(public_uuid, solve_id);
     };
 
     on_puzzle_action_message = async (ws: WebSocket, action: GameActions) => {
@@ -142,7 +170,7 @@ class EchoServer extends WebSocketServer {
         action.user_id = client_state.user_id.public_uuid;
 
         // add to store, unless it's a cursor update
-        if (action.action === 'cursor') {
+        if (action.action === 'cursor' || action.action === 'removeCursor') {
             this._client_state.update_cursor(ws, action as CursorActionType);
         } else {
             await this._store.add_solve_action(solve_id, action);
@@ -160,8 +188,6 @@ class EchoServer extends WebSocketServer {
     };
 
     on_incoming_message = async (ws: WebSocket, data: RawData, isBinary: boolean) => {
-        const t0 = performance.now();
-
         // todo: rate-limit incoming messages?
 
         // decode message
@@ -171,7 +197,6 @@ class EchoServer extends WebSocketServer {
         }
 
         const strData = data.toString('utf8');
-        console.log('Received message: ', strData);
         const action = stringToAction(strData);
         switch (action.action) {
             case 'joinPuzzle':
@@ -183,8 +208,5 @@ class EchoServer extends WebSocketServer {
             default:
                 await this.on_puzzle_action_message(ws, action);
         }
-
-        const t1 = performance.now();
-        console.log(`took ${t1 - t0} milliseconds.`);
     };
 }

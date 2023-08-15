@@ -1,4 +1,4 @@
-import { UserId } from "@chrisrude/drumline-lib";
+import { CursorActionType, UserId, actionToString } from "@chrisrude/drumline-lib";
 import { WebSocket } from 'ws';
 
 export { ClientStateStore };
@@ -37,10 +37,12 @@ class ClientsBySolve {
 class ClientState {
     solve_id: string | null;
     user_id: UserId | null;
+    last_cursor_update: string | null;
 
     constructor() {
         this.solve_id = null;
         this.user_id = null;
+        this.last_cursor_update = null;
     }
 }
 
@@ -103,5 +105,15 @@ class ClientStateStore {
 
     get_clients_for_solve = (solve_id: string): Set<WebSocket> => {
         return this.clients_by_solve.get(solve_id);
+    }
+
+    update_cursor = (ws: WebSocket, cursor: CursorActionType): void => {
+        console.log('update_cursor', cursor);
+        const str = actionToString(cursor);
+        this.get_client_state(ws).last_cursor_update = str;
+    }
+
+    get_cursor = (ws: WebSocket): string | null => {
+        return this.get_client_state(ws).last_cursor_update;
     }
 }

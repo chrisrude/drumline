@@ -3,6 +3,7 @@ export type { AnswerSegment, CellType, GameStateType, Grid };
 import type {
     ClearSegmentActionType,
     ClueListActionType,
+    CursorActionType,
     GameActionType,
     GridActionType,
     MarkSegmentActionType,
@@ -107,6 +108,7 @@ type GameStateType = {
 class GameState implements GameStateType {
     readonly band_answer_segments: AnswerSegments[];
     readonly center: number;
+    readonly cursors: Map<string, [number, number]>;
     readonly grid: Grid;
     is_solved: boolean;
     readonly row_answer_segments: AnswerSegments[];
@@ -118,6 +120,7 @@ class GameState implements GameStateType {
 
         this.band_answer_segments = Array.from({ length: num_bands }, () => new AnswerSegments());
         this.center = Math.floor(size / 2);
+        this.cursors = new Map();
         this.grid = Array.from({ length: size }, () =>
             Array.from({ length: size }, () => new Cell())
         );
@@ -138,6 +141,10 @@ class GameState implements GameStateType {
             case 'clear':
                 const grid_action = action as GridActionType;
                 this.applyGridAction(grid_action);
+                break;
+            case 'cursor':
+                const cursor_action = action as CursorActionType;
+                this.applyCursorAction(cursor_action);
                 break;
         }
     };
@@ -177,6 +184,13 @@ class GameState implements GameStateType {
             }
         }
     };
+
+    applyCursorAction = (cursor_action: CursorActionType): void => {
+        this.cursors.set(
+            cursor_action.user_id,
+            [cursor_action.row, cursor_action.col]
+        );
+    }
 
     getAnswerSegments = (kind: ClueListKind, index: number): AnswerSegments => {
         const is_row = 'row' === kind;

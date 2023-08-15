@@ -1,4 +1,5 @@
 import {
+    CursorActionType,
     GameActions,
     JoinPuzzleActionType,
     LeavePuzzleActionType,
@@ -105,6 +106,15 @@ class EchoServer extends WebSocketServer {
             const strData = old_updates[i];
             ws.send(strData, { binary: false });
         }
+
+        // finally, send all cursor locations to the client
+        const other_clients = this._client_state.get_clients_for_solve(solve_id);
+        other_clients.forEach((client: WebSocket) => {
+            const cursor = this._client_state.get_cursor(client);
+            if (cursor && client != ws) {
+                ws.send(cursor, { binary: false });
+            }
+        });
     }
 
     on_leave_puzzle = (ws: WebSocket, _leavePuzzle: LeavePuzzleActionType) => {
@@ -131,7 +141,12 @@ class EchoServer extends WebSocketServer {
         // change from private to public uuid
         action.user_id = client_state.user_id.public_uuid;
 
-        await this._store.add_solve_action(solve_id, action);
+        // add to store, unless it's a cursor update
+        if (action.action === 'cursor') {
+            this._client_state.update_cursor(ws, action as CursorActionType);
+        } else {
+            await this._store.add_solve_action(solve_id, action);
+        }
 
         // find clients to update
         const solve_clients = this._client_state.get_clients_for_solve(solve_id);
@@ -146,6 +161,8 @@ class EchoServer extends WebSocketServer {
 
     on_incoming_message = async (ws: WebSocket, data: RawData, isBinary: boolean) => {
         const t0 = performance.now();
+
+        // todo: rate-limit incoming messages?
 
         // decode message
         if (isBinary) {

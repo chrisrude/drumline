@@ -20,4 +20,14 @@ const validateProperties = (
             }
         }
     }
+    for (const property of numProperties) {
+        if (!obj.hasOwnProperty(property)) {
+            throw new Error(`Invalid action: ${property} is missing`);
+        }
+    }
+    for (const property of strProperties) {
+        if (!obj.hasOwnProperty(property)) {
+            throw new Error(`Invalid action: ${property} is missing`);
+        }
+    }
 };

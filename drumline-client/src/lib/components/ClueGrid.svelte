@@ -11,6 +11,7 @@
     import {
         clear,
         clearSegment,
+        cursor,
         markSegment,
         memoizedGenerateGridAttributes,
         set,
@@ -341,6 +342,16 @@
             highlightBand = newBand;
         }
         cursorLocation = newLocation;
+
+        // send notification via update
+        setTimeout(() => {
+            // todo: just call this sync?
+            const cursorUpdate = cursor({
+                row: cursorLocation[0],
+                col: cursorLocation[1]
+            });
+            apply(cursorUpdate);
+        }, 10);
     };
 
     const onPath = (i: number, j: number) => {
@@ -420,6 +431,17 @@
         const band_group = attributesAt([i, j]).band_group;
         return !band_group.is_corner && band_group.side === side;
     };
+
+    // true if another solver's cursor (other than ours) is at
+    // this location
+    const hasCursor = (i: number, j: number): boolean => {
+        for (const cursor of gameState.cursors.values()) {
+            if (cursor[0] === i && cursor[1] === j) {
+                return true;
+            }
+        }
+        return false;
+    };
 </script>
 
 <svelte:window
@@ -468,6 +490,7 @@
                     <div
                         class="letter center-cell"
                         class:selected={cursorLocation[0] === i && cursorLocation[1] === j}
+                        class:hasCursor={gameState && hasCursor(i, j)}
                     />
                 {:else}
                     <!-- this is ok because the keyboard events are handled higher up -->
@@ -506,6 +529,7 @@
                         class:bandSideS={isBandSide(i, j, 'bottom')}
                         class:bandCornerSW={isBandCorner(i, j, 'left')}
                         class:bandSideW={isBandSide(i, j, 'left')}
+                        class:hasCursor={gameState && hasCursor(i, j)}
                         on:click={() => highlight([i, j], true)}
                         on:mousedown={(event) => onDragStart(event, i, j)}
                         on:mouseenter={(event) => onDragOver(event, i, j)}
@@ -707,6 +731,11 @@
     .grid .even-band.selected {
         background-color: rgba(199, 36, 177, 0.7);
         color: white;
+    }
+
+    .grid .hasCursor {
+        outline: solid 4px var(--color-theme-1);
+        outline-offset: -8px;
     }
 
     .button-bar {

@@ -4,6 +4,7 @@ export {
     areActionsEqual,
     clear,
     clearSegment,
+    cursor,
     joinPuzzle,
     leavePuzzle,
     markSegment,
@@ -13,9 +14,7 @@ export {
 export type {
     ClearActionType,
     ClearSegmentActionType,
-    ClueListActionType,
-    CreatePuzzleActionType,
-    GameActionKinds,
+    ClueListActionType, CreatePuzzleActionType, CursorActionType, GameActionKinds,
     GameActionType,
     GameActions,
     GridActionType,
@@ -35,6 +34,7 @@ type GameActions =
     | LeavePuzzleActionType
     | SetActionType
     | ClearActionType
+    | CursorActionType
     | MarkSegmentActionType
     | ClearSegmentActionType;
 
@@ -43,6 +43,7 @@ const GAME_ACTIONS = [
     'leavePuzzle',
     'set',
     'clear',
+    'cursor',
     'markSegment',
     'clearSegment'
 ] as const;
@@ -93,6 +94,10 @@ type ClearActionType = GridActionType & {
     action: 'clear';
 };
 
+type CursorActionType = GridActionType & {
+    action: 'cursor';
+}
+
 // clue list actions
 type MarkSegmentActionType = ClueListActionType & {
     action: 'markSegment';
@@ -119,6 +124,16 @@ function set(at: GridLocationType, text: string): SetActionType {
 function clear(at: GridLocationType): ClearActionType {
     return {
         action: 'clear',
+        user_id: '',
+        change_count: -1,
+        row: at.row,
+        col: at.col
+    };
+}
+
+function cursor(at: GridLocationType): CursorActionType {
+    return {
+        action: 'cursor',
         user_id: '',
         change_count: -1,
         row: at.row,
@@ -184,17 +199,19 @@ function stringToAction(str: string): GameActions {
     validateProperties(obj, [], ['action']);
     switch (obj.action) {
         case 'set':
+            strProperties.push('text');
+        // fall through
         case 'clear':
+        case 'cursor':
             numProperties.push('col');
             numProperties.push('row');
-            strProperties.push('text');
             break;
         case 'markSegment':
+            numProperties.push('idx_cell_start');
+            numProperties.push('idx_cell_end');
         case 'clearSegment':
             numProperties.push('index');
             strProperties.push('kind');
-            numProperties.push('idx_cell_start');
-            numProperties.push('idx_cell_end');
             break;
         case 'joinPuzzle':
             strProperties.push('solve_id');

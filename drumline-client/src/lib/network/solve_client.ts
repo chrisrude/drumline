@@ -62,13 +62,14 @@ class SolveClient {
         }
         // we expect that we have a game state, as the rest of the
         // app is asking us to update it.
-        storedGameState.update((game_state) => {
+        if (action.action !== 'cursor') {
+            const game_state = get(storedGameState);
             if (null === game_state) {
                 throw new Error('No game state');
             }
             game_state.apply(action);
-            return game_state;
-        });
+            storedGameState.set(game_state);
+        }
 
         // add to our pending actions.  Do this first
         // in case the server fails to respond, or the
@@ -93,8 +94,12 @@ class SolveClient {
                 return;
             }
 
-            // add to our received actions
-            this._applied_actions.push(action);
+            // was this a cursor update?  don't include it in our
+            // applied actions
+            if (action.action !== 'cursor') {
+                // add to our received actions
+                this._applied_actions.push(action);
+            }
             this._handleActionCallback(action, this._pending_actions);
 
             return;

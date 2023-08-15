@@ -133,12 +133,23 @@ const findWordBounds = (
         return grid[row_next][col_next].is_filled() && !answer_segments.in_answer_at_offset(idx)[0];
     };
 
+    // when in the center row, stop searching when we cross the center square
+    const is_in_center_row = !use_band && (location[0] === grid_attributes.center);
+    const crossed_center = (idx: number): boolean => {
+        const orig_col = location[1];
+        const new_col = locations[idx][1];
+        return (orig_col < grid_attributes.center) !== (new_col < grid_attributes.center);
+    };
+
     // look backwards for a square that has a letter in it and is not
     // part of an existing word
     let idxStart = cell_group.offset;
     while (idxStart > 0) {
         const idxStartNext = idxStart - 1;
         if (!fn_is_suitable_for_word(idxStartNext)) {
+            break;
+        }
+        if (is_in_center_row && crossed_center(idxStartNext)) {
             break;
         }
         idxStart = idxStartNext;
@@ -151,6 +162,9 @@ const findWordBounds = (
     while (idxEnd < locations.length - 1) {
         const idxEndNext = idxEnd + 1;
         if (!fn_is_suitable_for_word(idxEndNext)) {
+            break;
+        }
+        if (is_in_center_row && crossed_center(idxEndNext)) {
             break;
         }
         idxEnd = idxEndNext;

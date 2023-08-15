@@ -702,6 +702,7 @@
         box-shadow: var(--shadow-right), var(--shadow-top);
     }
 
+    .grid .center-cell.selected,
     .grid .odd-band.selected,
     .grid .even-band.selected {
         background-color: rgba(199, 36, 177, 0.7);

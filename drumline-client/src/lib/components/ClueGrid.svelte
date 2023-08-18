@@ -208,6 +208,8 @@
                 if (event.shiftKey) {
                     onShiftDown(cursorLocation, newLocation);
                 }
+                // iPad safari will nudge the screen down, even if there's nowhere to go
+                event.preventDefault();
                 break;
             case 'ArrowUp':
                 if (newLocation[0] > 0) {
@@ -216,6 +218,8 @@
                 if (event.shiftKey) {
                     onShiftDown(cursorLocation, newLocation);
                 }
+                // iPad safari will nudge the screen up, even if there's nowhere to go
+                event.preventDefault();
                 break;
             case 'ArrowLeft':
                 if (newLocation[1] > 0) {
@@ -245,6 +249,8 @@
                 return;
             case ' ':
                 toggleSelection();
+                // iPad safari will nudge the screen down a lot, even if there's nowhere to go
+                event.preventDefault();
                 break;
             case '.':
                 // find adjacent letters and mark them as a word

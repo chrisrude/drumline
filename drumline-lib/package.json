@@ -30,7 +30,7 @@
         "@rollup/plugin-commonjs": "^25.0.3",
         "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.1.0",
-        "@rollup/plugin-terser": "^0.4.3",
+        "@rollup/plugin-terser": "^1.0.0",
         "@rollup/plugin-typescript": "^11.1.2",
         "@types/uuid": "^9.0.2",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
@@ -41,10 +41,10 @@
         "prettier": "^3.0.0",
         "tslib": "^2.6.1",
         "typescript": "^5.1.6",
-        "vitest": "^0.32.2"
+        "vitest": "^4.1.11"
     },
     "dependencies": {
-        "uuid": "^9.0.0"
+        "uuid": "^14.0.0"
     },
     "type": "module"
 }

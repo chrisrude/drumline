@@ -1,11 +1,12 @@
 /***
  * This file contains the logic for moving the cursor after filling in a cell.
  *
- * The inspiration for his is the NYT crossword app, which is something most
+ * The inspiration for this is the NYT crossword app, which is something most
  * users are likely to be familiar with.
  *
- * The state here is based on:
- * - the size of the grid (aka the )
+ * After a letter is typed, the cursor advances to the next *empty* cell in
+ * the current row or band.  Rows stop at their end, bands wrap around.  If
+ * every other cell is already filled, the cursor just advances by one.
  */
 
 import {
@@ -43,33 +44,22 @@ const _findEmptyCell = (
     location_offset: number,
     fn_next_idx: (locations: CellGroupLocations, index: number) => number
 ): [number, number] => {
-    const num_cells = grid.length * grid.length;
+    // walk forward from the starting cell, at most once around the group.
+    // note that the cell at location_offset itself is only considered if
+    // we wrap all the way back around to it.
     let last_cell_idx = location_offset;
-    let next_cell_idx = location_offset;
-    let loop_count = 0;
-    while ((next_cell_idx = fn_next_idx(locations, last_cell_idx))) {
-        const next_cell = locations[next_cell_idx];
-        if (isEmpty(grid, next_cell)) {
-            // we found an answer
-            return next_cell;
-        }
-        // if we didn't move, we're stuck, so just return the
-        // next cell, as if none were filled
+    for (let loop_count = 0; loop_count < locations.length; loop_count++) {
+        const next_cell_idx = fn_next_idx(locations, last_cell_idx);
         if (next_cell_idx === last_cell_idx) {
+            // we didn't move (end of a non-wrapping group), so we're stuck
             break;
         }
-        // if we wound up at the starting cell, we wrapped around without
-        // finding a suitable place to stop, so just return the start cell
-        // also, if we've looked at more cells than are in the grid, we're
-        // probably looping indefinitely, so just return the start cell
-        if (next_cell_idx === location_offset || loop_count > num_cells) {
-            break;
+        if (isEmpty(grid, locations[next_cell_idx])) {
+            return locations[next_cell_idx];
         }
         last_cell_idx = next_cell_idx;
-        loop_count += 1;
     }
-    // all the cells are filled, so just return the next cell, as if
+    // no empty cell was found, so just return the next cell, as if
     // none were filled
-    const original_next_cell = fn_next_idx(locations, location_offset);
-    return locations[original_next_cell];
+    return locations[fn_next_idx(locations, location_offset)];
 };

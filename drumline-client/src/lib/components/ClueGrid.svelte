@@ -9,6 +9,7 @@
     import type { NetworkedGameState } from '$lib/network/networked_game_state';
     import { storedGameState } from '$lib/stores/game_state_store';
     import {
+        BAND_IDENTIFIERS,
         clear,
         clearSegment,
         cursor,
@@ -21,7 +22,6 @@
         type GameActions,
         type RowGroup
     } from '@chrisrude/drumline-lib';
-    import { BAND_IDENTIFIERS } from '@chrisrude/drumline-lib/lib/clue_parser';
 
     export let gameState: NetworkedGameState;
     export let highlightRow: number = -1;
@@ -768,11 +768,5 @@
     .button-bar button:hover:enabled {
         background-color: var(--color-theme-1);
         color: var(--color-bg-0);
-    }
-
-    .deleteMessage {
-        font-size: 1.5rem;
-        font-weight: 500;
-        margin-bottom: 1rem;
     }
 </style>

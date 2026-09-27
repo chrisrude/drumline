@@ -1,12 +1,15 @@
 export { validateProperties };
 
+const hasOwn = (obj: object, property: string): boolean =>
+    Object.prototype.hasOwnProperty.call(obj, property);
+
 const validateProperties = (
     obj: { [s: string]: unknown },
     numProperties: string[],
     strProperties: string[]
 ) => {
-    if (obj === null) {
-        throw new Error('Invalid action: (null)');
+    if (obj === null || typeof obj !== 'object') {
+        throw new Error('Invalid action: not an object');
     }
     for (const [key, value] of Object.entries(obj)) {
         if (numProperties.includes(key)) {
@@ -21,12 +24,12 @@ const validateProperties = (
         }
     }
     for (const property of numProperties) {
-        if (!obj.hasOwnProperty(property)) {
+        if (!hasOwn(obj, property)) {
             throw new Error(`Invalid action: ${property} is missing`);
         }
     }
     for (const property of strProperties) {
-        if (!obj.hasOwnProperty(property)) {
+        if (!hasOwn(obj, property)) {
             throw new Error(`Invalid action: ${property} is missing`);
         }
     }

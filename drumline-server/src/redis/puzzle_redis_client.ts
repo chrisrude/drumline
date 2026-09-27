@@ -2,8 +2,6 @@ import { Puzzle, PuzzleListInfo } from '@chrisrude/drumline-lib';
 import { RedisClientType } from 'redis';
 import { ADMIN_USER_UUIDS } from '../secrets';
 
-const RESULT_OK = 'OK';
-
 const PUZZLE_KEY_PREFIX = 'puzzle';
 const PUZZLE_INPUT_SUBKEY = 'input';
 const PUZZLE_AUTHOR_SUBKEY = 'author_uuid';
@@ -131,8 +129,9 @@ class PuzzleRedisClient {
             return false;
         }
 
+        // DEL replies with the number of keys removed
         const del_result = await this._client.multi().del(puzzle_key).exec();
-        if (!del_result || del_result.length !== 1 || del_result[0] !== RESULT_OK) {
+        if (!del_result || del_result.length !== 1 || del_result[0] !== 1) {
             throw new Error(`delete returned unexpected: ${del_result}`);
         }
 

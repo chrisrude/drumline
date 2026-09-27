@@ -3,7 +3,7 @@ import { readable } from 'svelte/store';
 
 export { userStore };
 
-// our private v5 uuid for this user
+// our private v4 uuid for this user (the public id derived from it is v5)
 const STORAGE_KEY_PRIVATE_UUID = 'drumline-uuid';
 
 const storedPrivateUuid = window.localStorage.getItem(STORAGE_KEY_PRIVATE_UUID) ?? null;

@@ -108,8 +108,8 @@ const memoizedGetBandNumberFromCoords = memoize(_getBandNumberFromCoords);
 
 const _clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 
-// returns the index'ed value of the list, clamping to the
-// first or last element if an out of bounds index is given
+// returns idx clamped to the valid index range of the list, so that
+// an out-of-bounds index maps to the first or last element
 const _clampListIndex = <T>(list: T[], idx: number): number => _clamp(idx, 0, list.length - 1);
 
 // for rows, nextCell when called at the end of the row

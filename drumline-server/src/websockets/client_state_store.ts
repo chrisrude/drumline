@@ -71,6 +71,10 @@ class ClientStateStore {
         if (!client_state) {
             throw new Error('Client does not exist');
         }
+        if (client_state.solve_id !== null && client_state.solve_id !== solve_id) {
+            // a client can only be in one solve at a time
+            this.clients_by_solve.remove(ws, client_state.solve_id);
+        }
         client_state.solve_id = solve_id;
         this.clients_by_solve.add(ws, solve_id);
     };

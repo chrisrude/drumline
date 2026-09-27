@@ -9,17 +9,19 @@ type PuzzleListInfo = {
     your_puzzle: boolean;
 };
 
+// The stored form of a puzzle is just its original clue text, as a
+// JSON string.  Everything else can be re-derived by parsing it.
 const loadPuzzleFromJson = (storedString: string): Puzzle | null => {
-    const json = JSON.parse(storedString);
     try {
-        return new Puzzle(json);
+        const original_text = JSON.parse(storedString);
+        if (typeof original_text !== 'string') {
+            throw new Error('stored puzzle is not a string');
+        }
+        return new Puzzle(original_text);
     } catch (e) {
         console.error('could not load puzzle from json: ', e);
         return null;
     }
 };
 
-const savePuzzleToJson = (puzzle: Puzzle): string => {
-    const json = JSON.stringify(puzzle);
-    return json;
-};
+const savePuzzleToJson = (puzzle: Puzzle): string => JSON.stringify(puzzle.original_text);

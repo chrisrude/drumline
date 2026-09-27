@@ -30,7 +30,8 @@ class PuzzleCrudder {
     }
 
     _try_create_user = (uuid: string): UserId | null => {
-        // make sure uuid is valid and a v5 uuid
+        // make sure uuid is valid and a v4 uuid (private user ids are v4;
+        // the derived public ids are v5)
         if (!uuid || !uuidValidate(uuid) || uuidVersion(uuid) !== 4) {
             return null;
         }
@@ -64,7 +65,6 @@ class PuzzleCrudder {
         const id = req.params.id;
         console.log(`read_puzzle: ${id}`);
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const puzzle = await this._redis_client.loadPuzzle(id);
         if (null === puzzle) {
             res.status(404).send(`Puzzle not found`);
@@ -78,14 +78,17 @@ class PuzzleCrudder {
 
     create_puzzle = async (req: Request, res: Response) => {
         console.log(`create_puzzle`);
-        console.log(`input_text: ${req.body.input_text}`);
-        console.log(`user: ${req.body.private_uuid}`);
 
-        const input_text = req.body.input_text;
-        const user = this._try_create_user(req.body.private_uuid);
-        console.log(`body: ${JSON.stringify(req.body)}`);
+        // note: don't log the request body here.  It contains the
+        // user's private uuid, and the client promises not to log activity.
+        const input_text = req.body?.input_text;
+        const user = this._try_create_user(req.body?.private_uuid);
         if (null === user) {
-            res.status(400).send(`Invalid private_uuid`).end();
+            res.status(400).send(`Invalid private_uuid`);
+            return;
+        }
+        if (typeof input_text !== 'string') {
+            res.status(400).send('Invalid puzzle_input');
             return;
         }
         let puzzle: Puzzle;
@@ -100,7 +103,13 @@ class PuzzleCrudder {
         // make ID for puzzle, userId
         const puzzle_id = await puzzleHmac(puzzle, SECRET_PUZZLE_ID_SALT);
 
-        this._redis_client.savePuzzle(puzzle, puzzle_id, requester_private_uuid);
+        try {
+            await this._redis_client.savePuzzle(puzzle, puzzle_id, requester_private_uuid);
+        } catch (err) {
+            console.error('create_puzzle: could not save puzzle', err);
+            res.status(500).send('Could not save puzzle');
+            return;
+        }
 
         res.status(201).location(`/puzzles/${puzzle_id}`).send({
             result: 'OK',
@@ -112,7 +121,7 @@ class PuzzleCrudder {
         console.log(`delete_puzzle`);
 
         // need to be logged in to delete a puzzle
-        const user = this._try_create_user(req.body.private_uuid);
+        const user = this._try_create_user(req.body?.private_uuid);
         if (!user) {
             res.status(401).send(`No user ID`);
             return;
@@ -121,25 +130,24 @@ class PuzzleCrudder {
         const requester_private_uuid = user.private_uuid;
         const id = req.params.id;
 
-        // delete the puzzle. This will throw if the creator
-        // is not the same as the requester.
+        // delete the puzzle.  This returns false if the puzzle does not
+        // exist, or if the creator is not the same as the requester.
         const deleted = await this._redis_client.deletePuzzle(id, requester_private_uuid);
         if (!deleted) {
             res.status(404).send(`Puzzle not found`);
             return;
         }
 
-        res.status(204).send({
-            result: 'OK'
-        });
+        // 204 responses have no body
+        res.status(204).end();
     };
 
     health_check = async (_req: Request, res: Response) => {
-        console.log(`health_check`);
         if (!this.load_completed) {
             res.status(418).send({
                 result: "I'm a teapot"
             });
+            return;
         }
         res.status(200).send({
             result: 'OK'

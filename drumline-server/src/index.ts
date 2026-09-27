@@ -9,7 +9,8 @@ import { PuzzleRedisClient } from './redis';
 import { CORS_ALLOW_URL, PORT, SECRET_REDIS_URL } from './secrets';
 import { EchoServer } from './websockets';
 
-console.log(`using redis url: `, SECRET_REDIS_URL);
+// don't log the full url: it may contain credentials
+console.log(`using redis host: `, new URL(SECRET_REDIS_URL).host);
 const client: RedisClientType = createClient({
     url: SECRET_REDIS_URL,
     socket: {
@@ -26,7 +27,6 @@ const cors_options: CorsOptions = {
 
 const app = express();
 app.use(cors(cors_options));
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const puzzle_crudder = new PuzzleCrudder(app, redis_client);
 
 const http_server = http.createServer(app);
@@ -42,13 +42,18 @@ http_server.listen(PORT, function () {
     console.log('Listening on http://localhost:%d', PORT);
 });
 
-process.on('exit', async () => {
-    console.log('exiting...');
+// 'exit' handlers can't do async work, so shut down on the signals
+// the deployer sends instead.
+const shutdown = async (signal: string) => {
+    console.log(`received ${signal}, exiting...`);
     ws_server.close();
     http_server.close();
     console.log('disconnecting from redis...');
     await redis_client.disconnect();
-});
+    process.exit(0);
+};
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
 // this will cause our health check endpoint to return 200,
 // indicating that we're ready to serve requests from this

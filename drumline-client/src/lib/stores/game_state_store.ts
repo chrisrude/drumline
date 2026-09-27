@@ -87,8 +87,9 @@ params.subscribe((newParams) => {
         storedGameState.set(null);
         return;
     }
-    storedGameState.set(init_game_state(newSolveParams, get(userStore)));
-    lastGameState!.connect();
+    const game_state = init_game_state(newSolveParams, get(userStore));
+    storedGameState.set(game_state);
+    game_state?.connect();
 });
 
 storedGameState.subscribe((newGameState: NetworkedGameState | null) => {

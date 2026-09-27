@@ -145,11 +145,14 @@ class GameState implements GameStateType {
             }
         }
         for (let i = 0; i < this.size; i++) {
-            this.row_answer_segments[i].segments = other_game_state.row_answer_segments[i].segments;
+            this.row_answer_segments[i].segments = [
+                ...other_game_state.row_answer_segments[i].segments
+            ];
         }
         for (let i = 0; i < this.band_answer_segments.length; i++) {
-            this.band_answer_segments[i].segments =
-                other_game_state.band_answer_segments[i].segments;
+            this.band_answer_segments[i].segments = [
+                ...other_game_state.band_answer_segments[i].segments
+            ];
         }
     };
 

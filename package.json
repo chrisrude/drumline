@@ -1,7 +1,7 @@
 {
-    "name": "drumline-lib",
+    "name": "drumline",
     "version": "0.0.3",
-    "description": "Common modules for drumline, shared between server and client",
+    "description": "Root package for drumline: builds and runs drumline-lib and drumline-server (the client is deployed separately)",
     "main": "index.js",
     "repository": {
         "type": "git",

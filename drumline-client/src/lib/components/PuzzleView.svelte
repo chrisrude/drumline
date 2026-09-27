@@ -6,6 +6,7 @@
     import { getCachedPuzzle, setCachedPuzzle } from '$lib/stores/puzzle_store';
     import { HTTP_BASE_URL } from '$lib/stores/settings_store';
     import type { Puzzle } from '@chrisrude/drumline-lib';
+    import { onDestroy } from 'svelte';
     import { Confetti } from 'svelte-canvas-confetti';
     import { params as paramsStore } from 'svelte-spa-router';
     import { blur } from 'svelte/transition';
@@ -14,23 +15,30 @@
     let highlightBand = -1;
 
     let puzzle: Puzzle | null = null;
+    let loadError = '';
 
-    paramsStore.subscribe((params) => {
+    const unsubscribe = paramsStore.subscribe((params) => {
         const solve_params = convert_params(params);
         if (!solve_params) {
             return;
         }
+        loadError = '';
         // is there a cached puzzle?
         const storedPuzzle = getCachedPuzzle(solve_params.id);
         if (storedPuzzle) {
             puzzle = storedPuzzle;
             return;
         }
-        puzzles_read(solve_params.id, HTTP_BASE_URL).then((loaded_puzzle) => {
-            puzzle = loaded_puzzle;
-            setCachedPuzzle(loaded_puzzle, solve_params.id);
-        });
+        puzzles_read(solve_params.id, HTTP_BASE_URL)
+            .then((loaded_puzzle) => {
+                puzzle = loaded_puzzle;
+                setCachedPuzzle(loaded_puzzle, solve_params.id);
+            })
+            .catch((error) => {
+                loadError = error instanceof Error ? error.message : 'Unknown error';
+            });
     });
+    onDestroy(unsubscribe);
 </script>
 
 {#if $storedGameState && $storedGameState.is_solved}
@@ -43,20 +51,26 @@
                 <ClueGrid bind:highlightRow bind:highlightBand bind:gameState={$storedGameState} />
             </div>
             <div class="clue-sets">
-                <div class="clue-set">
-                    <ClueList
-                        clueTitle="Rows"
-                        clueLists={puzzle?.row_clues ?? []}
-                        bind:highlightIdx={highlightRow}
-                    />
-                </div>
-                <div class="clue-set">
-                    <ClueList
-                        clueTitle="Bands"
-                        clueLists={puzzle?.band_clues ?? []}
-                        bind:highlightIdx={highlightBand}
-                    />
-                </div>
+                {#if loadError}
+                    <div class="clue-set">
+                        <p>Could not load puzzle clues: {loadError}</p>
+                    </div>
+                {:else}
+                    <div class="clue-set">
+                        <ClueList
+                            clueTitle="Rows"
+                            clueLists={puzzle?.row_clues ?? []}
+                            bind:highlightIdx={highlightRow}
+                        />
+                    </div>
+                    <div class="clue-set">
+                        <ClueList
+                            clueTitle="Bands"
+                            clueLists={puzzle?.band_clues ?? []}
+                            bind:highlightIdx={highlightBand}
+                        />
+                    </div>
+                {/if}
             </div>
         </div>
     </div>

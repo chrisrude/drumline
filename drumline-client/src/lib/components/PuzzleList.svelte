@@ -12,10 +12,10 @@
 <div class="puzzle-list">
     <div class="puzzle-list-recent">
         <h2>Recently Played</h2>
-        {#if get(storedRecentPuzzleList).length === 0}
+        {#if $storedRecentPuzzleList.length === 0}
             <p>No recently played puzzles</p>
         {/if}
-        {#each get(storedRecentPuzzleList) as puzzle_info}
+        {#each $storedRecentPuzzleList as puzzle_info}
             <div class="puzzle-list-list-item">
                 <a href="/puzzles/{puzzle_info.size}/{puzzle_info.puzzle_id}" use:link
                     >{puzzle_info.puzzle_id}</a

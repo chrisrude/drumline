@@ -1,6 +1,5 @@
 <script lang="ts">
-    import type { ClueList } from '@chrisrude/drumline-lib';
-    import { BAND_IDENTIFIERS } from '@chrisrude/drumline-lib/lib/clue_parser';
+    import { BAND_IDENTIFIERS, type ClueList } from '@chrisrude/drumline-lib';
 
     export let clueLists: ClueList[];
     export let clueTitle: string;

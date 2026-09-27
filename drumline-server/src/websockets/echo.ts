@@ -8,7 +8,6 @@ import {
     removeCursor,
     stringToAction
 } from '@chrisrude/drumline-lib';
-import { AddressInfo } from 'net';
 import { RedisClientType } from 'redis';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
@@ -22,7 +21,7 @@ interface AsyncSolveStore {
 }
 
 const validate_user_id = (uuid: string): UserId => {
-    // make sure uuid is valid and a v5 uuid
+    // make sure uuid is valid and a v4 uuid (private ids are v4)
     if (!uuid || !uuidValidate(uuid) || uuidVersion(uuid) !== 4) {
         console.error('Invalid user_id: ' + uuid);
         throw new Error('Invalid user_id');
@@ -44,16 +43,6 @@ class EchoServer extends WebSocketServer {
         this._store = new SolveRedisClient(_redis_client);
 
         this.on('error', console.error);
-
-        this.on('listening', () => {
-            const addr = this.address();
-            if (addr instanceof String) {
-                console.log('Listening on %d', addr);
-            } else {
-                const addrInfo = addr as AddressInfo;
-                console.log('Listening on %s:%d', addrInfo.address, addrInfo.port);
-            }
-        });
 
         this.on('connection', this.on_connection);
 
@@ -195,17 +184,24 @@ class EchoServer extends WebSocketServer {
             return;
         }
 
-        const strData = data.toString('utf8');
-        const action = stringToAction(strData);
-        switch (action.action) {
-            case 'joinPuzzle':
-                this.on_join_puzzle(ws, action);
-                break;
-            case 'leavePuzzle':
-                this.on_leave_puzzle(ws, action);
-                break;
-            default:
-                await this.on_puzzle_action_message(ws, action);
+        // a malformed message from one client must not take down the
+        // server, so anything thrown while parsing or handling it is
+        // logged and the message is dropped.
+        try {
+            const strData = data.toString('utf8');
+            const action = stringToAction(strData);
+            switch (action.action) {
+                case 'joinPuzzle':
+                    this.on_join_puzzle(ws, action);
+                    break;
+                case 'leavePuzzle':
+                    this.on_leave_puzzle(ws, action);
+                    break;
+                default:
+                    await this.on_puzzle_action_message(ws, action);
+            }
+        } catch (err) {
+            console.error('Error handling message, ignoring: ', err);
         }
     };
 }

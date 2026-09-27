@@ -228,7 +228,11 @@ function stringToAction(str: string): GameActions {
         case 'markSegment':
             numProperties.push('idx_cell_start');
             numProperties.push('idx_cell_end');
+            numProperties.push('index');
+            strProperties.push('kind');
+            break;
         case 'clearSegment':
+            numProperties.push('idx_cell');
             numProperties.push('index');
             strProperties.push('kind');
             break;
@@ -247,8 +251,8 @@ function stringToAction(str: string): GameActions {
     validateProperties(obj, numProperties, strProperties);
 
     // check "kind" enumeration if it should exist
-    if ('kind' in strProperties) {
-        if (obj.kind !== 'across' && obj.kind !== 'down') {
+    if (strProperties.includes('kind')) {
+        if (obj.kind !== 'row' && obj.kind !== 'band') {
             throw new Error('Invalid action: ' + str);
         }
     }
@@ -281,6 +285,7 @@ function areActionsEqual(a: GameActions, b: GameActions): boolean {
             }
         // fall through on purpose
         case 'clear':
+        case 'cursor':
             const grid_a = a as GridActionType;
             const grid_b = b as GridActionType;
             if (grid_a.row !== grid_b.row) {
@@ -295,6 +300,9 @@ function areActionsEqual(a: GameActions, b: GameActions): boolean {
             const mark_a = a as MarkSegmentActionType;
             const mark_b = b as MarkSegmentActionType;
             if (mark_a.idx_cell_start !== mark_b.idx_cell_start) {
+                return false;
+            }
+            if (mark_a.idx_cell_end !== mark_b.idx_cell_end) {
                 return false;
             }
         // fall through

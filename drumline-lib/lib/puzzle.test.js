@@ -167,15 +167,15 @@ describe('puzzle input test', () => {
         const puzzle = new Puzzle(FIRST_TEST);
         expect(puzzle).not.toBe(null);
         // expect three bands and 7 rows
-        expect(puzzle.bands.length).toBe(3);
-        expect(puzzle.rows.length).toBe(7);
+        expect(puzzle.band_clues.length).toBe(3);
+        expect(puzzle.row_clues.length).toBe(7);
     });
 
     it('puzzle 66 loads correctly', () => {
         const puzzle = new Puzzle(SECOND_TEST);
         expect(puzzle).not.toBe(null);
-        // expect three bands and 7 rows
-        expect(puzzle.bands.length).toBe(7);
-        expect(puzzle.rows.length).toBe(15);
+        // expect seven bands and 15 rows
+        expect(puzzle.band_clues.length).toBe(7);
+        expect(puzzle.row_clues.length).toBe(15);
     });
 });

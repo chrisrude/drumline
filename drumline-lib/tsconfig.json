@@ -10,6 +10,6 @@
         "forceConsistentCasingInFileNames": true,
         "esModuleInterop": true
     },
-    "include": ["/**/*.ts"],
+    "include": ["index.ts", "lib/**/*.ts"],
     "exclude": ["node_modules", "./dist"]
 }

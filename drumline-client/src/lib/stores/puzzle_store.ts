@@ -1,7 +1,12 @@
 export { addRecentPuzzle, getCachedPuzzle, setCachedPuzzle, storedRecentPuzzleList };
 
 import { browser } from '$app/environment';
-import { Puzzle, loadPuzzleFromJson, type PuzzleListInfo } from '@chrisrude/drumline-lib';
+import {
+    Puzzle,
+    loadPuzzleFromJson,
+    savePuzzleToJson,
+    type PuzzleListInfo
+} from '@chrisrude/drumline-lib';
 
 import { writable, type StartStopNotifier } from 'svelte/store';
 
@@ -21,7 +26,7 @@ const getCachedPuzzle = (puzzle_id: string): Puzzle | null => {
 };
 
 const setCachedPuzzle = (puzzle: Puzzle, puzzle_id: string) => {
-    window.localStorage.setItem(puzzle_store_key(puzzle_id), JSON.stringify(puzzle.original_text));
+    window.localStorage.setItem(puzzle_store_key(puzzle_id), savePuzzleToJson(puzzle));
     addRecentPuzzle(puzzle, puzzle_id);
 };
 

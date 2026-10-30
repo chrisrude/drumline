@@ -32,10 +32,10 @@
     "dependencies": {
         "@chrisrude/drumline-lib": "file:../drumline-lib",
         "cors": "^2.8.5",
-        "express": "^4.18.2",
+        "express": "^4.22.0",
         "redis": "^4.6.7",
         "uuid": "^9.0.0",
-        "ws": "^8.13.0"
+        "ws": "^8.21.0"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.3",

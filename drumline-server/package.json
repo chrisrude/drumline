@@ -35,7 +35,7 @@
         "express": "^4.18.2",
         "redis": "^4.6.7",
         "uuid": "^9.0.0",
-        "ws": "^8.13.0"
+        "ws": "^8.22.0"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.3",
@@ -49,7 +49,7 @@
         "@types/node": "^20.4.5",
         "@types/uuid": "^9.0.2",
         "@types/websocket": "^1.0.5",
-        "@types/ws": "^8.5.5",
+        "@types/ws": "^8.18.2",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
         "eslint": "^8.45.0",
